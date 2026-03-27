@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Sparkles,
   LayoutDashboard,
@@ -24,6 +25,8 @@ import {
   Menu,
   X,
   ChevronRight,
+  LogOut,
+  UserCircle,
 } from 'lucide-react';
 
 const navLinks = [
@@ -45,9 +48,15 @@ const navLinks = [
 export function Navbar() {
   const pathname = usePathname();
   const { lang, setLang } = useLanguage();
+  const { user, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const isLanding = pathname === '/';
+
+  const handleLogout = () => {
+    logout();
+    window.location.href = '/';
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -123,14 +132,32 @@ export function Navbar() {
                 <span className="hidden sm:block uppercase">{lang === 'fr' ? 'FR' : 'EN'}</span>
               </button>
 
-              {isLanding && (
-                <Link
-                  href="/dashboard"
-                  className="btn-primary hidden sm:inline-flex items-center gap-2 px-4 py-2 text-sm"
-                >
-                  {lang === 'fr' ? 'Commencer' : 'Get Started'}
-                  <ChevronRight className="w-4 h-4" />
-                </Link>
+              {user ? (
+                <div className="hidden sm:flex items-center gap-2">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/6 border border-white/10">
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-[10px] font-bold text-white">
+                      {user.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="text-sm text-white/80 font-medium max-w-[100px] truncate">{user.name}</span>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="p-2 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                    title={lang === 'fr' ? 'Déconnexion' : 'Log out'}
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="hidden sm:flex items-center gap-2">
+                  <Link href="/login" className="px-3 py-1.5 text-sm text-white/60 hover:text-white rounded-lg hover:bg-white/8 transition-all font-medium">
+                    {lang === 'fr' ? 'Connexion' : 'Log in'}
+                  </Link>
+                  <Link href="/register" className="btn-primary inline-flex items-center gap-1.5 px-4 py-2 text-sm">
+                    {lang === 'fr' ? "S'inscrire" : 'Sign up'}
+                    <ChevronRight className="w-4 h-4" />
+                  </Link>
+                </div>
               )}
 
               {/* Mobile menu toggle */}
@@ -175,12 +202,31 @@ export function Navbar() {
                   </Link>
                 );
               })}
-              <Link
-                href="/dashboard"
-                className="btn-primary mt-2 text-center py-3 rounded-xl text-sm font-semibold"
-              >
-                Get Started →
-              </Link>
+              {user ? (
+                <div className="mt-2 pt-2 border-t border-white/8">
+                  <div className="flex items-center justify-between px-4 py-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-xs font-bold text-white">
+                        {user.name.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-sm text-white/80 font-medium">{user.name}</span>
+                    </div>
+                    <button onClick={handleLogout} className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 transition-colors">
+                      <LogOut className="w-3.5 h-3.5" />
+                      {lang === 'fr' ? 'Déconnexion' : 'Log out'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-2 pt-2 border-t border-white/8 flex flex-col gap-2">
+                  <Link href="/login" className="text-center py-3 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/8 transition-all">
+                    {lang === 'fr' ? 'Se connecter' : 'Log in'}
+                  </Link>
+                  <Link href="/register" className="btn-primary text-center py-3 rounded-xl text-sm font-semibold">
+                    {lang === 'fr' ? "S'inscrire gratuitement" : 'Sign up free'} →
+                  </Link>
+                </div>
+              )}
             </nav>
           </motion.div>
         )}

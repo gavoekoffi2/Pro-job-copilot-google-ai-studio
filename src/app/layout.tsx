@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Toaster } from 'react-hot-toast';
 import { Navbar } from '@/components/layout/Navbar';
 import { LanguageProvider } from '@/contexts/LanguageContext';
+import { AuthProvider } from '@/contexts/AuthContext';
 import '@fontsource/inter/300.css';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
@@ -37,6 +38,7 @@ export default function RootLayout({
       </head>
       <body className="font-sans bg-[#08080f] text-white antialiased">
         <LanguageProvider>
+          <AuthProvider>
           <Navbar />
           <main className="min-h-screen">
             {children}
@@ -58,6 +60,7 @@ export default function RootLayout({
             error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } },
           }}
         />
+          </AuthProvider>
         </LanguageProvider>
       </body>
     </html>

@@ -13,6 +13,8 @@ import { Badge } from '@/components/ui/Badge';
 import { GradientText } from '@/components/ui/GradientText';
 import { getStats, getActivity, formatRelativeTime } from '@/lib/storage';
 import { getDailyTip } from '@/lib/gemini';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 import type { DashboardStats, ActivityItem } from '@/types';
 
 const tools = [
@@ -49,10 +51,18 @@ const staggerItem = {
 };
 
 export default function DashboardPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [tip, setTip] = useState<string>('');
   const [tipLoading, setTipLoading] = useState(true);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace('/login');
+    }
+  }, [user, authLoading, router]);
 
   useEffect(() => {
     setStats(getStats());
@@ -93,7 +103,8 @@ export default function DashboardPage() {
             </div>
             <div>
               <h1 className="text-2xl font-black text-white">
-                Career <GradientText variant="primary">Dashboard</GradientText>
+                {user ? `Bonjour, ${user.name.split(' ')[0]} 👋` : 'Career'}{' '}
+                <GradientText variant="primary">Dashboard</GradientText>
               </h1>
               <p className="text-white/50 text-sm">Your AI-powered career command center</p>
             </div>
