@@ -17,6 +17,7 @@ import {
   Target,
   Scale,
   Send,
+  Camera,
   Sparkles,
 } from 'lucide-react';
 
@@ -30,6 +31,7 @@ const tools = [
   { href: '/salary',          label: 'Salary',         icon: DollarSign,      color: 'text-emerald-400' },
   { href: '/tracker',         label: 'Tracker',        icon: Kanban,          color: 'text-orange-400' },
   { href: '/cv-builder',      label: 'CV Builder',     icon: FileEdit,        color: 'text-violet-400' },
+  { href: '/cv-import',       label: 'Import CV Photo',icon: Camera,          color: 'text-rose-400' },
   { href: '/outreach',        label: 'Email Generator',icon: Send,            color: 'text-indigo-400' },
   { href: '/skills-gap',      label: 'Skills Gap',     icon: Target,          color: 'text-teal-400' },
   { href: '/compare',         label: 'Offer Comparator',icon: Scale,          color: 'text-amber-400' },

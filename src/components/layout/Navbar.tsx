@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Sparkles,
   LayoutDashboard,
@@ -41,6 +42,7 @@ const navLinks = [
 
 export function Navbar() {
   const pathname = usePathname();
+  const { lang, setLang } = useLanguage();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const isLanding = pathname === '/';
@@ -107,14 +109,24 @@ export function Navbar() {
               </nav>
             )}
 
-            {/* Landing CTA or mobile menu */}
-            <div className="flex items-center gap-3">
+            {/* Right actions */}
+            <div className="flex items-center gap-2">
+              {/* Language Toggle */}
+              <button
+                onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/6 border border-white/10 text-xs font-semibold text-white/70 hover:text-white hover:bg-white/10 transition-all"
+                title={lang === 'fr' ? 'Switch to English' : 'Passer en Français'}
+              >
+                <span className="text-sm">{lang === 'fr' ? '🇫🇷' : '🇬🇧'}</span>
+                <span className="hidden sm:block uppercase">{lang === 'fr' ? 'FR' : 'EN'}</span>
+              </button>
+
               {isLanding && (
                 <Link
                   href="/dashboard"
                   className="btn-primary hidden sm:inline-flex items-center gap-2 px-4 py-2 text-sm"
                 >
-                  Get Started
+                  {lang === 'fr' ? 'Commencer' : 'Get Started'}
                   <ChevronRight className="w-4 h-4" />
                 </Link>
               )}

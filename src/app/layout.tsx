@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Toaster } from 'react-hot-toast';
 import { Navbar } from '@/components/layout/Navbar';
+import { LanguageProvider } from '@/contexts/LanguageContext';
 import '@fontsource/inter/300.css';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
@@ -35,10 +36,11 @@ export default function RootLayout({
         <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>" />
       </head>
       <body className="font-sans bg-[#08080f] text-white antialiased">
-        <Navbar />
-        <main className="min-h-screen">
-          {children}
-        </main>
+        <LanguageProvider>
+          <Navbar />
+          <main className="min-h-screen">
+            {children}
+          </main>
 
         <Toaster
           position="bottom-right"
@@ -52,20 +54,11 @@ export default function RootLayout({
               fontSize: '14px',
               fontFamily: 'Inter, sans-serif',
             },
-            success: {
-              iconTheme: {
-                primary: '#8b5cf6',
-                secondary: '#fff',
-              },
-            },
-            error: {
-              iconTheme: {
-                primary: '#ef4444',
-                secondary: '#fff',
-              },
-            },
+            success: { iconTheme: { primary: '#8b5cf6', secondary: '#fff' } },
+            error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } },
           }}
         />
+        </LanguageProvider>
       </body>
     </html>
   );

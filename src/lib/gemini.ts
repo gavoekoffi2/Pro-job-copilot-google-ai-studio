@@ -14,6 +14,7 @@ import type {
   OfferComparison,
   SkillsGapAnalysis,
 } from '@/types';
+import type { CVData } from '@/types/cv';
 
 // ─── Client Singleton ────────────────────────────────────────
 const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY!;
@@ -508,6 +509,174 @@ Order criticalGaps by importance (critical first). Include 3-8 gaps total.`;
     return parseJSON<SkillsGapAnalysis>(text);
   } catch (error) {
     throw new Error(`Skills gap analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+// ─── CV Photo Import (Vision) ────────────────────────────────
+export async function extractCVFromImage(
+  imageBase64: string,
+  mimeType: 'image/jpeg' | 'image/png' | 'image/webp'
+): Promise<Partial<CVData>> {
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+  const prompt = `You are an expert CV/resume parser. Analyze this CV image and extract all information.
+
+Return ONLY a valid JSON object (no markdown) with this exact structure (use empty string "" for missing fields, empty arrays [] for missing lists):
+{
+  "firstName": "",
+  "lastName": "",
+  "title": "",
+  "email": "",
+  "phone": "",
+  "location": "",
+  "website": "",
+  "linkedin": "",
+  "github": "",
+  "summary": "",
+  "experience": [
+    {
+      "id": "1",
+      "company": "",
+      "position": "",
+      "location": "",
+      "startDate": "",
+      "endDate": "",
+      "current": false,
+      "description": "",
+      "achievements": []
+    }
+  ],
+  "education": [
+    {
+      "id": "1",
+      "institution": "",
+      "degree": "",
+      "field": "",
+      "startDate": "",
+      "endDate": "",
+      "gpa": "",
+      "honors": ""
+    }
+  ],
+  "skills": [
+    {
+      "id": "1",
+      "category": "",
+      "items": []
+    }
+  ],
+  "languages": [
+    {
+      "language": "",
+      "level": "Intermediate"
+    }
+  ],
+  "certifications": [],
+  "projects": []
+}
+
+Extract EVERYTHING visible in the image. For experience descriptions, extract bullet points as the achievements array. Be thorough and accurate.`;
+
+  try {
+    const result = await model.generateContent([
+      { inlineData: { mimeType, data: imageBase64 } },
+      prompt,
+    ]);
+    const text = result.response.text();
+    return parseJSON<Partial<CVData>>(text);
+  } catch (error) {
+    throw new Error(`CV extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+// ─── CV Translator ────────────────────────────────────────────
+export async function translateCVContent(
+  cv: CVData,
+  targetLanguage: string
+): Promise<CVData> {
+  const model = getModel();
+
+  // Build a text-only representation of all translatable fields
+  const translatable = {
+    title: cv.title,
+    summary: cv.summary,
+    experience: cv.experience.map(e => ({
+      id: e.id,
+      position: e.position,
+      description: e.description,
+      achievements: e.achievements,
+    })),
+    education: cv.education.map(e => ({
+      id: e.id,
+      degree: e.degree,
+      field: e.field,
+      honors: e.honors || '',
+    })),
+    skills: cv.skills.map(s => ({
+      id: s.id,
+      category: s.category,
+      items: s.items,
+    })),
+    certifications: cv.certifications.map(c => ({
+      id: c.id,
+      name: c.name,
+    })),
+    projects: cv.projects.map(p => ({
+      id: p.id,
+      name: p.name,
+      description: p.description,
+    })),
+  };
+
+  const prompt = `You are a professional CV translator. Translate the following CV content to ${targetLanguage}.
+
+IMPORTANT rules:
+- Translate ONLY the text content, never the JSON keys
+- Do NOT translate: company names, institution names, tool/technology names (React, Python, etc.), URLs, email addresses, phone numbers, dates
+- DO translate: job titles, descriptions, achievements, skill categories, degree fields, summaries, project names/descriptions
+- Maintain professional language appropriate for a CV
+- Keep the exact same JSON structure
+
+Input JSON:
+${JSON.stringify(translatable, null, 2)}
+
+Return ONLY the translated JSON with the exact same structure (no markdown, no explanation).`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    const translated = parseJSON<typeof translatable>(text);
+
+    // Merge translated fields back into original CV data
+    const merged: CVData = {
+      ...cv,
+      title: translated.title,
+      summary: translated.summary,
+      experience: cv.experience.map(e => {
+        const t = translated.experience.find(te => te.id === e.id);
+        return t ? { ...e, position: t.position, description: t.description, achievements: t.achievements } : e;
+      }),
+      education: cv.education.map(e => {
+        const t = translated.education.find(te => te.id === e.id);
+        return t ? { ...e, degree: t.degree, field: t.field, honors: t.honors || e.honors } : e;
+      }),
+      skills: cv.skills.map(s => {
+        const t = translated.skills.find(ts => ts.id === s.id);
+        return t ? { ...s, category: t.category, items: t.items } : s;
+      }),
+      certifications: cv.certifications.map(c => {
+        const t = translated.certifications.find(tc => tc.id === c.id);
+        return t ? { ...c, name: t.name } : c;
+      }),
+      projects: cv.projects.map(p => {
+        const t = translated.projects.find(tp => tp.id === p.id);
+        return t ? { ...p, name: t.name, description: t.description } : p;
+      }),
+    };
+
+    return merged;
+  } catch (error) {
+    throw new Error(`CV translation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
