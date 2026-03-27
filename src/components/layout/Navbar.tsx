@@ -26,7 +26,6 @@ import {
   X,
   ChevronRight,
   LogOut,
-  UserCircle,
 } from 'lucide-react';
 
 const navLinks = [

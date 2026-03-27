@@ -149,7 +149,7 @@ export default function SkillsGapPage() {
 
   const handleAnalyze = async () => {
     if (!targetRole.trim()) {
-      toast.error('Please enter a target role');
+      toast.error('Entrez le poste que vous visez');
       return;
     }
     setLoading(true);
@@ -164,11 +164,11 @@ export default function SkillsGapPage() {
       );
       setResult(analysis);
       addActivity('resume', `Skills gap analysis for ${targetRole}`);
-      toast.success('Analysis complete!');
+      toast.success('Analyse des compétences terminée !');
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Analysis failed. Please try again.';
+      const msg = e instanceof Error ? e.message : 'Analyse échouée. Réessayez.';
       setError(msg);
-      toast.error('Analysis failed');
+      toast.error('Analyse échouée — réessayez');
     } finally {
       setLoading(false);
     }
@@ -178,13 +178,16 @@ export default function SkillsGapPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.type !== 'text/plain') {
-      toast.error('Please upload a .txt file');
+      toast.error('Uploadez un fichier .txt');
       return;
     }
     const reader = new FileReader();
-    reader.onload = (ev) => setResumeText(ev.target?.result as string ?? '');
+    reader.onload = (ev) => {
+      const text = ev.target?.result;
+      setResumeText(typeof text === 'string' ? text : '');
+    };
     reader.readAsText(file);
-    toast.success('Resume loaded');
+    toast.success('CV chargé avec succès');
   };
 
   const criticalCount = result?.criticalGaps.filter(g => g.importance === 'critical').length ?? 0;

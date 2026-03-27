@@ -228,16 +228,16 @@ export default function ComparePage() {
   const canCompare = offers.length >= 2 && offers.every(o => o.company && o.role && o.baseSalary > 0);
 
   const handleCompare = async () => {
-    if (!canCompare) { toast.error('Fill in Company, Role and Salary for all offers'); return; }
+    if (!canCompare) { toast.error('Remplissez Entreprise, Poste et Salaire pour chaque offre'); return; }
     setLoading(true); setError(''); setResult(null);
     try {
       const comparison = await compareJobOffers(offers);
       setResult(comparison);
       addActivity('salary', `Compared ${offers.length} job offers (${offers.map(o => o.company).join(', ')})`);
-      toast.success('Analysis complete!');
+      toast.success('Comparaison terminée !');
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Comparison failed. Please try again.';
-      setError(msg); toast.error('Comparison failed');
+      const msg = e instanceof Error ? e.message : 'Comparaison échouée. Réessayez.';
+      setError(msg); toast.error('Comparaison échouée — réessayez');
     } finally { setLoading(false); }
   };
 

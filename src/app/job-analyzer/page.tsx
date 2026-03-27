@@ -24,7 +24,7 @@ export default function JobAnalyzerPage() {
 
   const handleAnalyze = async () => {
     if (!jobDescription.trim()) {
-      toast.error('Please paste a job description');
+      toast.error("Collez la description du poste ci-dessous");
       return;
     }
 
@@ -36,11 +36,11 @@ export default function JobAnalyzerPage() {
       const analysis = await analyzeJobDescription(jobDescription, resumeText || undefined);
       setResult(analysis);
       addActivity('job-analysis', `Analyzed job description${resumeText ? ' with resume match' : ''}`);
-      toast.success('Job description analyzed!');
+      toast.success('Offre analysée avec succès !');
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Analysis failed.';
+      const msg = e instanceof Error ? e.message : 'Analyse échouée.';
       setError(msg);
-      toast.error('Analysis failed');
+      toast.error('Analyse échouée — réessayez');
     } finally {
       setLoading(false);
     }

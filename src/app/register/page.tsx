@@ -28,12 +28,13 @@ export default function RegisterPage() {
       setError(lang === 'fr' ? 'Veuillez entrer votre prénom.' : 'Please enter your name.');
       return;
     }
-    if (!email.includes('@')) {
-      setError(lang === 'fr' ? 'Email invalide.' : 'Invalid email.');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError(lang === 'fr' ? 'Adresse email invalide.' : 'Invalid email address.');
       return;
     }
-    if (password.length < 6) {
-      setError(lang === 'fr' ? 'Le mot de passe doit faire au moins 6 caractères.' : 'Password must be at least 6 characters.');
+    if (password.length < 8) {
+      setError(lang === 'fr' ? 'Le mot de passe doit faire au moins 8 caractères.' : 'Password must be at least 8 characters.');
       return;
     }
 
@@ -151,7 +152,7 @@ export default function RegisterPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  placeholder={lang === 'fr' ? 'Min. 6 caractères' : 'Min. 6 characters'}
+                  placeholder={lang === 'fr' ? 'Min. 8 caractères' : 'Min. 8 characters'}
                   className="input-glass w-full pl-10 pr-10 py-3 text-sm"
                   autoComplete="new-password"
                 />

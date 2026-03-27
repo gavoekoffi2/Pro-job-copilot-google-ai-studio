@@ -40,6 +40,8 @@ function ScoreBar({ label, score }: { label: string; score: number }) {
   );
 }
 
+const MAX_CHARS = 12000;
+
 export default function ResumePage() {
   const [resumeText, setResumeText] = useState('');
   const [jobTitle, setJobTitle] = useState('');
@@ -47,13 +49,20 @@ export default function ResumePage() {
   const [result, setResult] = useState<ResumeAnalysis | null>(null);
   const [error, setError] = useState('');
 
+  const charCount = resumeText.length;
+  const charWarning = charCount > MAX_CHARS;
+
   const handleAnalyze = async () => {
     if (!resumeText.trim()) {
-      toast.error('Please paste your resume text first');
+      toast.error('Collez votre CV en texte ci-dessous');
       return;
     }
     if (resumeText.trim().length < 100) {
-      toast.error('Resume text seems too short. Please paste your full resume.');
+      toast.error('Le texte semble trop court — collez votre CV complet');
+      return;
+    }
+    if (charWarning) {
+      toast.error(`CV trop long (${charCount.toLocaleString()} car.) — limitez à ${MAX_CHARS.toLocaleString()} caractères`);
       return;
     }
 
@@ -66,11 +75,11 @@ export default function ResumePage() {
       setResult(analysis);
       incrementStat('resumesAnalyzed');
       addActivity('resume', `Analyzed resume${jobTitle ? ` for ${jobTitle}` : ''}`);
-      toast.success('Resume analyzed successfully!');
+      toast.success('CV analysé avec succès !');
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Analysis failed. Please try again.';
+      const msg = e instanceof Error ? e.message : 'Analyse échouée. Réessayez.';
       setError(msg);
-      toast.error('Analysis failed');
+      toast.error('Analyse échouée — vérifiez votre clé API');
     } finally {
       setLoading(false);
     }
@@ -80,11 +89,14 @@ export default function ResumePage() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.type !== 'text/plain') {
-      toast.error('Please upload a .txt file (PDF not supported in browser yet)');
+      toast.error('Uploadez un fichier .txt (le PDF n\'est pas supporté en local)');
       return;
     }
     const reader = new FileReader();
-    reader.onload = (ev) => setResumeText(ev.target?.result as string ?? '');
+    reader.onload = (ev) => {
+      const text = ev.target?.result;
+      setResumeText(typeof text === 'string' ? text : '');
+    };
     reader.readAsText(file);
   };
 
@@ -114,13 +126,26 @@ export default function ResumePage() {
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
               <div className="glass rounded-xl p-6 h-full flex flex-col">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-bold text-white text-sm uppercase tracking-wider">Your Resume</h2>
-                  <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/6 border border-white/10 text-xs font-medium text-white/60 hover:text-white cursor-pointer transition-all">
-                    <Upload className="w-3.5 h-3.5" />
-                    Upload .txt
-                    <input type="file" accept=".txt" onChange={handleFileUpload} className="hidden" />
-                  </label>
+                  <h2 className="font-bold text-white text-sm uppercase tracking-wider">Votre CV</h2>
+                  <div className="flex items-center gap-2">
+                    {charCount > 0 && (
+                      <span className={`text-xs font-mono ${charWarning ? 'text-red-400' : 'text-white/30'}`}>
+                        {charCount.toLocaleString()}/{MAX_CHARS.toLocaleString()}
+                      </span>
+                    )}
+                    <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/6 border border-white/10 text-xs font-medium text-white/60 hover:text-white cursor-pointer transition-all">
+                      <Upload className="w-3.5 h-3.5" />
+                      Upload .txt
+                      <input type="file" accept=".txt" onChange={handleFileUpload} className="hidden" />
+                    </label>
+                  </div>
                 </div>
+                {charWarning && (
+                  <p className="text-xs text-red-400 mb-2 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    CV trop long — raccourcissez-le à {MAX_CHARS.toLocaleString()} caractères max
+                  </p>
+                )}
 
                 <textarea
                   value={resumeText}

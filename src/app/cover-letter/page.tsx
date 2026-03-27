@@ -30,11 +30,11 @@ export default function CoverLetterPage() {
 
   const handleGenerate = async () => {
     if (!resumeText.trim() || !jobDescription.trim()) {
-      toast.error('Please fill in both resume and job description');
+      toast.error('Remplissez votre CV et la description du poste');
       return;
     }
     if (!company.trim() || !role.trim()) {
-      toast.error('Please enter company name and role title');
+      toast.error("Entrez le nom de l'entreprise et le titre du poste");
       return;
     }
 
@@ -47,11 +47,11 @@ export default function CoverLetterPage() {
       setResult(letter);
       incrementStat('coverLettersGenerated');
       addActivity('cover-letter', `Generated cover letter for ${role} at ${company}`);
-      toast.success('Cover letter generated!');
+      toast.success('Lettre de motivation générée !');
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Generation failed. Please try again.';
+      const msg = e instanceof Error ? e.message : 'Génération échouée. Réessayez.';
       setError(msg);
-      toast.error('Generation failed');
+      toast.error('Génération échouée — vérifiez votre clé API');
     } finally {
       setLoading(false);
     }

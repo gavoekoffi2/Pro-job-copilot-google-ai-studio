@@ -105,7 +105,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
   const handleCopy = async () => {
     await navigator.clipboard.writeText(text);
     setCopied(true);
-    toast.success(`${label} copied!`);
+    toast.success(`${label} copié !`);
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -172,15 +172,15 @@ export default function OutreachPage() {
 
   const handleGenerate = async () => {
     if (!yourName.trim()) {
-      toast.error('Please enter your name');
+      toast.error('Entrez votre prénom');
       return;
     }
     if (!yourBackground.trim()) {
-      toast.error('Please enter your background summary');
+      toast.error('Décrivez votre parcours en quelques mots');
       return;
     }
     if (!companyName.trim()) {
-      toast.error('Please enter the company name');
+      toast.error("Entrez le nom de l'entreprise");
       return;
     }
 
@@ -205,11 +205,11 @@ export default function OutreachPage() {
       const email = await generateOutreachEmail(ctx);
       setResult(email);
       addActivity('cover-letter', `Generated ${emailType} email for ${companyName}`);
-      toast.success('Email generated!');
+      toast.success('Email généré avec succès !');
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Generation failed. Please try again.';
+      const msg = e instanceof Error ? e.message : 'Génération échouée. Réessayez.';
       setError(msg);
-      toast.error('Generation failed');
+      toast.error('Génération échouée — réessayez');
     } finally {
       setLoading(false);
     }

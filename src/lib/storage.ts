@@ -21,8 +21,20 @@ function setItem<T>(key: string, value: T): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // localStorage full or unavailable
+  } catch (e) {
+    if (e instanceof Error && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED')) {
+      console.warn('[ProJob] localStorage quota exceeded — consider clearing browser data');
+      // Attempt recovery: remove oldest activity entries
+      try {
+        const activities = JSON.parse(localStorage.getItem('pjc_activity') ?? '[]');
+        if (activities.length > 10) {
+          localStorage.setItem('pjc_activity', JSON.stringify(activities.slice(0, 10)));
+          localStorage.setItem(key, JSON.stringify(value));
+        }
+      } catch {
+        // Could not recover — silently fail to avoid crashing
+      }
+    }
   }
 }
 

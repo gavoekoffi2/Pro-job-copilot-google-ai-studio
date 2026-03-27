@@ -65,9 +65,11 @@ export default function DashboardPage() {
   }, [user, authLoading, router]);
 
   useEffect(() => {
-    setStats(getStats());
-    setActivity(getActivity().slice(0, 5));
-  }, []);
+    if (user) {
+      setStats(getStats());
+      setActivity(getActivity().slice(0, 5));
+    }
+  }, [user]);
 
   useEffect(() => {
     getDailyTip().then((t) => {
@@ -78,6 +80,16 @@ export default function DashboardPage() {
       setTipLoading(false);
     });
   }, []);
+
+  // Block render until auth is resolved — prevents flash of protected content
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-10 h-10 rounded-full border-2 border-purple-500/30 border-t-purple-500 animate-spin" />
+      </div>
+    );
+  }
+  if (!user) return null;
 
   const statCards = [
     { label: 'Resumes Analyzed',       value: stats?.resumesAnalyzed ?? 0,       icon: FileText,   color: 'text-blue-400',    bg: 'bg-blue-500/10' },

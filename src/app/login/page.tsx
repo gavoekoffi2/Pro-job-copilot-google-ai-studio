@@ -23,8 +23,9 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
 
-    if (!email.includes('@')) {
-      setError(lang === 'fr' ? 'Email invalide.' : 'Invalid email.');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError(lang === 'fr' ? 'Adresse email invalide.' : 'Invalid email address.');
       return;
     }
     if (!password) {

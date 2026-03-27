@@ -82,7 +82,7 @@ export default function SalaryPage() {
 
   const handleAnalyze = async () => {
     if (!role.trim() || !location.trim() || !experience) {
-      toast.error('Please fill in role, location, and experience');
+      toast.error('Remplissez le poste, la ville et l\'expérience');
       return;
     }
     setLoading(true);
@@ -96,11 +96,11 @@ export default function SalaryPage() {
       );
       setResult(insights);
       addActivity('salary', `Salary insights for ${role} in ${location}`);
-      toast.success('Salary insights ready!');
+      toast.success('Analyse salariale prête !');
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Failed to get insights.';
+      const msg = e instanceof Error ? e.message : 'Analyse échouée.';
       setError(msg);
-      toast.error('Failed to get salary insights');
+      toast.error('Analyse salariale échouée — réessayez');
     } finally {
       setLoading(false);
     }

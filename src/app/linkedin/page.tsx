@@ -77,7 +77,7 @@ export default function LinkedInPage() {
   const handleOptimize = async () => {
     const filled = Object.values(sections).filter(v => v.trim());
     if (filled.length < 2) {
-      toast.error('Please fill in at least 2 sections');
+      toast.error('Remplissez au moins 2 sections de votre profil');
       return;
     }
     setLoading(true);
@@ -87,11 +87,11 @@ export default function LinkedInPage() {
       const opt = await optimizeLinkedIn(sections);
       setResult(opt);
       addActivity('linkedin', 'Optimized LinkedIn profile sections');
-      toast.success('Profile optimized!');
+      toast.success('Profil LinkedIn optimisé !');
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Optimization failed.';
+      const msg = e instanceof Error ? e.message : 'Optimisation échouée.';
       setError(msg);
-      toast.error('Optimization failed');
+      toast.error('Optimisation échouée — réessayez');
     } finally {
       setLoading(false);
     }

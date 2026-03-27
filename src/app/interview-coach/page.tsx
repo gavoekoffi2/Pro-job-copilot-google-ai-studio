@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, Sparkles, ChevronRight, ChevronLeft, CheckCircle2, AlertCircle, RotateCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -16,6 +16,7 @@ import type { InterviewQuestion, AnswerFeedback } from '@/types';
 
 const levelOptions = ['Junior', 'Mid-level', 'Senior', 'Lead', 'Principal'];
 const companyTypes = ['Startup', 'Scale-up', 'Enterprise', 'FAANG', 'Consulting', 'Agency'];
+const SESSION_KEY = 'pjc_interview_session';
 
 const typeBadgeVariant = {
   behavioral: 'primary' as const,
@@ -36,6 +37,32 @@ export default function InterviewCoachPage() {
   const [evaluating, setEvaluating] = useState(false);
   const [phase, setPhase] = useState<'setup' | 'practice' | 'results'>('setup');
 
+  // ── Restore session on mount ────────────────────────────────
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(SESSION_KEY);
+      if (saved) {
+        const { questions: q, answers: a, feedbacks: f, currentIdx: idx, phase: p, role: r, level: l, companyType: c } = JSON.parse(saved);
+        if (q?.length && p !== 'setup') {
+          setQuestions(q); setAnswers(a ?? {}); setFeedbacks(f ?? {});
+          setCurrentIdx(idx ?? 0); setPhase(p); setRole(r ?? ''); setLevel(l ?? 'Mid-level'); setCompanyType(c ?? 'Startup');
+          toast.success('Session précédente restaurée', { duration: 2500 });
+        }
+      }
+    } catch { /* ignore corrupted session */ }
+  }, []);
+
+  // ── Persist session on change ───────────────────────────────
+  useEffect(() => {
+    if (phase === 'setup') {
+      localStorage.removeItem(SESSION_KEY);
+      return;
+    }
+    try {
+      localStorage.setItem(SESSION_KEY, JSON.stringify({ questions, answers, feedbacks, currentIdx, phase, role, level, companyType }));
+    } catch { /* storage full */ }
+  }, [questions, answers, feedbacks, currentIdx, phase, role, level, companyType]);
+
   const currentQ = questions[currentIdx];
   const currentAnswer = answers[currentQ?.id ?? ''] ?? '';
   const currentFeedback = feedbacks[currentQ?.id ?? ''];
@@ -45,7 +72,7 @@ export default function InterviewCoachPage() {
     : 0;
 
   const handleStart = async () => {
-    if (!role.trim()) { toast.error('Please enter the role you\'re interviewing for'); return; }
+    if (!role.trim()) { toast.error("Entrez le poste pour lequel vous passez l'entretien"); return; }
     setSetupLoading(true);
     try {
       const qs = await getInterviewQuestions(role, level, companyType);
@@ -56,20 +83,20 @@ export default function InterviewCoachPage() {
       setPhase('practice');
       addActivity('interview', `Started interview practice for ${role} (${level})`);
     } catch {
-      toast.error('Failed to generate questions. Please try again.');
+      toast.error('Génération des questions échouée — réessayez');
     } finally {
       setSetupLoading(false);
     }
   };
 
   const handleEvaluate = async () => {
-    if (!currentAnswer.trim()) { toast.error('Please write an answer first'); return; }
+    if (!currentAnswer.trim()) { toast.error('Rédigez votre réponse avant de la faire évaluer'); return; }
     setEvaluating(true);
     try {
       const feedback = await evaluateInterviewAnswer(currentQ.question, currentAnswer, role);
       setFeedbacks(prev => ({ ...prev, [currentQ.id]: feedback }));
     } catch {
-      toast.error('Evaluation failed. Please try again.');
+      toast.error('Évaluation échouée — réessayez');
     } finally {
       setEvaluating(false);
     }
@@ -85,6 +112,7 @@ export default function InterviewCoachPage() {
   };
 
   const handleReset = () => {
+    localStorage.removeItem(SESSION_KEY);
     setPhase('setup');
     setQuestions([]);
     setAnswers({});

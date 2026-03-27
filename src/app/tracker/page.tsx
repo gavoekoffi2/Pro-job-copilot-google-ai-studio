@@ -44,7 +44,7 @@ function AddJobModal({ onClose, onAdd }: { onClose: () => void; onAdd: (job: Job
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.company.trim() || !form.role.trim()) {
-      toast.error('Company and role are required');
+      toast.error("L'entreprise et le poste sont obligatoires");
       return;
     }
     const now = new Date().toISOString();
@@ -62,7 +62,7 @@ function AddJobModal({ onClose, onAdd }: { onClose: () => void; onAdd: (job: Job
     };
     onAdd(job);
     onClose();
-    toast.success(`Added ${job.role} at ${job.company}`);
+    toast.success(`${job.role} chez ${job.company} ajouté !`);
   };
 
   return (
@@ -229,7 +229,7 @@ export default function TrackerPage() {
   const handleDelete = (id: string) => {
     deleteApplication(id);
     setApplications(getApplications());
-    toast.success('Application removed');
+    toast.success('Candidature supprimée');
   };
 
   const handleDragEnd = (result: DropResult) => {
