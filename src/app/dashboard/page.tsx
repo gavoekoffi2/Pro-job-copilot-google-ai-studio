@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
   FileText, Mail, Search, MessageSquare, Linkedin, DollarSign,
   Kanban, Sparkles, TrendingUp, CheckCircle, Clock, Lightbulb,
-  ArrowRight, FileEdit, Target, Scale, Send,
+  ArrowRight, FileEdit, Target, Scale, Send, Camera,
 } from 'lucide-react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Badge } from '@/components/ui/Badge';
@@ -27,6 +27,7 @@ const tools = [
   { href: '/outreach',        icon: Send,            label: 'Email Generator',       color: 'text-indigo-400',  bg: 'bg-indigo-500/15',  desc: 'Cold emails & follow-ups' },
   { href: '/skills-gap',      icon: Target,          label: 'Skills Gap Analyzer',   color: 'text-teal-400',    bg: 'bg-teal-500/15',    desc: '90-day growth plan' },
   { href: '/compare',         icon: Scale,           label: 'Offer Comparator',      color: 'text-amber-400',   bg: 'bg-amber-500/15',   desc: 'Compare job offers' },
+  { href: '/cv-import',       icon: Camera,          label: 'Import CV Photo',        color: 'text-rose-400',    bg: 'bg-rose-500/15',    desc: 'Scan & digitize CV' },
 ];
 
 const activityIcons: Record<ActivityItem['type'], typeof FileText> = {
