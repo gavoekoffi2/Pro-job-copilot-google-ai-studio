@@ -15,6 +15,7 @@ import {
   Linkedin,
   DollarSign,
   Kanban,
+  FileEdit,
   Menu,
   X,
   ChevronRight,
@@ -29,6 +30,7 @@ const navLinks = [
   { href: '/linkedin',        label: 'LinkedIn',          icon: Linkedin },
   { href: '/salary',          label: 'Salary',            icon: DollarSign },
   { href: '/tracker',         label: 'Tracker',           icon: Kanban },
+  { href: '/cv-builder',      label: 'CV Builder',        icon: FileEdit },
 ];
 
 export function Navbar() {

@@ -13,6 +13,7 @@ import {
   Linkedin,
   DollarSign,
   Kanban,
+  FileEdit,
   Sparkles,
 } from 'lucide-react';
 
@@ -25,6 +26,7 @@ const tools = [
   { href: '/linkedin',        label: 'LinkedIn',       icon: Linkedin,        color: 'text-cyan-400' },
   { href: '/salary',          label: 'Salary',         icon: DollarSign,      color: 'text-emerald-400' },
   { href: '/tracker',         label: 'Tracker',        icon: Kanban,          color: 'text-orange-400' },
+  { href: '/cv-builder',      label: 'CV Builder',     icon: FileEdit,        color: 'text-violet-400' },
 ];
 
 export function Sidebar() {
