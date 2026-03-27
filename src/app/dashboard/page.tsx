@@ -6,10 +6,9 @@ import Link from 'next/link';
 import {
   FileText, Mail, Search, MessageSquare, Linkedin, DollarSign,
   Kanban, Sparkles, TrendingUp, CheckCircle, Clock, Lightbulb,
-  ArrowRight, Loader2,
+  ArrowRight, FileEdit, Target, Scale, Send,
 } from 'lucide-react';
 import { Sidebar } from '@/components/layout/Sidebar';
-import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { GradientText } from '@/components/ui/GradientText';
 import { getStats, getActivity, formatRelativeTime } from '@/lib/storage';
@@ -24,6 +23,10 @@ const tools = [
   { href: '/linkedin',        icon: Linkedin,        label: 'LinkedIn',              color: 'text-cyan-400',    bg: 'bg-cyan-500/15',    desc: 'Optimize profile' },
   { href: '/salary',          icon: DollarSign,      label: 'Salary Negotiator',     color: 'text-emerald-400', bg: 'bg-emerald-500/15', desc: 'Know your worth' },
   { href: '/tracker',         icon: Kanban,          label: 'App Tracker',           color: 'text-orange-400',  bg: 'bg-orange-500/15',  desc: 'Track applications' },
+  { href: '/cv-builder',      icon: FileEdit,        label: 'CV Builder',            color: 'text-violet-400',  bg: 'bg-violet-500/15',  desc: '12 premium templates' },
+  { href: '/outreach',        icon: Send,            label: 'Email Generator',       color: 'text-indigo-400',  bg: 'bg-indigo-500/15',  desc: 'Cold emails & follow-ups' },
+  { href: '/skills-gap',      icon: Target,          label: 'Skills Gap Analyzer',   color: 'text-teal-400',    bg: 'bg-teal-500/15',    desc: '90-day growth plan' },
+  { href: '/compare',         icon: Scale,           label: 'Offer Comparator',      color: 'text-amber-400',   bg: 'bg-amber-500/15',   desc: 'Compare job offers' },
 ];
 
 const activityIcons: Record<ActivityItem['type'], typeof FileText> = {
@@ -136,7 +139,7 @@ export default function DashboardPage() {
             <motion.div key={label} variants={staggerItem}>
               <div className="glass rounded-xl p-4">
                 <div className={`w-9 h-9 rounded-lg ${bg} flex items-center justify-center mb-3`}>
-                  <Icon className={`w-4.5 h-4.5 ${color}`} />
+                  <Icon className={`w-4 h-4 ${color}`} />
                 </div>
                 <div className="text-2xl font-black text-white mb-0.5">{value}</div>
                 <div className="text-xs text-white/50 font-medium">{label}</div>

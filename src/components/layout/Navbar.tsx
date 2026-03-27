@@ -16,21 +16,27 @@ import {
   DollarSign,
   Kanban,
   FileEdit,
+  Target,
+  Scale,
+  Send,
   Menu,
   X,
   ChevronRight,
 } from 'lucide-react';
 
 const navLinks = [
-  { href: '/dashboard',       label: 'Dashboard',         icon: LayoutDashboard },
-  { href: '/resume',          label: 'Resume',            icon: FileText },
-  { href: '/cover-letter',    label: 'Cover Letter',      icon: Mail },
-  { href: '/job-analyzer',    label: 'Job Analyzer',      icon: Search },
-  { href: '/interview-coach', label: 'Interview',         icon: MessageSquare },
-  { href: '/linkedin',        label: 'LinkedIn',          icon: Linkedin },
-  { href: '/salary',          label: 'Salary',            icon: DollarSign },
-  { href: '/tracker',         label: 'Tracker',           icon: Kanban },
-  { href: '/cv-builder',      label: 'CV Builder',        icon: FileEdit },
+  { href: '/dashboard',       label: 'Dashboard',     icon: LayoutDashboard },
+  { href: '/resume',          label: 'Resume',        icon: FileText },
+  { href: '/cover-letter',    label: 'Cover Letter',  icon: Mail },
+  { href: '/job-analyzer',    label: 'Job Analyzer',  icon: Search },
+  { href: '/interview-coach', label: 'Interview',     icon: MessageSquare },
+  { href: '/linkedin',        label: 'LinkedIn',      icon: Linkedin },
+  { href: '/salary',          label: 'Salary',        icon: DollarSign },
+  { href: '/tracker',         label: 'Tracker',       icon: Kanban },
+  { href: '/cv-builder',      label: 'CV Builder',    icon: FileEdit },
+  { href: '/outreach',        label: 'Emails',        icon: Send },
+  { href: '/skills-gap',      label: 'Skills Gap',    icon: Target },
+  { href: '/compare',         label: 'Compare Offers',icon: Scale },
 ];
 
 export function Navbar() {

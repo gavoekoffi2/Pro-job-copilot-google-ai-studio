@@ -8,6 +8,11 @@ import type {
   LinkedInOptimization,
   SalaryInsights,
   CoverLetterTone,
+  OutreachContext,
+  OutreachEmail,
+  JobOffer,
+  OfferComparison,
+  SkillsGapAnalysis,
 } from '@/types';
 
 // ─── Client Singleton ────────────────────────────────────────
@@ -347,6 +352,162 @@ Respond ONLY with a valid JSON object (no markdown):
     return parseJSON<SalaryInsights>(text);
   } catch (error) {
     throw new Error(`Salary insights failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+// ─── Outreach Email Generator ────────────────────────────────
+export async function generateOutreachEmail(
+  ctx: OutreachContext
+): Promise<OutreachEmail> {
+  const model = getModel();
+
+  const typeDescriptions: Record<string, string> = {
+    'cold-email': `a cold outreach email to a hiring manager at ${ctx.companyName} for the ${ctx.jobTitle} position. The sender has not applied yet and wants to make a strong first impression.`,
+    'linkedin-connect': `a LinkedIn connection request message to ${ctx.recipientName || 'a professional'} at ${ctx.companyName}. Keep it under 300 characters for the note field.`,
+    'follow-up': `a follow-up email after applying for the ${ctx.jobTitle} position at ${ctx.companyName}. Polite, concise, showing continued interest.`,
+    'thank-you': `a post-interview thank you email to ${ctx.recipientName || 'the interviewer'} at ${ctx.companyName} for the ${ctx.jobTitle} role. Interview date: ${ctx.interviewDate || 'recently'}.`,
+    'referral': `a referral request email asking ${ctx.referrerName || 'a contact'} to refer them for the ${ctx.jobTitle} role at ${ctx.companyName}.`,
+  };
+
+  const toneDesc: Record<string, string> = {
+    professional: 'formal and polished business language',
+    friendly: 'warm, personable, and approachable while still professional',
+    concise: 'extremely concise and direct — maximum 150 words in the body',
+  };
+
+  const prompt = `You are an expert career coach who writes highly effective professional emails that get responses.
+
+Write ${typeDescriptions[ctx.type]}
+
+Sender name: ${ctx.yourName || 'the candidate'}
+${ctx.yourBackground ? `Sender background: ${ctx.yourBackground}` : ''}
+${ctx.specificInsight ? `Specific insight to mention: ${ctx.specificInsight}` : ''}
+Tone: ${toneDesc[ctx.tone]}
+
+Guidelines:
+- Make it feel genuinely personal, not templated
+- Reference specific details about the company/role to show research
+- Include a clear, low-friction call to action
+- Do NOT use clichés like "I hope this finds you well" or "I am reaching out to..."
+
+Respond ONLY with a valid JSON object (no markdown):
+{
+  "subject": "<compelling email subject line>",
+  "body": "<the complete email body with proper line breaks using \\n>"
+}`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    return parseJSON<OutreachEmail>(text);
+  } catch (error) {
+    throw new Error(`Email generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+// ─── Job Offer Comparator ─────────────────────────────────────
+export async function compareJobOffers(
+  offers: JobOffer[]
+): Promise<OfferComparison> {
+  const model = getModel();
+
+  const offersText = offers.map(o => `
+Company: ${o.company}
+Role: ${o.role}
+Base Salary: $${o.baseSalary.toLocaleString()}
+Bonus: ${o.bonus}%
+Equity: ${o.equity || 'None'}
+Location: ${o.location} (${o.remote})
+Benefits: ${o.benefits || 'Not specified'}
+Notes: ${o.notes || 'None'}
+  `.trim()).join('\n\n---\n\n');
+
+  const companyNames = offers.map(o => o.company);
+
+  const prompt = `You are an expert compensation consultant and career strategist who has helped thousands of professionals evaluate job offers.
+
+Analyze these ${offers.length} job offers and provide a comprehensive comparison:
+
+${offersText}
+
+Respond ONLY with a valid JSON object (no markdown):
+{
+  "winner": "<company name of the best overall offer>",
+  "analyses": {
+    ${companyNames.map(name => `"${name}": {
+      "financialScore": <0-100>,
+      "growthScore": <0-100 career growth potential>,
+      "workLifeScore": <0-100 work-life balance>,
+      "overallScore": <0-100>,
+      "pros": [<3-5 specific pros>],
+      "cons": [<2-4 specific cons>],
+      "fiveYearComp": <estimated 5-year total compensation as a number>
+    }`).join(',\n    ')}
+  },
+  "recommendation": "<2-3 paragraph nuanced recommendation explaining the winner and key tradeoffs>",
+  "questionsToAsk": {
+    ${companyNames.map(name => `"${name}": [<3 smart questions to ask this company before deciding>]`).join(',\n    ')}
+  }
+}`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    return parseJSON<OfferComparison>(text);
+  } catch (error) {
+    throw new Error(`Offer comparison failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+// ─── Skills Gap Analyzer ─────────────────────────────────────
+export async function analyzeSkillsGap(
+  targetRole: string,
+  resumeText?: string,
+  jobDescription?: string
+): Promise<SkillsGapAnalysis> {
+  const model = getModel();
+
+  const resumeSection = resumeText
+    ? `\nCandidate's Current Resume:\n---\n${resumeText}\n---`
+    : '\n(No resume provided — assess gaps for someone new to this field)';
+
+  const jobSection = jobDescription
+    ? `\nTarget Job Description:\n---\n${jobDescription}\n---`
+    : '';
+
+  const prompt = `You are a world-class career development coach and skills expert.
+
+Analyze the skills gap for someone targeting: ${targetRole}
+${resumeSection}
+${jobSection}
+
+Respond ONLY with a valid JSON object (no markdown):
+{
+  "readinessScore": <0-100, how ready they are for this role right now>,
+  "matchingSkills": [<skills from their resume that match the target role, empty array if no resume>],
+  "criticalGaps": [
+    {
+      "skill": "<skill name>",
+      "importance": "<critical|important|nice-to-have>",
+      "learningPath": "<specific, actionable way to learn this skill>",
+      "timeEstimate": "<realistic time to reach proficiency, e.g. '2-4 weeks', '3 months'>",
+      "resources": [<2-3 specific learning resources: course names, books, platforms>]
+    }
+  ],
+  "thirtyDayPlan": [<3-4 specific actionable steps for month 1>],
+  "sixtyDayPlan": [<3-4 specific actionable steps for month 2>],
+  "ninetyDayPlan": [<3-4 specific actionable steps for month 3>],
+  "summary": "<2-3 sentence honest assessment of their readiness and main focus areas>"
+}
+
+Order criticalGaps by importance (critical first). Include 3-8 gaps total.`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    return parseJSON<SkillsGapAnalysis>(text);
+  } catch (error) {
+    throw new Error(`Skills gap analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
