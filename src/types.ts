@@ -87,7 +87,13 @@ export type TemplateId =
   | 'eclat'
   | 'classic'
   | 'tech'
-  | 'nairobi';
+  | 'nairobi'
+  | 'zurich'
+  | 'accra'
+  | 'casablanca'
+  | 'capetown'
+  | 'montreal'
+  | 'savane';
 
 export type TemplateCategory =
   | 'Moderne'

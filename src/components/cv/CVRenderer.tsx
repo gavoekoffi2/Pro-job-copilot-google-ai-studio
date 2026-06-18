@@ -19,6 +19,8 @@ import {
   TechTemplate,
   NairobiTemplate,
 } from './templates/set3';
+import { ZurichTemplate, AccraTemplate, CasablancaTemplate } from './templates/set4';
+import { CapetownTemplate, MontrealTemplate, SavaneTemplate } from './templates/set5';
 
 const REGISTRY: Record<TemplateId, (p: TemplateProps) => React.JSX.Element> = {
   sahel: SahelTemplate,
@@ -33,6 +35,12 @@ const REGISTRY: Record<TemplateId, (p: TemplateProps) => React.JSX.Element> = {
   classic: ClassicTemplate,
   tech: TechTemplate,
   nairobi: NairobiTemplate,
+  zurich: ZurichTemplate,
+  accra: AccraTemplate,
+  casablanca: CasablancaTemplate,
+  capetown: CapetownTemplate,
+  montreal: MontrealTemplate,
+  savane: SavaneTemplate,
 };
 
 interface CVRendererProps {
