@@ -1,12 +1,18 @@
-import { GoogleGenAI, Type, type Schema } from '@google/genai';
 import type { AnalysisResult, CVData } from '../types';
 import { uid } from '../lib/utils';
 
-const apiKey = process.env.API_KEY || '';
-export const hasApiKey = Boolean(apiKey);
+type Schema = Record<string, any>;
 
-const ai = new GoogleGenAI({ apiKey });
-const MODEL = 'gemini-2.5-flash';
+const Type = {
+  OBJECT: 'object',
+  ARRAY: 'array',
+  STRING: 'string',
+  NUMBER: 'number',
+  BOOLEAN: 'boolean',
+} as const;
+
+// La clé OpenRouter reste côté serveur Netlify. Le front appelle seulement la fonction sécurisée.
+export const hasApiKey = true;
 
 /* ----------------------------- Schémas ----------------------------- */
 
@@ -123,11 +129,7 @@ const cvSchema: Schema = {
 /* ----------------------------- Helpers ----------------------------- */
 
 function ensureKey() {
-  if (!hasApiKey) {
-    throw new Error(
-      "Clé API manquante. Définissez GEMINI_API_KEY pour activer l'IA.",
-    );
-  }
+  // La présence de la clé est vérifiée côté fonction Netlify afin de ne jamais exposer OPENROUTER_API_KEY au navigateur.
 }
 
 const VALID_LEVELS = ['Débutant', 'Intermédiaire', 'Avancé', 'Expert'];
@@ -195,13 +197,17 @@ function stripPhoto(data: CVData): CVData {
 }
 
 async function generateJson(prompt: string, schema: Schema): Promise<any> {
-  const response = await ai.models.generateContent({
-    model: MODEL,
-    contents: prompt,
-    config: { responseMimeType: 'application/json', responseSchema: schema },
+  const response = await fetch('/.netlify/functions/ai', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, schema }),
   });
-  if (!response.text) throw new Error("Pas de réponse de l'IA.");
-  return JSON.parse(response.text);
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data?.error || "Erreur lors de l'appel IA OpenRouter.");
+  }
+  return data.result;
 }
 
 /* --------------------------- Fonctions IA --------------------------- */
@@ -346,13 +352,19 @@ Analyse ce document (CV). Transforme son contenu en JSON strictement formaté se
 Extrais le contact, les expériences, formations, compétences, langues, certifications et centres d'intérêt.
 Conserve la langue d'origine. Laisse vide ce qui est absent.
 `;
-  const response = await ai.models.generateContent({
-    model: MODEL,
-    contents: {
-      parts: [{ inlineData: { mimeType, data: base64Data } }, { text: prompt }],
-    },
-    config: { responseMimeType: 'application/json', responseSchema: cvSchema },
+  const response = await fetch('/.netlify/functions/ai', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      prompt,
+      schema: cvSchema,
+      file: { base64Data, mimeType },
+    }),
   });
-  if (!response.text) throw new Error('Impossible de structurer le CV.');
-  return normalizeCV(JSON.parse(response.text));
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data?.error || 'Impossible de structurer le CV.');
+  }
+  return normalizeCV(data.result);
 }

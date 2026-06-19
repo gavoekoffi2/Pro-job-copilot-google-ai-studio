@@ -11,11 +11,13 @@ jobs:
     env:
       NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
       NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL || 'google/gemini-2.5-flash' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Verify Netlify secrets
+      - name: Verify deployment secrets
         run: |
           if [ -z "$NETLIFY_AUTH_TOKEN" ]; then
             echo "::error::NETLIFY_AUTH_TOKEN is missing. Add it in GitHub repo secrets."
@@ -23,6 +25,10 @@ jobs:
           fi
           if [ -z "$NETLIFY_SITE_ID" ]; then
             echo "::error::NETLIFY_SITE_ID is missing. Add it in GitHub repo secrets."
+            exit 1
+          fi
+          if [ -z "$OPENROUTER_API_KEY" ]; then
+            echo "::error::OPENROUTER_API_KEY is missing. Add it in GitHub repo secrets."
             exit 1
           fi
 
@@ -40,6 +46,11 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Sync OpenRouter env to Netlify
+        run: |
+          npx netlify env:set OPENROUTER_API_KEY "$OPENROUTER_API_KEY" --context production --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
+          npx netlify env:set OPENROUTER_MODEL "$OPENROUTER_MODEL" --context production --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
 
       - name: Deploy production
         run: npx netlify deploy --prod --dir=dist --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
