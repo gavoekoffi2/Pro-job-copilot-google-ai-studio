@@ -13,7 +13,15 @@ function json(statusCode, body) {
 
 function requireEnv(name) {
   const value = process.env[name];
-  if (!value) throw new Error(`${name} is not configured`);
+  if (!value) {
+    const error = new Error(
+      name === 'OPENROUTER_API_KEY'
+        ? "Configuration IA serveur manquante : ajoutez OPENROUTER_API_KEY dans Netlify/GitHub pour activer l'analyse, la traduction et l'optimisation de CV."
+        : `${name} is not configured`,
+    );
+    error.statusCode = 503;
+    throw error;
+  }
   return value;
 }
 
@@ -106,6 +114,7 @@ export async function handler(event) {
     const parsed = parseJsonResponse(text);
     return json(200, { result: parsed, model });
   } catch (error) {
-    return json(500, { error: error instanceof Error ? error.message : 'Unknown server error' });
+    const statusCode = Number(error?.statusCode) || 500;
+    return json(statusCode, { error: error instanceof Error ? error.message : 'Unknown server error' });
   }
 }
