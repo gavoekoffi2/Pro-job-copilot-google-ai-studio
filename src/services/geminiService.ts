@@ -11,7 +11,7 @@ const Type = {
   BOOLEAN: 'boolean',
 } as const;
 
-// La clé OpenRouter reste côté serveur Netlify. Le front appelle seulement la fonction sécurisée.
+// Les clés IA restent côté serveur Netlify. Le front appelle seulement la fonction sécurisée.
 export const hasApiKey = true;
 
 /* ----------------------------- Schémas ----------------------------- */
@@ -205,7 +205,7 @@ async function generateJson(prompt: string, schema: Schema): Promise<any> {
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data?.error || "Erreur lors de l'appel IA OpenRouter.");
+    throw new Error(data?.error || "Erreur lors de l'appel IA.");
   }
   return data.result;
 }
