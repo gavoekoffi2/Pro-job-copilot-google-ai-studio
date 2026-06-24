@@ -116,6 +116,7 @@ export interface TemplateMeta {
 export enum AppView {
   HOME = 'HOME',
   BUILDER = 'BUILDER',
+  UPDATE = 'UPDATE',
   ANALYZE = 'ANALYZE',
   TRANSLATE = 'TRANSLATE',
   TAILOR = 'TAILOR',

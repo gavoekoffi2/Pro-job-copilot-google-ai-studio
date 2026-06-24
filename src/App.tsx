@@ -15,6 +15,9 @@ const CVBuilder = lazy(() =>
 const AnalyzeView = lazy(() =>
   import('./components/flows/AnalyzeView').then((m) => ({ default: m.AnalyzeView })),
 );
+const UpdateCVView = lazy(() =>
+  import('./components/flows/UpdateCVView').then((m) => ({ default: m.UpdateCVView })),
+);
 const TranslateView = lazy(() =>
   import('./components/flows/TranslateView').then((m) => ({ default: m.TranslateView })),
 );
@@ -70,6 +73,17 @@ function AppShell() {
                 accent={accent}
                 setAccent={setAccent}
                 locale={locale}
+              />
+            )}
+            {view === AppView.UPDATE && (
+              <UpdateCVView
+                data={cvData}
+                templateId={templateId}
+                setTemplateId={setTemplateId}
+                accent={accent}
+                setAccent={setAccent}
+                locale={locale}
+                onOpenInBuilder={openInBuilder}
               />
             )}
             {view === AppView.ANALYZE && (

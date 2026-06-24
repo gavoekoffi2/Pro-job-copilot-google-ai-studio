@@ -30,6 +30,11 @@ export function Footer({ setView }: { setView: (v: AppView) => void }) {
                 </button>
               </li>
               <li>
+                <button className="hover:text-brand-300" onClick={() => go(AppView.UPDATE)}>
+                  {t.nav.update}
+                </button>
+              </li>
+              <li>
                 <button className="hover:text-brand-300" onClick={() => go(AppView.ANALYZE)}>
                   {t.nav.analyze}
                 </button>

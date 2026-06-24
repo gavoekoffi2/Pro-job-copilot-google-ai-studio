@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FileText, Languages, Menu, ScanSearch, Target, X } from 'lucide-react';
+import { FileText, Languages, Menu, RefreshCw, ScanSearch, Target, X } from 'lucide-react';
 import { AppView } from '../types';
 import { useT } from '../i18n/LanguageContext';
 import { cn } from '../lib/utils';
@@ -26,6 +26,7 @@ export function Navbar({ view, setView }: NavbarProps) {
 
   const items: { view: AppView; label: string; icon: typeof FileText }[] = [
     { view: AppView.BUILDER, label: t.nav.builder, icon: FileText },
+    { view: AppView.UPDATE, label: t.nav.update, icon: RefreshCw },
     { view: AppView.ANALYZE, label: t.nav.analyze, icon: ScanSearch },
     { view: AppView.TRANSLATE, label: t.nav.translate, icon: Languages },
     { view: AppView.TAILOR, label: t.nav.tailor, icon: Target },

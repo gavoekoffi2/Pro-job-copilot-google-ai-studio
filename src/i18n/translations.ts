@@ -39,6 +39,7 @@ export const fr = {
   nav: {
     home: 'Accueil',
     builder: 'Créer un CV',
+    update: 'Mettre à jour un CV',
     analyze: 'Analyser',
     translate: 'Traduire',
     tailor: 'Adapter à une offre',
@@ -229,6 +230,26 @@ export const fr = {
     reanalyze: 'Relancer l’analyse',
   },
 
+  update: {
+    title: 'Mettre à jour un CV importé',
+    subtitle:
+      'Importez un CV existant, écrivez ce que vous voulez ajouter ou corriger, puis laissez l’IA réinsérer la modification au bon endroit avec une rédaction professionnelle.',
+    stepImportTitle: 'Importer le CV',
+    stepImportText: 'PDF, image ou texte : l’IA lit le document et le transforme en CV structuré.',
+    stepInstructionTitle: 'Décrire la mise à jour',
+    stepInstructionText: 'Ajoutez une expérience, une formation, une compétence, un résumé ou une correction.',
+    stepTemplateTitle: 'Choisir le design',
+    stepTemplateText: 'Sélectionnez un template premium et une couleur, puis téléchargez le CV final.',
+    instructionTitle: 'Quelle modification faut-il intégrer ?',
+    instructionHelp:
+      'L’IA analyse le CV importé, comprend la demande, place l’information dans la bonne section et reformule professionnellement sans casser la structure.',
+    instructionPlaceholder:
+      'Ex : Ajoute mon poste de Commercial B2B chez FINAB de janvier 2024 à aujourd’hui, avec prospection, suivi clients et négociation de contrats…',
+    applyUpdate: 'Mettre à jour le CV avec l’IA',
+    updateDone: 'CV mis à jour : la modification a été intégrée et le rendu est prêt.',
+    templateChoiceTitle: 'Template du CV mis à jour',
+  },
+
   translate: {
     title: 'Traduction de CV',
     subtitle:
@@ -295,6 +316,7 @@ export const en: typeof fr = {
   nav: {
     home: 'Home',
     builder: 'Build a CV',
+    update: 'Update a CV',
     analyze: 'Analyze',
     translate: 'Translate',
     tailor: 'Tailor to a job',
@@ -480,6 +502,26 @@ export const en: typeof fr = {
       'E.g. “Add my 2 years of sales experience”, “Highlight leadership”…',
     openInBuilder: 'Open in builder',
     reanalyze: 'Re-run analysis',
+  },
+
+  update: {
+    title: 'Update an imported CV',
+    subtitle:
+      'Import an existing CV, describe what you want to add or correct, and let AI insert the change in the right place with professional wording.',
+    stepImportTitle: 'Import the CV',
+    stepImportText: 'PDF, image or text: AI reads the document and turns it into structured CV data.',
+    stepInstructionTitle: 'Describe the update',
+    stepInstructionText: 'Add an experience, education item, skill, summary or correction.',
+    stepTemplateTitle: 'Choose the design',
+    stepTemplateText: 'Pick a premium template and color, then download the final CV.',
+    instructionTitle: 'What change should be integrated?',
+    instructionHelp:
+      'AI analyzes the imported CV, understands the request, places the information in the right section and rewrites it professionally without breaking the structure.',
+    instructionPlaceholder:
+      'E.g. Add my B2B Sales role at FINAB from January 2024 to today, with prospecting, client follow-up and contract negotiation…',
+    applyUpdate: 'Update CV with AI',
+    updateDone: 'CV updated: the change has been integrated and the rendering is ready.',
+    templateChoiceTitle: 'Template for the updated CV',
   },
 
   translate: {
