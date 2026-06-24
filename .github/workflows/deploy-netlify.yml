@@ -28,8 +28,7 @@ jobs:
             exit 1
           fi
           if [ -z "$OPENROUTER_API_KEY" ]; then
-            echo "::error::OPENROUTER_API_KEY is missing. Add it in GitHub repo secrets."
-            exit 1
+            echo "::warning::OPENROUTER_API_KEY is missing. Deployment will continue, but AI features will return a clear configuration error until the secret is added."
           fi
 
       - name: Setup Node
@@ -49,8 +48,12 @@ jobs:
 
       - name: Sync OpenRouter env to Netlify
         run: |
-          npx netlify env:set OPENROUTER_API_KEY "$OPENROUTER_API_KEY" --context production --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
-          npx netlify env:set OPENROUTER_MODEL "$OPENROUTER_MODEL" --context production --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
+          if [ -n "$OPENROUTER_API_KEY" ]; then
+            npx netlify env:set OPENROUTER_API_KEY "$OPENROUTER_API_KEY" --context production --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
+            npx netlify env:set OPENROUTER_MODEL "$OPENROUTER_MODEL" --context production --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
+          else
+            echo "OPENROUTER_API_KEY not provided in GitHub secrets; keeping existing Netlify production env unchanged."
+          fi
 
       - name: Deploy production
-        run: npx netlify deploy --prod --dir=dist --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
+        run: npx netlify deploy --prod --dir=dist --functions=netlify/functions --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"

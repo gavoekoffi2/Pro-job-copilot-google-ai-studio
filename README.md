@@ -10,7 +10,7 @@ Créez, analysez, traduisez et adaptez un CV professionnel qui décroche des ent
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6)](https://www.typescriptlang.org)
 [![Vite](https://img.shields.io/badge/Vite-6-646cff)](https://vite.dev)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38bdf8)](https://tailwindcss.com)
-[![Gemini](https://img.shields.io/badge/Google%20Gemini-2.5%20Flash-8e75ff)](https://ai.google.dev)
+[![OpenRouter](https://img.shields.io/badge/OpenRouter-Gemini%202.5%20Flash-8e75ff)](https://openrouter.ai/)
 
 </div>
 
@@ -35,7 +35,7 @@ Créez, analysez, traduisez et adaptez un CV professionnel qui décroche des ent
 - **React 19** + **TypeScript** + **Vite 6**
 - **Tailwind CSS 4** (système de design premium sur mesure)
 - **Framer Motion** (animations et motion design)
-- **Google Gemini 2.5 Flash** (`@google/genai`) pour toutes les fonctionnalités IA
+- **OpenRouter** via fonction Netlify sécurisée (`/.netlify/functions/ai`) pour les fonctionnalités IA
 - **jsPDF** + **html2canvas** (export PDF, chargés à la demande)
 - **lucide-react** (icônes)
 
@@ -43,7 +43,7 @@ Créez, analysez, traduisez et adaptez un CV professionnel qui décroche des ent
 
 ### Prérequis
 - Node.js 18+ et npm
-- Une clé API Google Gemini — [obtenez-la ici](https://aistudio.google.com/apikey)
+- Une clé API OpenRouter configurée côté Netlify (`OPENROUTER_API_KEY`)
 
 ### Installation
 
@@ -53,7 +53,7 @@ npm install
 
 # 2. Configurer la clé API
 cp .env.example .env.local
-# puis éditez .env.local et renseignez GEMINI_API_KEY
+# puis éditez .env.local si vous testez les fonctions Netlify localement
 
 # 3. Lancer en développement
 npm run dev
@@ -96,9 +96,8 @@ src/
 Le projet génère des fichiers statiques (`npm run build` → `dist/`) déployables sur
 Vercel, Netlify, Cloudflare Pages, GitHub Pages, etc.
 
-> ⚠️ La clé `GEMINI_API_KEY` est injectée au moment du build. Pour une application
-> publique, il est recommandé de faire transiter les appels Gemini par un petit
-> backend / fonction serverless afin de ne pas exposer la clé côté client.
+> ✅ La clé IA n’est pas exposée au navigateur : les appels passent par la fonction Netlify
+> `/.netlify/functions/ai`, qui lit `OPENROUTER_API_KEY` côté serveur.
 
 ## 🖼️ Crédits
 
@@ -108,5 +107,5 @@ Vercel, Netlify, Cloudflare Pages, GitHub Pages, etc.
 ---
 
 <div align="center">
-<sub>Built with AI Studio · Propulsé par Google Gemini</sub>
+<sub>Propulsé par OpenRouter · IA serveur sécurisée</sub>
 </div>

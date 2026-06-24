@@ -33,7 +33,7 @@ export const fr = {
     poweredByAi: "Propulsé par l'IA",
     errorGeneric: "Une erreur est survenue. Veuillez réessayer.",
     errorNoApiKey:
-      "Clé API manquante. Configurez GEMINI_API_KEY pour activer l'IA.",
+      "Configuration IA serveur manquante. Ajoutez OPENROUTER_API_KEY dans Netlify pour activer l'IA.",
   },
 
   nav: {
@@ -289,7 +289,7 @@ export const en: typeof fr = {
     useCurrentCV: 'Use my current CV',
     poweredByAi: 'Powered by AI',
     errorGeneric: 'Something went wrong. Please try again.',
-    errorNoApiKey: 'Missing API key. Set GEMINI_API_KEY to enable AI.',
+    errorNoApiKey: 'Missing server AI configuration. Set OPENROUTER_API_KEY in Netlify to enable AI.',
   },
 
   nav: {
