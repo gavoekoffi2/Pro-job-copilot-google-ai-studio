@@ -13,6 +13,8 @@ jobs:
       NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
       OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL || 'google/gemini-2.5-flash' }}
+      GENIUSPAY_API_KEY: ${{ secrets.GENIUSPAY_API_KEY }}
+      GENIUSPAY_API_SECRET: ${{ secrets.GENIUSPAY_API_SECRET }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,6 +32,9 @@ jobs:
           if [ -z "$OPENROUTER_API_KEY" ]; then
             echo "::warning::OPENROUTER_API_KEY is missing. Deployment will continue, but AI features will return a clear configuration error until the secret is added."
           fi
+          if [ -z "$GENIUSPAY_API_KEY" ] || [ -z "$GENIUSPAY_API_SECRET" ]; then
+            echo "::warning::GeniusPay credentials are incomplete. Deployment will continue, but checkout will return a clear configuration error until GENIUSPAY_API_KEY and GENIUSPAY_API_SECRET are added."
+          fi
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -46,13 +51,19 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Sync OpenRouter env to Netlify
+      - name: Sync runtime env to Netlify
         run: |
           if [ -n "$OPENROUTER_API_KEY" ]; then
             npx netlify env:set OPENROUTER_API_KEY "$OPENROUTER_API_KEY" --context production --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
             npx netlify env:set OPENROUTER_MODEL "$OPENROUTER_MODEL" --context production --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
           else
             echo "OPENROUTER_API_KEY not provided in GitHub secrets; keeping existing Netlify production env unchanged."
+          fi
+          if [ -n "$GENIUSPAY_API_KEY" ] && [ -n "$GENIUSPAY_API_SECRET" ]; then
+            npx netlify env:set GENIUSPAY_API_KEY "$GENIUSPAY_API_KEY" --context production --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
+            npx netlify env:set GENIUSPAY_API_SECRET "$GENIUSPAY_API_SECRET" --context production --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
+          else
+            echo "GeniusPay credentials incomplete; keeping existing Netlify production env unchanged."
           fi
 
       - name: Deploy production

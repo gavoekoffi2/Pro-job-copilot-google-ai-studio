@@ -37,6 +37,7 @@ import { AddButton, Collapse, ItemCard, Label, TextArea, TextField } from './fie
 import { DesignPanel } from './DesignPanel';
 import { PreviewPane } from './PreviewPane';
 import { TEMPLATE_MAP } from '../../data/templates';
+import { PaymentGateModal } from '../payment/PaymentGateModal';
 
 const LEVELS: SkillLevel[] = ['Débutant', 'Intermédiaire', 'Avancé', 'Expert'];
 
@@ -67,6 +68,7 @@ export function CVBuilder({
   const [aiInput, setAiInput] = useState('');
   const [busy, setBusy] = useState<null | 'apply' | 'optimize' | 'import' | 'pdf'>(null);
   const [error, setError] = useState<string | null>(null);
+  const [paywallOpen, setPaywallOpen] = useState(false);
 
   /* ----------------------------- mutations ----------------------------- */
   const setPersonal = (patch: Partial<CVData['personalInfo']>) =>
@@ -125,7 +127,12 @@ export function CVBuilder({
     }
   };
 
-  const onDownload = async () => {
+  const onDownload = () => {
+    if (!previewRef.current) return;
+    setPaywallOpen(true);
+  };
+
+  const onPaidDownload = async () => {
     if (!previewRef.current) return;
     setBusy('pdf');
     try {
@@ -138,7 +145,8 @@ export function CVBuilder({
   };
 
   return (
-    <div className="mx-auto max-w-[1500px] px-4 pb-16 pt-24 sm:px-6 lg:px-8">
+    <>
+      <div className="mx-auto max-w-[1500px] px-4 pb-16 pt-24 sm:px-6 lg:px-8">
       {/* En-tête */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -453,7 +461,17 @@ export function CVBuilder({
           </div>
         </div>
       </div>
-    </div>
+      </div>
+      <PaymentGateModal
+        open={paywallOpen}
+        cv={data}
+        templateId={templateId}
+        accent={accent}
+        locale={locale}
+        onClose={() => setPaywallOpen(false)}
+        onPaid={onPaidDownload}
+      />
+    </>
   );
 }
 

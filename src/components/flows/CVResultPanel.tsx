@@ -5,6 +5,7 @@ import { useT } from '../../i18n/LanguageContext';
 import { exportElementToPdf, cvFileName } from '../../lib/pdf';
 import { Button } from '../ui/ui';
 import { PreviewPane } from '../builder/PreviewPane';
+import { PaymentGateModal } from '../payment/PaymentGateModal';
 
 /** Aperçu d'un CV résultat + actions (ouvrir dans le créateur, télécharger PDF). */
 export function CVResultPanel({
@@ -23,8 +24,14 @@ export function CVResultPanel({
   const t = useT();
   const ref = useRef<HTMLDivElement>(null);
   const [busy, setBusy] = useState(false);
+  const [paywallOpen, setPaywallOpen] = useState(false);
 
-  const download = async () => {
+  const download = () => {
+    if (!ref.current) return;
+    setPaywallOpen(true);
+  };
+
+  const paidDownload = async () => {
     if (!ref.current) return;
     setBusy(true);
     try {
@@ -35,6 +42,7 @@ export function CVResultPanel({
   };
 
   return (
+    <>
     <div>
       <div className="mb-3 flex flex-wrap gap-2">
         <Button icon={<PencilRuler className="h-4 w-4" />} onClick={onOpenInBuilder}>
@@ -48,5 +56,15 @@ export function CVResultPanel({
         <PreviewPane ref={ref} data={cv} templateId={templateId} accent={accent} locale={locale} />
       </div>
     </div>
+      <PaymentGateModal
+        open={paywallOpen}
+        cv={cv}
+        templateId={templateId}
+        accent={accent}
+        locale={locale}
+        onClose={() => setPaywallOpen(false)}
+        onPaid={paidDownload}
+      />
+    </>
   );
 }
