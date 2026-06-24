@@ -1,4 +1,3 @@
-import { getStore } from '@netlify/blobs';
 import { json, requireEnv } from './_utils.mjs';
 
 const GENIUSPAY_BASE_URL = 'https://geniuspay.ci/api/v1/merchant';
@@ -37,28 +36,6 @@ export async function handler(event) {
     const payment = data.data || {};
     const status = payment.status;
     const paid = status === 'completed';
-
-    const store = getStore('pro-job-copilot-payments');
-    const existing = await store.get(`payment:${reference}`, { type: 'json' }).catch(() => null);
-    if (existing) {
-      const updated = {
-        ...existing,
-        status,
-        paid,
-        paymentMethod: payment.payment_method || payment.payment_provider || existing.paymentMethod,
-        completedAt: payment.completed_at || existing.completedAt,
-        updatedAt: new Date().toISOString(),
-      };
-      await store.setJSON(`payment:${reference}`, updated);
-      if (updated.cvId) await store.setJSON(`cv:${updated.cvId}`, updated);
-      if (paid && updated.user?.email) {
-        await store.setJSON(`user:${updated.user.email}:latest`, {
-          cvId: updated.cvId,
-          reference,
-          updatedAt: updated.updatedAt,
-        });
-      }
-    }
 
     return json(200, {
       reference,

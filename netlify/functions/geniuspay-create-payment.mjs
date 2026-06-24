@@ -1,4 +1,3 @@
-import { getStore } from '@netlify/blobs';
 import { json, requireEnv, siteUrl } from './_utils.mjs';
 
 const GENIUSPAY_BASE_URL = 'https://geniuspay.ci/api/v1/merchant';
@@ -43,7 +42,6 @@ export async function handler(event) {
       return json(400, { error: 'CV invalide ou manquant.' });
     }
 
-    const now = new Date().toISOString();
     const cvId = `cv_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
     const origin = siteUrl();
 
@@ -85,32 +83,13 @@ export async function handler(event) {
       return json(502, { error: "GeniusPay n'a pas retourné de référence ou d'URL de paiement." });
     }
 
-    const store = getStore('pro-job-copilot-payments');
-    const record = {
-      cvId,
-      reference,
-      status: payment.status || 'pending',
-      amount: CV_DOWNLOAD_PRICE_XOF,
-      currency: 'XOF',
-      user,
-      cv,
-      templateId: payload.templateId,
-      accent: payload.accent,
-      locale: payload.locale,
-      paid: false,
-      createdAt: now,
-      updatedAt: now,
-    };
-    await store.setJSON(`payment:${reference}`, record);
-    await store.setJSON(`cv:${cvId}`, record);
-
     return json(200, {
       reference,
       cvId,
       checkoutUrl,
       amount: CV_DOWNLOAD_PRICE_XOF,
       currency: 'XOF',
-      status: record.status,
+      status: payment.status || 'pending',
     });
   } catch (error) {
     const statusCode = Number(error?.statusCode) || 500;
