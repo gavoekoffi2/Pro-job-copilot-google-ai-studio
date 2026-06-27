@@ -12,10 +12,8 @@ jobs:
       NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
       NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-      OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL || 'google/gemini-2.5-flash' }}
-      AI_PROVIDER: ${{ vars.AI_PROVIDER || 'openrouter' }}
-      NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
-      NVIDIA_MODEL: ${{ vars.NVIDIA_MODEL || 'meta/llama-3.1-405b-instruct' }}
+      OPENROUTER_MODEL_ANALYZE: ${{ vars.OPENROUTER_MODEL_ANALYZE || 'google/gemini-2.5-flash' }}
+      OPENROUTER_MODEL_GENERATE: ${{ vars.OPENROUTER_MODEL_GENERATE || 'anthropic/claude-3.7-sonnet' }}
       GENIUSPAY_API_KEY: ${{ secrets.GENIUSPAY_API_KEY }}
       GENIUSPAY_API_SECRET: ${{ secrets.GENIUSPAY_API_SECRET }}
     steps:
@@ -33,10 +31,7 @@ jobs:
             exit 1
           fi
           if [ -z "$OPENROUTER_API_KEY" ]; then
-            echo "::notice::OPENROUTER_API_KEY is missing. Deployment can still use NVIDIA if NVIDIA_API_KEY is configured."
-          fi
-          if [ "$AI_PROVIDER" = "nvidia" ] && [ -z "$NVIDIA_API_KEY" ]; then
-            echo "::warning::AI_PROVIDER=nvidia but NVIDIA_API_KEY is missing. AI features will return a clear configuration error until the secret is added."
+            echo "::warning::OPENROUTER_API_KEY is missing. AI features will return a clear configuration error until the secret is added."
           fi
           if [ -z "$GENIUSPAY_API_KEY" ] || [ -z "$GENIUSPAY_API_SECRET" ]; then
             echo "::warning::GeniusPay credentials are incomplete. Deployment will continue, but checkout will return a clear configuration error until GENIUSPAY_API_KEY and GENIUSPAY_API_SECRET are added."
@@ -61,16 +56,10 @@ jobs:
         run: |
           if [ -n "$OPENROUTER_API_KEY" ]; then
             npx netlify env:set OPENROUTER_API_KEY "$OPENROUTER_API_KEY" --context production --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
-            npx netlify env:set OPENROUTER_MODEL "$OPENROUTER_MODEL" --context production --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
+            npx netlify env:set OPENROUTER_MODEL_ANALYZE "$OPENROUTER_MODEL_ANALYZE" --context production --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
+            npx netlify env:set OPENROUTER_MODEL_GENERATE "$OPENROUTER_MODEL_GENERATE" --context production --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
           else
             echo "OPENROUTER_API_KEY not provided in GitHub secrets; keeping existing Netlify production env unchanged."
-          fi
-          npx netlify env:set AI_PROVIDER "$AI_PROVIDER" --context production --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
-          npx netlify env:set NVIDIA_MODEL "$NVIDIA_MODEL" --context production --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
-          if [ -n "$NVIDIA_API_KEY" ]; then
-            npx netlify env:set NVIDIA_API_KEY "$NVIDIA_API_KEY" --context production --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
-          else
-            echo "NVIDIA_API_KEY not provided in GitHub secrets; keeping existing Netlify production env unchanged."
           fi
           if [ -n "$GENIUSPAY_API_KEY" ] && [ -n "$GENIUSPAY_API_SECRET" ]; then
             npx netlify env:set GENIUSPAY_API_KEY "$GENIUSPAY_API_KEY" --context production --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"

@@ -218,8 +218,11 @@ async function postAi(body: Record<string, unknown>): Promise<any> {
   return data.result;
 }
 
-async function generateJson(prompt: string, schema: Schema): Promise<any> {
-  return postAi({ prompt, schema });
+// 'analyze' -> Gemini (analyse/scoring) ; 'generate' -> Claude (rédaction/extraction).
+type AiTask = 'analyze' | 'generate';
+
+async function generateJson(prompt: string, schema: Schema, task: AiTask = 'generate'): Promise<any> {
+  return postAi({ prompt, schema, task });
 }
 
 /* --------------------------- Fonctions IA --------------------------- */
@@ -244,7 +247,7 @@ Réponds dans la même langue que le CV.
 Contenu du CV :
 ${textToAnalyze.substring(0, 100000)}
 `;
-  return (await generateJson(prompt, analysisSchema)) as AnalysisResult;
+  return (await generateJson(prompt, analysisSchema, 'analyze')) as AnalysisResult;
 }
 
 /** Améliore le contenu d'un CV (orthographe, style, verbes d'action). */
@@ -368,6 +371,7 @@ Conserve la langue d'origine. Laisse vide ce qui est absent.
   const result = await postAi({
     prompt,
     schema: cvSchema,
+    task: 'generate',
     file: { base64Data, mimeType, filename },
   });
   return normalizeCV(result);

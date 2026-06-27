@@ -1,5 +1,4 @@
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const NVIDIA_API_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
 
 // Budget de sortie généreux : une traduction/adaptation renvoie le CV COMPLET en JSON,
 // ce qui peut être volumineux. Un budget trop faible tronque la réponse -> JSON invalide.
@@ -16,16 +15,10 @@ function json(statusCode, body) {
   };
 }
 
-function configuredProvider() {
-  return (process.env.AI_PROVIDER || (process.env.NVIDIA_API_KEY ? 'nvidia' : 'openrouter')).toLowerCase();
-}
-
 function requireEnv(name) {
   const value = process.env[name];
   if (!value) {
     const messages = {
-      NVIDIA_API_KEY:
-        "Configuration IA serveur manquante : ajoutez NVIDIA_API_KEY dans Netlify/GitHub pour activer l'analyse, la traduction et l'optimisation de CV.",
       OPENROUTER_API_KEY:
         "Configuration IA serveur manquante : ajoutez OPENROUTER_API_KEY dans Netlify/GitHub pour activer l'analyse, la traduction et l'optimisation de CV.",
     };
@@ -146,10 +139,6 @@ function extractBalancedJson(text) {
   return null;
 }
 
-function buildTextPrompt(prompt, schema) {
-  return `${systemPromptForSchema(schema)}\n\nTÂCHE UTILISATEUR :\n${prompt}`;
-}
-
 function isPdf(mimeType) {
   return String(mimeType || '').toLowerCase().includes('pdf');
 }
@@ -176,9 +165,18 @@ function openRouterUserContent(prompt, file) {
   return userContent;
 }
 
-async function callOpenRouter({ prompt, schema, file }) {
+// Modèle par tâche, tout via la même clé OpenRouter :
+// - `analyze` : Gemini (rapide, excellent pour l'analyse/scoring ATS) ;
+// - `generate` : Claude (qualité rédactionnelle pour génération/traduction/adaptation/extraction).
+function modelForTask(task) {
+  const gemini = process.env.OPENROUTER_MODEL_ANALYZE || process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash';
+  const claude = process.env.OPENROUTER_MODEL_GENERATE || 'anthropic/claude-3.7-sonnet';
+  return task === 'analyze' ? gemini : claude;
+}
+
+async function callOpenRouter({ prompt, schema, file, task }) {
   const apiKey = requireEnv('OPENROUTER_API_KEY');
-  const model = process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash';
+  const model = modelForTask(task);
   const siteUrl =
     process.env.URL ||
     process.env.DEPLOY_PRIME_URL ||
@@ -230,49 +228,6 @@ async function callOpenRouter({ prompt, schema, file }) {
   };
 }
 
-async function callNvidia({ prompt, schema, file }) {
-  const apiKey = requireEnv('NVIDIA_API_KEY');
-  const model = process.env.NVIDIA_MODEL || 'meta/llama-3.1-405b-instruct';
-
-  if (file?.base64Data && file?.mimeType) {
-    // Le provider NVIDIA est configuré en mode texte : il ne peut pas lire un PDF/image.
-    const error = new Error(
-      "L'import de fichier (PDF/image) nécessite le provider OpenRouter. Configurez OPENROUTER_API_KEY, ou collez le texte du CV.",
-    );
-    error.statusCode = 422;
-    throw error;
-  }
-
-  const requestBody = {
-    model,
-    messages: [{ role: 'user', content: buildTextPrompt(prompt, schema) }],
-    max_tokens: Number(process.env.NVIDIA_MAX_TOKENS || DEFAULT_MAX_TOKENS),
-    temperature: Number(process.env.NVIDIA_TEMPERATURE || 0.2),
-    top_p: Number(process.env.NVIDIA_TOP_P || 0.95),
-    stream: false,
-  };
-
-  const response = await fetch(NVIDIA_API_URL, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(requestBody),
-  });
-
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const message =
-      data?.error?.message || data?.message || data?.detail || `NVIDIA API error ${response.status}`;
-    return { ok: false, status: response.status, error: message };
-  }
-
-  const finishReason = data?.choices?.[0]?.finish_reason;
-  return { ok: true, text: normalizeChatText(data), finishReason, model, provider: 'nvidia' };
-}
-
 export async function handler(event) {
   if (event.httpMethod !== 'POST') {
     return json(405, { error: 'Method not allowed' });
@@ -280,23 +235,15 @@ export async function handler(event) {
 
   try {
     const payload = JSON.parse(event.body || '{}');
-    const { prompt, schema, file } = payload;
+    const { prompt, schema, file, task } = payload;
     if (!prompt || typeof prompt !== 'string') {
       return json(400, { error: 'Missing prompt' });
     }
 
-    const provider = configuredProvider();
-    let result;
-    if (provider === 'nvidia') {
-      result = await callNvidia({ prompt, schema, file });
-    } else if (provider === 'openrouter') {
-      result = await callOpenRouter({ prompt, schema, file });
-    } else {
-      return json(400, { error: `AI_PROVIDER non supporté : ${provider}` });
-    }
+    const result = await callOpenRouter({ prompt, schema, file, task });
 
     if (!result.ok) {
-      return json(result.status || 502, { error: result.error, provider });
+      return json(result.status || 502, { error: result.error, provider: 'openrouter' });
     }
 
     try {
@@ -308,7 +255,7 @@ export async function handler(event) {
         return json(502, {
           error:
             "La réponse de l'IA a été tronquée (limite de longueur). Réessayez ; pour un CV très long, simplifiez-le ou augmentez OPENROUTER_MAX_TOKENS.",
-          provider,
+          provider: 'openrouter',
         });
       }
       throw parseError;
