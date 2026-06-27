@@ -13,9 +13,9 @@ jobs:
       NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
       OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL || 'google/gemini-2.5-flash' }}
-      AI_PROVIDER: ${{ vars.AI_PROVIDER || 'nvidia' }}
+      AI_PROVIDER: ${{ vars.AI_PROVIDER || 'openrouter' }}
       NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
-      NVIDIA_MODEL: ${{ vars.NVIDIA_MODEL || 'google/diffusiongemma-26b-a4b-it' }}
+      NVIDIA_MODEL: ${{ vars.NVIDIA_MODEL || 'meta/llama-3.1-405b-instruct' }}
       GENIUSPAY_API_KEY: ${{ secrets.GENIUSPAY_API_KEY }}
       GENIUSPAY_API_SECRET: ${{ secrets.GENIUSPAY_API_SECRET }}
     steps:
