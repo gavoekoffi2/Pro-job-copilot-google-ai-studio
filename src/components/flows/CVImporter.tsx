@@ -41,7 +41,7 @@ export function CVImporter({
     await run(async () => {
       const url = await fileToDataUrl(file);
       const { mimeType, data } = stripDataUrlPrefix(url);
-      return parseCVFromFile(data, mimeType);
+      return parseCVFromFile(data, mimeType, file.name);
     });
   };
 
