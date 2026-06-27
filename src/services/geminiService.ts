@@ -196,18 +196,33 @@ function stripPhoto(data: CVData): CVData {
   };
 }
 
-async function generateJson(prompt: string, schema: Schema): Promise<any> {
-  const response = await fetch('/.netlify/functions/ai', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt, schema }),
-  });
+async function postAi(body: Record<string, unknown>): Promise<any> {
+  let response: Response;
+  try {
+    response = await fetch('/.netlify/functions/ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new Error('Connexion au service IA impossible. Vérifiez votre connexion et réessayez.');
+  }
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     throw new Error(data?.error || "Erreur lors de l'appel IA.");
   }
+  if (data?.result == null) {
+    throw new Error("Réponse IA incomplète. Réessayez dans un instant.");
+  }
   return data.result;
+}
+
+// 'analyze' -> Gemini (analyse/scoring) ; 'generate' -> Claude (rédaction/extraction).
+type AiTask = 'analyze' | 'generate';
+
+async function generateJson(prompt: string, schema: Schema, task: AiTask = 'generate'): Promise<any> {
+  return postAi({ prompt, schema, task });
 }
 
 /* --------------------------- Fonctions IA --------------------------- */
@@ -232,7 +247,7 @@ Réponds dans la même langue que le CV.
 Contenu du CV :
 ${textToAnalyze.substring(0, 100000)}
 `;
-  return (await generateJson(prompt, analysisSchema)) as AnalysisResult;
+  return (await generateJson(prompt, analysisSchema, 'analyze')) as AnalysisResult;
 }
 
 /** Améliore le contenu d'un CV (orthographe, style, verbes d'action). */
@@ -345,6 +360,7 @@ ${rawText.substring(0, 50000)}
 export async function parseCVFromFile(
   base64Data: string,
   mimeType: string,
+  filename?: string,
 ): Promise<CVData> {
   ensureKey();
   const prompt = `
@@ -352,19 +368,11 @@ Analyse ce document (CV). Transforme son contenu en JSON strictement formaté se
 Extrais le contact, les expériences, formations, compétences, langues, certifications et centres d'intérêt.
 Conserve la langue d'origine. Laisse vide ce qui est absent.
 `;
-  const response = await fetch('/.netlify/functions/ai', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      prompt,
-      schema: cvSchema,
-      file: { base64Data, mimeType },
-    }),
+  const result = await postAi({
+    prompt,
+    schema: cvSchema,
+    task: 'generate',
+    file: { base64Data, mimeType, filename },
   });
-
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(data?.error || 'Impossible de structurer le CV.');
-  }
-  return normalizeCV(data.result);
+  return normalizeCV(result);
 }

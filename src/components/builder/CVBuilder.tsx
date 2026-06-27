@@ -91,7 +91,7 @@ export function CVBuilder({
     try {
       const url = await fileToDataUrl(file);
       const { mimeType, data: b64 } = stripDataUrlPrefix(url);
-      const parsed = await parseCVFromFile(b64, mimeType);
+      const parsed = await parseCVFromFile(b64, mimeType, file.name);
       // Conserver la photo déjà chargée le cas échéant.
       setData({ ...parsed, personalInfo: { ...parsed.personalInfo, photo: data.personalInfo.photo } });
     } catch (e: any) {
