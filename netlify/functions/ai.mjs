@@ -165,13 +165,14 @@ function openRouterUserContent(prompt, file) {
   return userContent;
 }
 
-// Modèle par tâche, tout via la même clé OpenRouter :
-// - `analyze` : Gemini (rapide, excellent pour l'analyse/scoring ATS) ;
-// - `generate` : Claude (qualité rédactionnelle pour génération/traduction/adaptation/extraction).
+// Modèle par tâche, tout via la même clé OpenRouter.
+// Par défaut on garde Gemini pour les deux flux : il est disponible sur OpenRouter,
+// rapide, économique, et compatible avec les imports PDF/image utilisés pour les CV.
+// La génération reste surchargeable via OPENROUTER_MODEL_GENERATE si un autre modèle est validé.
 function modelForTask(task) {
   const gemini = process.env.OPENROUTER_MODEL_ANALYZE || process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash';
-  const claude = process.env.OPENROUTER_MODEL_GENERATE || 'anthropic/claude-3.7-sonnet';
-  return task === 'analyze' ? gemini : claude;
+  const generate = process.env.OPENROUTER_MODEL_GENERATE || 'google/gemini-2.5-flash';
+  return task === 'analyze' ? gemini : generate;
 }
 
 async function callOpenRouter({ prompt, schema, file, task }) {

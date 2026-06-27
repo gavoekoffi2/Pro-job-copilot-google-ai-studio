@@ -13,7 +13,7 @@ jobs:
       NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
       OPENROUTER_MODEL_ANALYZE: ${{ vars.OPENROUTER_MODEL_ANALYZE || 'google/gemini-2.5-flash' }}
-      OPENROUTER_MODEL_GENERATE: ${{ vars.OPENROUTER_MODEL_GENERATE || 'anthropic/claude-3.7-sonnet' }}
+      OPENROUTER_MODEL_GENERATE: ${{ vars.OPENROUTER_MODEL_GENERATE || 'google/gemini-2.5-flash' }}
       GENIUSPAY_API_KEY: ${{ secrets.GENIUSPAY_API_KEY }}
       GENIUSPAY_API_SECRET: ${{ secrets.GENIUSPAY_API_SECRET }}
     steps:

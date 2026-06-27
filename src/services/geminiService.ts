@@ -218,7 +218,8 @@ async function postAi(body: Record<string, unknown>): Promise<any> {
   return data.result;
 }
 
-// 'analyze' -> Gemini (analyse/scoring) ; 'generate' -> Claude (rédaction/extraction).
+// 'analyze' -> analyse/scoring ; 'generate' -> rédaction/extraction/import CV.
+// Les modèles exacts sont choisis côté fonction Netlify via OpenRouter.
 type AiTask = 'analyze' | 'generate';
 
 async function generateJson(prompt: string, schema: Schema, task: AiTask = 'generate'): Promise<any> {
