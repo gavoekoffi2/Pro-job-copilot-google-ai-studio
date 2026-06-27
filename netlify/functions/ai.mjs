@@ -175,7 +175,7 @@ function modelForTask(task) {
   return task === 'analyze' ? gemini : generate;
 }
 
-async function callOpenRouter({ prompt, schema, file, task }) {
+async function callOpenRouter({ prompt, schema, file, task, systemPrompt, temperature = 0.2 }) {
   const apiKey = requireEnv('OPENROUTER_API_KEY');
   const model = modelForTask(task);
   const siteUrl =
@@ -186,10 +186,10 @@ async function callOpenRouter({ prompt, schema, file, task }) {
   const requestBody = {
     model,
     messages: [
-      { role: 'system', content: systemPromptForSchema(schema) },
+      { role: 'system', content: systemPrompt || systemPromptForSchema(schema) },
       { role: 'user', content: openRouterUserContent(prompt, file) },
     ],
-    temperature: 0.2,
+    temperature,
     max_tokens: Number(process.env.OPENROUTER_MAX_TOKENS || DEFAULT_MAX_TOKENS),
     response_format: { type: 'json_object' },
     // Désactive la « réflexion » des modèles Gemini 2.5/o-series : elle consomme le budget de
@@ -229,6 +229,31 @@ async function callOpenRouter({ prompt, schema, file, task }) {
   };
 }
 
+async function repairJsonResponse({ badText, schema, task }) {
+  const repairPrompt = `
+Convertis la réponse ci-dessous en UN SEUL objet JSON valide.
+Règles strictes :
+- Ne garde que le JSON final.
+- Supprime tout markdown, commentaire, phrase explicative, virgule finale ou texte hors JSON.
+- Si une valeur manque, utilise une chaîne vide "" ou un tableau vide [] selon le schéma.
+- Respecte ce schéma autant que possible :
+${JSON.stringify(schema || {}, null, 2)}
+
+Réponse à réparer :
+${String(badText || '').slice(0, 60000)}
+`;
+
+  return callOpenRouter({
+    prompt: repairPrompt,
+    schema,
+    task,
+    file: null,
+    temperature: 0,
+    systemPrompt:
+      'Tu es un réparateur JSON strict. Réponds uniquement avec un objet JSON valide, sans markdown ni texte autour.',
+  });
+}
+
 export async function handler(event) {
   if (event.httpMethod !== 'POST') {
     return json(405, { error: 'Method not allowed' });
@@ -259,7 +284,21 @@ export async function handler(event) {
           provider: 'openrouter',
         });
       }
-      throw parseError;
+
+      // Deuxième chance : certains modèles renvoient parfois du texte explicatif,
+      // des virgules finales ou un objet JSON imparfait malgré response_format.
+      // On répare côté serveur au lieu de bloquer l'utilisateur avec "JSON invalide".
+      const repaired = await repairJsonResponse({ badText: result.text, schema, task });
+      if (!repaired.ok) {
+        return json(repaired.status || 502, { error: repaired.error, provider: 'openrouter' });
+      }
+      const parsed = parseJsonResponse(repaired.text);
+      return json(200, {
+        result: parsed,
+        model: repaired.model,
+        provider: repaired.provider,
+        repaired: true,
+      });
     }
   } catch (error) {
     const statusCode = Number(error?.statusCode) || 500;
