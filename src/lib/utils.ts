@@ -42,6 +42,18 @@ export function stripDataUrlPrefix(dataUrl: string): { mimeType: string; data: s
   return { mimeType: match[1], data: match[2] };
 }
 
+const MAX_AI_UPLOAD_BASE64_CHARS = 4_500_000;
+const MAX_AI_UPLOAD_BYTES = Math.floor((MAX_AI_UPLOAD_BASE64_CHARS * 3) / 4);
+
+function assertAiUploadSize(data: string, kind: 'image' | 'pdf' | 'file') {
+  if (data.length <= MAX_AI_UPLOAD_BASE64_CHARS) return;
+  const maxMb = Math.floor(MAX_AI_UPLOAD_BYTES / (1024 * 1024));
+  const label = kind === 'pdf' ? 'PDF' : kind === 'image' ? 'image' : 'fichier';
+  throw new Error(
+    `Le ${label} est trop lourd pour l'analyse IA. Compressez-le ou envoyez un fichier de moins de ${maxMb} Mo, puis réessayez.`,
+  );
+}
+
 /**
  * Redimensionne une image (scan/photo de CV) et la réencode en JPEG.
  * Objectif : rester sous la limite de taille de requête (fonction Netlify ~6 Mo)
@@ -84,23 +96,47 @@ function downscaleImage(file: File, maxDim = 3000, quality = 0.92): Promise<stri
   });
 }
 
+async function imageToUploadPayload(file: File): Promise<{ mimeType: string; data: string }> {
+  const attempts = [
+    { maxDim: 3000, quality: 0.9 },
+    { maxDim: 2400, quality: 0.84 },
+    { maxDim: 1800, quality: 0.78 },
+    { maxDim: 1400, quality: 0.72 },
+  ];
+
+  for (const attempt of attempts) {
+    const dataUrl = await downscaleImage(file, attempt.maxDim, attempt.quality);
+    const payload = stripDataUrlPrefix(dataUrl);
+    if (payload.data.length <= MAX_AI_UPLOAD_BASE64_CHARS) return payload;
+  }
+
+  const fallback = stripDataUrlPrefix(await downscaleImage(file, 1200, 0.68));
+  assertAiUploadSize(fallback.data, 'image');
+  return fallback;
+}
+
 /**
  * Prépare un fichier (CV) pour l'envoi à l'IA : les images sont compressées /
  * redimensionnées pour fiabiliser l'OCR et éviter de dépasser la limite de
- * requête ; les autres fichiers (PDF) sont transmis tels quels.
+ * requête ; les PDF trop lourds sont bloqués côté navigateur avec un message clair
+ * au lieu de laisser Netlify retourner une erreur texte générique.
  */
 export async function fileToUploadPayload(
   file: File,
 ): Promise<{ mimeType: string; data: string }> {
   if (file.type.startsWith('image/')) {
     try {
-      const dataUrl = await downscaleImage(file);
-      return stripDataUrlPrefix(dataUrl);
-    } catch {
+      return await imageToUploadPayload(file);
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('trop lourd')) throw error;
       /* Repli sur le fichier d'origine si le redimensionnement échoue. */
     }
   }
-  return stripDataUrlPrefix(await fileToDataUrl(file));
+
+  const payload = stripDataUrlPrefix(await fileToDataUrl(file));
+  const kind = file.type.toLowerCase().includes('pdf') ? 'pdf' : file.type.startsWith('image/') ? 'image' : 'file';
+  assertAiUploadSize(payload.data, kind);
+  return payload;
 }
 
 /** Convertit un CVData en texte lisible (pour l'analyse / l'adaptation). */

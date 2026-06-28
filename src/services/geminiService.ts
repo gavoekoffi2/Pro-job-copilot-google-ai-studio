@@ -243,9 +243,23 @@ async function postAi(body: Record<string, unknown>): Promise<any> {
     throw new Error('Connexion au service IA impossible. Vérifiez votre connexion et réessayez.');
   }
 
-  const data = await response.json().catch(() => ({}));
+  const raw = await response.text().catch(() => '');
+  let data: any = {};
+  if (raw) {
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      data = {};
+    }
+  }
+
   if (!response.ok) {
-    throw new Error(data?.error || "Erreur lors de l'appel IA.");
+    const requestId = response.headers.get('x-nf-request-id');
+    const rawMessage = raw && raw.length < 300 ? raw.trim() : '';
+    const fallback = rawMessage
+      ? `Service IA indisponible (${response.status}) : ${rawMessage}${requestId ? ` — ID ${requestId}` : ''}`
+      : `Erreur serveur IA (${response.status}). Réessayez dans un instant${requestId ? ` — ID ${requestId}` : ''}.`;
+    throw new Error(data?.error || fallback);
   }
   if (data?.result == null) {
     throw new Error("Réponse IA incomplète. Réessayez dans un instant.");
