@@ -68,6 +68,21 @@ export async function verifyGeniusPayPayment(reference: string): Promise<{
   return parseApiResponse(response);
 }
 
+export async function recoverCheckoutCv(reference: string): Promise<PendingCheckout> {
+  const response = await fetch(`/.netlify/functions/checkout-cv?reference=${encodeURIComponent(reference)}`);
+  const data = await parseApiResponse(response);
+  return {
+    reference: data.reference || reference,
+    checkoutUrl: '',
+    user: data.user || { name: '', email: '', phone: '' },
+    cv: data.cv,
+    templateId: data.templateId,
+    accent: data.accent || '#10b981',
+    locale: data.locale || 'fr',
+    createdAt: data.createdAt || Date.now(),
+  };
+}
+
 export function loadCheckoutUser(): CheckoutUser | null {
   try {
     const raw = localStorage.getItem(CHECKOUT_USER_KEY);

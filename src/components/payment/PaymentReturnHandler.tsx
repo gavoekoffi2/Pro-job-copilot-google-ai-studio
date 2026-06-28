@@ -6,6 +6,8 @@ import { cvFileName, exportElementToPdf } from '../../lib/pdf';
 import {
   clearPendingCheckout,
   loadPendingCheckout,
+  recoverCheckoutCv,
+  savePendingCheckout,
   verifyGeniusPayPayment,
   type PendingCheckout,
 } from '../../lib/payment';
@@ -39,7 +41,7 @@ export function PaymentReturnHandler() {
       reference,
     };
   });
-  const [pending] = useState<PendingCheckout | null>(() => loadPendingCheckout());
+  const [pending, setPending] = useState<PendingCheckout | null>(() => loadPendingCheckout());
   const [status, setStatus] = useState<'idle' | 'checking' | 'downloading' | 'done' | 'error'>(
     returnParams.paymentState ? 'checking' : 'idle',
   );
@@ -75,13 +77,26 @@ export function PaymentReturnHandler() {
       }
 
       const referenceToVerify = returnParams.reference || pending?.reference;
+      let checkout = pending;
 
-      if (!pending?.cv?.personalInfo || !referenceToVerify) {
+      if (!checkout?.cv?.personalInfo && referenceToVerify) {
+        try {
+          setMessage('Paiement détecté. Récupération sécurisée du CV…');
+          checkout = await recoverCheckoutCv(referenceToVerify);
+          savePendingCheckout(checkout);
+          setPending(checkout);
+        } catch {
+          checkout = null;
+        }
+      }
+
+      if (!checkout?.cv?.personalInfo || !referenceToVerify) {
         setStatus('error');
-        setMessage('Paiement détecté, mais le CV à télécharger n’a pas été retrouvé sur cet appareil. Rouvrez le CV puis cliquez sur Télécharger.');
+        setMessage('Paiement détecté, mais le CV à télécharger n’a pas été retrouvé. Rouvrez le CV puis cliquez sur Télécharger.');
         cleanUrl();
         return;
       }
+      const confirmedCheckout = checkout;
 
       try {
         setStatus('checking');
@@ -97,7 +112,7 @@ export function PaymentReturnHandler() {
         // Laisser React rendre le CV invisible avant capture PDF.
         await new Promise((resolve) => setTimeout(resolve, 250));
         if (!previewRef.current) throw new Error('Aperçu PDF indisponible.');
-        await exportElementToPdf(previewRef.current, cvFileName(pending.cv.personalInfo.fullName));
+        await exportElementToPdf(previewRef.current, cvFileName(confirmedCheckout.cv.personalInfo.fullName));
         clearPendingCheckout();
         setStatus('done');
         setMessage('Paiement confirmé. Le téléchargement du CV a été lancé automatiquement.');

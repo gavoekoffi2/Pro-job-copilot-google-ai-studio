@@ -1,3 +1,4 @@
+import { saveCheckoutRecord } from './_checkout-store.mjs';
 import { json, requireEnv, siteUrl } from './_utils.mjs';
 
 const GENIUSPAY_BASE_URL = 'https://geniuspay.ci/api/v1/merchant';
@@ -82,6 +83,20 @@ export async function handler(event) {
     if (!reference || !checkoutUrl) {
       return json(502, { error: "GeniusPay n'a pas retourné de référence ou d'URL de paiement." });
     }
+
+    await saveCheckoutRecord(reference, {
+      cv,
+      templateId: payload.templateId,
+      accent: payload.accent,
+      locale: payload.locale || 'fr',
+      user,
+      cvId,
+      checkoutUrl,
+      status: payment.status || 'pending',
+      amount: CV_DOWNLOAD_PRICE_XOF,
+      currency: 'XOF',
+      createdAt: Date.now(),
+    });
 
     return json(200, {
       reference,
