@@ -48,7 +48,7 @@ export function stripDataUrlPrefix(dataUrl: string): { mimeType: string; data: s
  * tout en gardant une résolution suffisante pour l'OCR. On ne fait jamais
  * d'upscale (l'échelle est bornée à 1).
  */
-function downscaleImage(file: File, maxDim = 2400, quality = 0.85): Promise<string> {
+function downscaleImage(file: File, maxDim = 3000, quality = 0.92): Promise<string> {
   return new Promise((resolve, reject) => {
     const objectUrl = URL.createObjectURL(file);
     const img = new Image();

@@ -397,15 +397,29 @@ export async function parseCVFromFile(
   }
 
   const prompt = `
-Tu reçois un CV sous forme de fichier (PDF ou image), éventuellement SCANNÉ ou PHOTOGRAPHIÉ
-(par exemple une image collée dans un document puis exportée en PDF).
-Effectue si nécessaire une reconnaissance optique de caractères (OCR) pour lire TOUT le texte
-visible, même lorsque le document est une image ou un scan de mauvaise qualité.
-Transforme ensuite son contenu en JSON strictement formaté selon le schéma fourni.
-Extrais le contact (nom complet, titre/poste, e-mail, téléphone, adresse, sites/LinkedIn),
-le résumé, les expériences, les formations, les compétences, les langues, les certifications
-et les centres d'intérêt.
-Conserve la langue d'origine. Ne laisse vide QUE ce qui est réellement absent du document.
+Tu es un expert en extraction de données de CV avec OCR. Tu reçois un CV sous forme de fichier
+(PDF ou image), éventuellement SCANNÉ ou PHOTOGRAPHIÉ (par ex. une image collée dans un document
+puis exportée en PDF).
+
+ÉTAPES OBLIGATOIRES :
+1. Lis INTÉGRALEMENT le document, de haut en bas et de gauche à droite — y compris les COLONNES
+   latérales, les en-têtes, pieds de page, encadrés et icônes. Fais l'OCR si c'est une image/scan,
+   même de mauvaise qualité.
+2. Repère chaque section : coordonnées, titre/poste, résumé/profil, expériences professionnelles,
+   formations/diplômes, compétences, langues, certifications, centres d'intérêt.
+3. Pour CHAQUE expérience visible, crée une entrée distincte : poste, entreprise, lieu, date de
+   début, date de fin (ou "en cours"), et la description complète des missions/réalisations
+   (une réalisation par ligne).
+4. Pour CHAQUE formation, compétence, langue, certification et centre d'intérêt visible, crée
+   aussi une entrée distincte.
+
+RÈGLES STRICTES :
+- N'OMETS RIEN de ce qui est visible. Ne te limite SURTOUT PAS au nom et aux coordonnées.
+- Recopie fidèlement les textes : n'invente pas, ne résume pas à l'excès les descriptions.
+- Conserve la langue d'origine du document.
+- Ne laisse un champ vide QUE si l'information est réellement absente du document.
+
+Renvoie uniquement le JSON structuré selon le schéma imposé, avec TOUTES les sections remplies.
 `;
   const result = await postAi({
     prompt,

@@ -148,7 +148,7 @@ function isPdf(mimeType) {
  * - PDF -> type `file` (+ plugin file-parser, géré côté requête) ;
  * - Image -> type `image_url`.
  */
-function openRouterUserContent(prompt, file) {
+function openRouterUserContent(prompt, file, imageDetail = 'high') {
   const userContent = [];
   if (file?.base64Data && file?.mimeType) {
     const dataUrl = `data:${file.mimeType};base64,${file.base64Data}`;
@@ -158,11 +158,39 @@ function openRouterUserContent(prompt, file) {
         file: { filename: file.filename || 'cv.pdf', file_data: dataUrl },
       });
     } else {
-      userContent.push({ type: 'image_url', image_url: { url: dataUrl } });
+      // `detail: 'high'` force une analyse fine de l'image : indispensable pour lire le
+      // petit texte d'un CV (au lieu d'une vignette basse résolution où seul le nom ressort).
+      userContent.push({ type: 'image_url', image_url: { url: dataUrl, detail: imageDetail } });
     }
   }
   userContent.push({ type: 'text', text: prompt });
   return userContent;
+}
+
+/**
+ * Convertit un schéma en schéma JSON « strict » (compatible structured outputs) :
+ * chaque objet voit toutes ses propriétés rendues obligatoires et interdit les
+ * propriétés supplémentaires. Cela force le modèle à RAISONNER sur chaque champ
+ * (et donc à remplir toutes les sections du CV) au lieu de ne renvoyer que le nom.
+ */
+function buildStrictSchema(schema) {
+  if (!schema || typeof schema !== 'object') return schema;
+  if (schema.type === 'object' && schema.properties) {
+    const properties = {};
+    for (const [key, value] of Object.entries(schema.properties)) {
+      properties[key] = buildStrictSchema(value);
+    }
+    return {
+      ...schema,
+      properties,
+      required: Object.keys(properties),
+      additionalProperties: false,
+    };
+  }
+  if (schema.type === 'array' && schema.items) {
+    return { ...schema, items: buildStrictSchema(schema.items) };
+  }
+  return schema;
 }
 
 // Modèle par tâche, tout via la même clé OpenRouter.
@@ -183,6 +211,8 @@ async function callOpenRouter({
   systemPrompt,
   temperature = 0.2,
   pdfEngine = 'pdf-text',
+  responseFormat,
+  enableReasoning = false,
 }) {
   const apiKey = requireEnv('OPENROUTER_API_KEY');
   const model = modelForTask(task);
@@ -199,10 +229,11 @@ async function callOpenRouter({
     ],
     temperature,
     max_tokens: Number(process.env.OPENROUTER_MAX_TOKENS || DEFAULT_MAX_TOKENS),
-    response_format: { type: 'json_object' },
-    // Désactive la « réflexion » des modèles Gemini 2.5/o-series : elle consomme le budget de
-    // sortie et fait tronquer le JSON, ce qui provoquait « La réponse IA n'est pas un JSON valide ».
-    reasoning: { enabled: false },
+    response_format: responseFormat || { type: 'json_object' },
+    // Par défaut, la « réflexion » est coupée (elle consomme le budget et tronque le JSON).
+    // Pour l'EXTRACTION depuis un fichier/image, on l'active : le modèle a besoin de
+    // parcourir tout le document, sinon il ne renvoie que l'information la plus saillante (le nom).
+    reasoning: { enabled: enableReasoning },
   };
 
   // Pour les PDF, OpenRouter traite le fichier via le plugin file-parser.
@@ -238,6 +269,19 @@ async function callOpenRouter({
     model,
     provider: 'openrouter',
   };
+}
+
+/**
+ * Appel OpenRouter avec repli de format : tous les modèles/fournisseurs ne
+ * supportent pas `json_schema`. En cas d'échec sur ce format, on réessaie en
+ * `json_object` (le schéma reste décrit dans le prompt système).
+ */
+async function callWithFallback(options) {
+  const result = await callOpenRouter(options);
+  if (!result.ok && options.responseFormat?.type === 'json_schema') {
+    return callOpenRouter({ ...options, responseFormat: { type: 'json_object' } });
+  }
+  return result;
 }
 
 async function repairJsonResponse({ badText, schema, task }) {
@@ -330,6 +374,22 @@ export async function handler(event) {
       return json(400, { error: 'Missing prompt' });
     }
 
+    // Extraction depuis un fichier/image : on durcit la sortie pour que le modèle
+    // remplisse TOUTES les sections du CV (et non seulement le nom) :
+    //  - schéma JSON strict (tous les champs obligatoires) ;
+    //  - raisonnement activé (le modèle parcourt tout le document) ;
+    //  - température 0 (fidélité maximale à ce qui est écrit).
+    const isExtraction = Boolean(file?.base64Data && schema);
+    const responseFormat = isExtraction
+      ? {
+          type: 'json_schema',
+          json_schema: { name: 'cv_extraction', strict: true, schema: buildStrictSchema(schema) },
+        }
+      : undefined;
+    const callOptions = isExtraction
+      ? { responseFormat, enableReasoning: true, temperature: 0 }
+      : {};
+
     // Chaîne de moteurs pour les PDF : on tente d'abord l'extraction du texte
     // (gratuite, parfaite pour un PDF numérique), puis l'OCR (mistral-ocr) si le PDF
     // est scanné / composé d'images et que le texte extrait est vide.
@@ -347,7 +407,7 @@ export async function handler(event) {
     for (const pdfEngine of engines) {
       let result;
       try {
-        result = await callOpenRouter({ prompt, schema, file, task, pdfEngine });
+        result = await callWithFallback({ prompt, schema, file, task, pdfEngine, ...callOptions });
       } catch (e) {
         lastError = e;
         continue;
