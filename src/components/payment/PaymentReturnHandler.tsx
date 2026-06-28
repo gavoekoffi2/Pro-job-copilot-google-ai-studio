@@ -11,6 +11,7 @@ import {
   verifyGeniusPayPayment,
   type PendingCheckout,
 } from '../../lib/payment';
+import { saveAccountCv } from '../../lib/account';
 
 /**
  * Gère le retour GeniusPay (?payment=success/error) et télécharge le CV sauvegardé
@@ -113,6 +114,15 @@ export function PaymentReturnHandler() {
         await new Promise((resolve) => setTimeout(resolve, 250));
         if (!previewRef.current) throw new Error('Aperçu PDF indisponible.');
         await exportElementToPdf(previewRef.current, cvFileName(confirmedCheckout.cv.personalInfo.fullName));
+        await saveAccountCv({
+          user: confirmedCheckout.user,
+          cv: confirmedCheckout.cv,
+          templateId: confirmedCheckout.templateId,
+          accent: confirmedCheckout.accent,
+          locale: confirmedCheckout.locale,
+          paid: true,
+          reference: referenceToVerify,
+        });
         clearPendingCheckout();
         setStatus('done');
         setMessage('Paiement confirmé. Le téléchargement du CV a été lancé automatiquement.');
@@ -144,6 +154,15 @@ export function PaymentReturnHandler() {
       await new Promise((resolve) => setTimeout(resolve, 150));
       if (!previewRef.current) throw new Error('Aperçu PDF indisponible.');
       await exportElementToPdf(previewRef.current, cvFileName(pending.cv.personalInfo.fullName));
+      await saveAccountCv({
+        user: pending.user,
+        cv: pending.cv,
+        templateId: pending.templateId,
+        accent: pending.accent,
+        locale: pending.locale,
+        paid: true,
+        reference: pending.reference,
+      });
       clearPendingCheckout();
       setStatus('done');
       setMessage('Téléchargement relancé.');

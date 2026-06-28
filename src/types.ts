@@ -124,6 +124,7 @@ export enum AppView {
   ANALYZE = 'ANALYZE',
   TRANSLATE = 'TRANSLATE',
   TAILOR = 'TAILOR',
+  ACCOUNT = 'ACCOUNT',
 }
 
 export type Locale = 'fr' | 'en';

@@ -3,6 +3,7 @@ import {
   Award,
   Briefcase,
   Download,
+  Save,
   GraduationCap,
   Heart,
   Languages as LangIcon,
@@ -40,6 +41,8 @@ import { DesignPanel } from './DesignPanel';
 import { PreviewPane } from './PreviewPane';
 import { TEMPLATE_MAP } from '../../data/templates';
 import { PaymentGateModal } from '../payment/PaymentGateModal';
+import { loadAccountUser, saveAccountCv, type SavedCvRecord } from '../../lib/account';
+import type { CheckoutUser } from '../../lib/payment';
 
 const LEVELS: SkillLevel[] = ['Débutant', 'Intermédiaire', 'Avancé', 'Expert'];
 
@@ -73,6 +76,10 @@ interface BuilderProps {
   accent: string;
   setAccent: (c: string) => void;
   locale: Locale;
+  accountUser: CheckoutUser | null;
+  currentCvId?: string;
+  onAccountUserChange: (user: CheckoutUser | null) => void;
+  onSavedToAccount: (record: SavedCvRecord) => void;
 }
 
 export function CVBuilder({
@@ -83,6 +90,10 @@ export function CVBuilder({
   accent,
   setAccent,
   locale,
+  accountUser,
+  currentCvId,
+  onAccountUserChange,
+  onSavedToAccount,
 }: BuilderProps) {
   const t = useT();
   const previewRef = useRef<HTMLDivElement>(null);
@@ -90,7 +101,7 @@ export function CVBuilder({
   const photoRef = useRef<HTMLInputElement>(null);
   const [tab, setTab] = useState<'content' | 'design'>('content');
   const [aiInput, setAiInput] = useState('');
-  const [busy, setBusy] = useState<null | 'apply' | 'optimize' | 'import' | 'pdf'>(null);
+  const [busy, setBusy] = useState<null | 'apply' | 'optimize' | 'import' | 'pdf' | 'save'>(null);
   const [error, setError] = useState<string | null>(null);
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [listening, setListening] = useState(false);
@@ -197,6 +208,35 @@ export function CVBuilder({
     recognition.start();
   };
 
+  const saveCurrentCv = async (paid = false) => {
+    const user = accountUser || loadAccountUser();
+    if (!user) {
+      setError('Créez/connectez votre compte dans “Mes CV”, ou lancez le téléchargement : le compte sera créé automatiquement.');
+      return null;
+    }
+    setError(null);
+    setBusy('save');
+    try {
+      const result = await saveAccountCv({
+        user,
+        cv: data,
+        templateId,
+        accent,
+        locale,
+        cvId: currentCvId,
+        paid,
+      });
+      onAccountUserChange(user);
+      onSavedToAccount(result.cv);
+      return result.cv;
+    } catch (e: any) {
+      setError(e?.message ?? 'Impossible de sauvegarder ce CV.');
+      return null;
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const onDownload = () => {
     if (!previewRef.current) return;
     setPaywallOpen(true);
@@ -207,6 +247,7 @@ export function CVBuilder({
     setBusy('pdf');
     try {
       await exportElementToPdf(previewRef.current, cvFileName(data.personalInfo.fullName));
+      await saveCurrentCv(true);
     } catch (e: any) {
       setError(e?.message ?? t.common.errorGeneric);
     } finally {
@@ -225,15 +266,26 @@ export function CVBuilder({
           </h1>
           <p className="text-ink-500">{t.builder.subtitle}</p>
         </div>
-        <Button
-          size="lg"
-          variant="dark"
-          icon={<Download className="h-5 w-5" />}
-          loading={busy === 'pdf'}
-          onClick={onDownload}
-        >
-          {t.common.downloadPdf}
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button
+            size="lg"
+            variant="outline"
+            icon={<Save className="h-5 w-5" />}
+            loading={busy === 'save'}
+            onClick={() => saveCurrentCv(false)}
+          >
+            Sauvegarder dans mon compte
+          </Button>
+          <Button
+            size="lg"
+            variant="dark"
+            icon={<Download className="h-5 w-5" />}
+            loading={busy === 'pdf'}
+            onClick={onDownload}
+          >
+            {t.common.downloadPdf}
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,460px)_1fr]">

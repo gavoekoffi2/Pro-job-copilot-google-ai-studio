@@ -11,6 +11,7 @@ import {
   verifyGeniusPayPayment,
   type CheckoutUser,
 } from '../../lib/payment';
+import { saveAccountCv, saveAccountUser } from '../../lib/account';
 
 export function PaymentGateModal({
   open,
@@ -51,6 +52,7 @@ export function PaymentGateModal({
     setBusy('create');
     try {
       saveCheckoutUser(user);
+      saveAccountUser(user);
       const checkout = await createGeniusPayCheckout({ user, cv, templateId, accent, locale });
       setReference(checkout.reference);
       setCheckoutUrl(checkout.checkoutUrl);
@@ -85,6 +87,7 @@ export function PaymentGateModal({
         return;
       }
       setBusy('download');
+      await saveAccountCv({ user, cv, templateId, accent, locale, paid: true, reference });
       await onPaid();
       clearPendingCheckout();
       onClose();

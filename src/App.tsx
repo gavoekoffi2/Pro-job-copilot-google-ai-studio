@@ -1,5 +1,5 @@
 import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
-import { AppView, type CVData, type TemplateId } from './types';
+import { AppView, type CVData, type Locale, type TemplateId } from './types';
 import { LanguageProvider, useLanguage } from './i18n/LanguageContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
@@ -8,6 +8,8 @@ import { Spinner } from './components/ui/ui';
 import { exampleCV } from './lib/sampleData';
 import { DEFAULT_TEMPLATE } from './data/templates';
 import { PaymentReturnHandler } from './components/payment/PaymentReturnHandler';
+import { loadAccountUser, type SavedCvRecord } from './lib/account';
+import type { CheckoutUser } from './lib/payment';
 
 // Vues lourdes chargées à la demande (la landing reste instantanée).
 const CVBuilder = lazy(() =>
@@ -25,6 +27,9 @@ const TranslateView = lazy(() =>
 const TailorView = lazy(() =>
   import('./components/flows/TailorView').then((m) => ({ default: m.TailorView })),
 );
+const AccountView = lazy(() =>
+  import('./components/account/AccountView').then((m) => ({ default: m.AccountView })),
+);
 
 function ViewLoader() {
   return (
@@ -40,6 +45,8 @@ function AppShell() {
   const [cvData, setCvData] = useState<CVData>(() => exampleCV());
   const [templateId, setTemplateId] = useState<TemplateId>(DEFAULT_TEMPLATE);
   const [accent, setAccent] = useState('#10b981');
+  const [accountUser, setAccountUser] = useState<CheckoutUser | null>(() => loadAccountUser());
+  const [currentCvId, setCurrentCvId] = useState<string | undefined>(undefined);
 
   // Remonter en haut à chaque changement de vue.
   useEffect(() => {
@@ -48,11 +55,33 @@ function AppShell() {
 
   const openInBuilder = useCallback((cv: CVData) => {
     setCvData(cv);
+    setCurrentCvId(undefined);
     setView(AppView.BUILDER);
+  }, []);
+
+  const openSavedCv = useCallback((payload: {
+    cvId: string;
+    cv: CVData;
+    templateId: TemplateId;
+    accent: string;
+    locale: Locale;
+    user: CheckoutUser;
+  }) => {
+    setCvData(payload.cv);
+    setTemplateId(payload.templateId);
+    setAccent(payload.accent);
+    setCurrentCvId(payload.cvId);
+    setAccountUser(payload.user);
+    setView(AppView.BUILDER);
+  }, []);
+
+  const onSavedToAccount = useCallback((record: SavedCvRecord) => {
+    setCurrentCvId(record.id);
   }, []);
 
   const pickTemplate = useCallback((id: TemplateId) => {
     setTemplateId(id);
+    setCurrentCvId(undefined);
     setView(AppView.BUILDER);
   }, []);
 
@@ -75,6 +104,10 @@ function AppShell() {
                 accent={accent}
                 setAccent={setAccent}
                 locale={locale}
+                accountUser={accountUser}
+                currentCvId={currentCvId}
+                onAccountUserChange={setAccountUser}
+                onSavedToAccount={onSavedToAccount}
               />
             )}
             {view === AppView.UPDATE && (
@@ -114,6 +147,9 @@ function AppShell() {
                 locale={locale}
                 onOpenInBuilder={openInBuilder}
               />
+            )}
+            {view === AppView.ACCOUNT && (
+              <AccountView onOpenCv={openSavedCv} onUserChange={setAccountUser} />
             )}
           </Suspense>
         )}
