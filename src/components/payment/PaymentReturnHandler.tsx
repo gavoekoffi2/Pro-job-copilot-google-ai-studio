@@ -21,9 +21,21 @@ export function PaymentReturnHandler() {
   const [returnParams] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     const payment = params.get('payment');
-    const reference = params.get('reference') || params.get('transaction_id') || params.get('transaction');
+    const reference =
+      params.get('reference') ||
+      params.get('ref') ||
+      params.get('transaction_id') ||
+      params.get('transaction') ||
+      params.get('transaction_reference') ||
+      params.get('payment_reference') ||
+      params.get('order_id') ||
+      params.get('token') ||
+      params.get('id');
+    const hasPaymentReturnParam = Array.from(params.keys()).some((key) =>
+      /payment|genius|reference|transaction|checkout|order|token/i.test(key),
+    );
     return {
-      paymentState: payment || (reference ? 'success' : null),
+      paymentState: payment || (reference || hasPaymentReturnParam ? 'success' : null),
       reference,
     };
   });
@@ -43,8 +55,14 @@ export function PaymentReturnHandler() {
       const url = new URL(window.location.href);
       url.searchParams.delete('payment');
       url.searchParams.delete('reference');
+      url.searchParams.delete('ref');
       url.searchParams.delete('transaction_id');
       url.searchParams.delete('transaction');
+      url.searchParams.delete('transaction_reference');
+      url.searchParams.delete('payment_reference');
+      url.searchParams.delete('order_id');
+      url.searchParams.delete('token');
+      url.searchParams.delete('id');
       window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
     };
 

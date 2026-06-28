@@ -20,9 +20,12 @@ export function requireEnv(name, message) {
 }
 
 export function siteUrl() {
+  // Toujours renvoyer vers le domaine canonique public. Les URLs de deploy preview
+  // Netlify sont immuables : si GeniusPay y renvoie après un vieux paiement,
+  // l'utilisateur peut retomber sur un ancien bundle sans le correctif paiement.
   return (
+    process.env.PUBLIC_SITE_URL ||
     process.env.URL ||
-    process.env.DEPLOY_PRIME_URL ||
     'https://pro-job-copilot-google-ai-studio.netlify.app'
   ).replace(/\/$/, '');
 }
