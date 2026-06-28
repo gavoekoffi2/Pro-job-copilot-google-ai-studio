@@ -4,6 +4,13 @@ const STORE_NAME = 'pro-job-copilot-checkouts';
 const TTL_DAYS = 14;
 
 function store() {
+  const siteID = process.env.NETLIFY_SITE_ID || process.env.SITE_ID;
+  const token = process.env.NETLIFY_BLOBS_TOKEN || process.env.NETLIFY_AUTH_TOKEN;
+
+  if (siteID && token) {
+    return getStore({ name: STORE_NAME, siteID, token });
+  }
+
   return getStore(STORE_NAME);
 }
 
