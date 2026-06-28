@@ -36,6 +36,15 @@ export interface PendingCheckout {
 
 const CHECKOUT_USER_KEY = 'pro_job_copilot_user';
 const PENDING_CHECKOUT_KEY = 'pro_job_copilot_pending_checkout';
+const VALID_TEMPLATE_IDS = new Set([
+  'sahel', 'dakar', 'executive', 'lagos', 'minimal', 'kigali', 'abidjan', 'horizon', 'eclat',
+  'classic', 'tech', 'nairobi', 'zurich', 'accra', 'casablanca', 'capetown', 'montreal',
+  'savane', 'lome', 'kpalime', 'maritime',
+]);
+
+function safeTemplateId(templateId: unknown): TemplateId {
+  return typeof templateId === 'string' && VALID_TEMPLATE_IDS.has(templateId) ? (templateId as TemplateId) : 'lome';
+}
 
 async function parseApiResponse(response: Response) {
   const data = await response.json().catch(() => ({}));
@@ -97,7 +106,7 @@ export async function recoverCheckoutCv(reference: string): Promise<PendingCheck
       certifications: Array.isArray(cv.certifications) ? cv.certifications : [],
       interests: Array.isArray(cv.interests) ? cv.interests : [],
     },
-    templateId: data.templateId || 'lome',
+    templateId: safeTemplateId(data.templateId),
     accent: data.accent || '#10b981',
     locale: data.locale || 'fr',
     createdAt: data.createdAt || Date.now(),
@@ -129,8 +138,34 @@ export function loadPendingCheckout(): PendingCheckout | null {
     const raw = localStorage.getItem(PENDING_CHECKOUT_KEY);
     if (!raw) return null;
     const checkout = JSON.parse(raw) as PendingCheckout;
-    if (!checkout?.reference || !checkout?.cv?.personalInfo || !checkout?.templateId) return null;
-    return checkout;
+    if (!checkout?.reference || !checkout?.cv?.personalInfo) return null;
+    return {
+      ...checkout,
+      templateId: safeTemplateId(checkout.templateId),
+      accent: checkout.accent || '#10b981',
+      locale: checkout.locale || 'fr',
+      cv: {
+        ...checkout.cv,
+        personalInfo: {
+          fullName: checkout.cv.personalInfo.fullName || checkout.user?.name || 'CV',
+          title: checkout.cv.personalInfo.title || '',
+          email: checkout.cv.personalInfo.email || checkout.user?.email || '',
+          phone: checkout.cv.personalInfo.phone || checkout.user?.phone || '',
+          address: checkout.cv.personalInfo.address || '',
+          website: checkout.cv.personalInfo.website || '',
+          linkedin: checkout.cv.personalInfo.linkedin || '',
+          summary: checkout.cv.personalInfo.summary || '',
+          photo: checkout.cv.personalInfo.photo,
+          showPhoto: checkout.cv.personalInfo.showPhoto ?? false,
+        },
+        experiences: Array.isArray(checkout.cv.experiences) ? checkout.cv.experiences : [],
+        education: Array.isArray(checkout.cv.education) ? checkout.cv.education : [],
+        skills: Array.isArray(checkout.cv.skills) ? checkout.cv.skills : [],
+        languages: Array.isArray(checkout.cv.languages) ? checkout.cv.languages : [],
+        certifications: Array.isArray(checkout.cv.certifications) ? checkout.cv.certifications : [],
+        interests: Array.isArray(checkout.cv.interests) ? checkout.cv.interests : [],
+      },
+    };
   } catch {
     return null;
   }
