@@ -23,6 +23,20 @@ export interface CheckoutResult {
   status: string;
 }
 
+export interface PendingCheckout {
+  reference: string;
+  checkoutUrl: string;
+  user: CheckoutUser;
+  cv: CVData;
+  templateId: TemplateId;
+  accent: string;
+  locale: Locale;
+  createdAt: number;
+}
+
+const CHECKOUT_USER_KEY = 'pro_job_copilot_user';
+const PENDING_CHECKOUT_KEY = 'pro_job_copilot_pending_checkout';
+
 async function parseApiResponse(response: Response) {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
@@ -56,7 +70,7 @@ export async function verifyGeniusPayPayment(reference: string): Promise<{
 
 export function loadCheckoutUser(): CheckoutUser | null {
   try {
-    const raw = localStorage.getItem('pro_job_copilot_user');
+    const raw = localStorage.getItem(CHECKOUT_USER_KEY);
     if (!raw) return null;
     const user = JSON.parse(raw);
     if (!user?.name || !user?.email || !user?.phone) return null;
@@ -67,5 +81,25 @@ export function loadCheckoutUser(): CheckoutUser | null {
 }
 
 export function saveCheckoutUser(user: CheckoutUser) {
-  localStorage.setItem('pro_job_copilot_user', JSON.stringify(user));
+  localStorage.setItem(CHECKOUT_USER_KEY, JSON.stringify(user));
+}
+
+export function savePendingCheckout(checkout: PendingCheckout) {
+  localStorage.setItem(PENDING_CHECKOUT_KEY, JSON.stringify(checkout));
+}
+
+export function loadPendingCheckout(): PendingCheckout | null {
+  try {
+    const raw = localStorage.getItem(PENDING_CHECKOUT_KEY);
+    if (!raw) return null;
+    const checkout = JSON.parse(raw) as PendingCheckout;
+    if (!checkout?.reference || !checkout?.cv?.personalInfo || !checkout?.templateId) return null;
+    return checkout;
+  } catch {
+    return null;
+  }
+}
+
+export function clearPendingCheckout() {
+  localStorage.removeItem(PENDING_CHECKOUT_KEY);
 }

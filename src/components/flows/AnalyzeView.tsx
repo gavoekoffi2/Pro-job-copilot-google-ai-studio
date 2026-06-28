@@ -31,7 +31,7 @@ export function AnalyzeView({
   const t = useT();
   const [cv, setCv] = useState<CVData | null>(null);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
-  const [busy, setBusy] = useState<null | 'analyze' | 'refine'>(null);
+  const [busy, setBusy] = useState<null | 'analyze' | 'refine' | 'auto'>(null);
   const [refine, setRefine] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -50,6 +50,29 @@ export function AnalyzeView({
   const onReady = (c: CVData) => {
     setCv(c);
     runAnalysis(c);
+  };
+
+  const onAutoOptimize = async () => {
+    if (!cv || !analysis) return;
+    setError(null);
+    setBusy('auto');
+    try {
+      const instructions = [
+        'Applique automatiquement les optimisations recommandées par l’analyse ci-dessous pour rendre le CV plus fort, plus clair et plus ATS-friendly.',
+        'Respecte strictement les faits existants : ne crée aucune entreprise, date, diplôme, chiffre, langue, compétence ou information personnelle absente du CV.',
+        analysis.weaknesses?.length ? `Points faibles à corriger :\n- ${analysis.weaknesses.join('\n- ')}` : '',
+        analysis.suggestions?.length ? `Conseils à appliquer :\n- ${analysis.suggestions.join('\n- ')}` : '',
+        analysis.keywords?.length ? `Mots-clés pertinents à intégrer seulement s’ils correspondent aux expériences/compétences déjà présentes : ${analysis.keywords.join(', ')}` : '',
+      ]
+        .filter(Boolean)
+        .join('\n\n');
+      const updated = await applyModifications(cv, instructions);
+      setCv(updated);
+      await runAnalysis(updated);
+    } catch (e: any) {
+      setError(e?.message ?? t.common.errorGeneric);
+      setBusy(null);
+    }
   };
 
   const onRefine = async () => {
@@ -80,7 +103,13 @@ export function AnalyzeView({
                 <Spinner /> {t.common.analyzing}
               </div>
             ) : analysis ? (
-              <AnalysisCard analysis={analysis} t={t} loading={busy === 'analyze'} />
+              <AnalysisCard
+                analysis={analysis}
+                t={t}
+                loading={busy === 'analyze'}
+                optimizing={busy === 'auto'}
+                onAutoOptimize={onAutoOptimize}
+              />
             ) : null}
 
             <div className="rounded-2xl border border-brand-100 bg-gradient-to-br from-brand-50 to-white p-5">
@@ -127,10 +156,14 @@ function AnalysisCard({
   analysis,
   t,
   loading,
+  optimizing,
+  onAutoOptimize,
 }: {
   analysis: AnalysisResult;
   t: any;
   loading: boolean;
+  optimizing: boolean;
+  onAutoOptimize: () => void;
 }) {
   return (
     <div className={`space-y-5 rounded-2xl border border-ink-100 bg-white p-5 ${loading ? 'opacity-60' : ''}`}>
@@ -145,6 +178,22 @@ function AnalysisCard({
       <ListBlock icon={<CheckCircle2 className="h-4 w-4" />} color="text-brand-600" title={t.analyze.strengths} items={analysis.strengths} />
       <ListBlock icon={<AlertTriangle className="h-4 w-4" />} color="text-amber-600" title={t.analyze.weaknesses} items={analysis.weaknesses} />
       <ListBlock icon={<Lightbulb className="h-4 w-4" />} color="text-blue-600" title={t.analyze.suggestions} items={analysis.suggestions} />
+
+      <div className="rounded-2xl border border-brand-100 bg-gradient-to-br from-brand-50 to-white p-4">
+        <h4 className="font-display text-base font-extrabold text-ink-950">Optimiser automatiquement ce CV</h4>
+        <p className="mt-1 text-sm leading-relaxed text-ink-600">
+          Appliquer les conseils ci-dessus directement sur le CV, sans inventer d’informations absentes.
+        </p>
+        <Button
+          className="mt-3 w-full"
+          icon={<Wand2 className="h-4 w-4" />}
+          loading={optimizing}
+          disabled={loading || optimizing}
+          onClick={onAutoOptimize}
+        >
+          Appliquer les optimisations proposées
+        </Button>
+      </div>
 
       {analysis.keywords?.length > 0 && (
         <div>

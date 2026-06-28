@@ -19,28 +19,36 @@ interface PreviewPaneProps {
 export const PreviewPane = forwardRef<HTMLDivElement, PreviewPaneProps>(
   ({ data, templateId, accent, locale }, ref) => {
     const wrapRef = useRef<HTMLDivElement>(null);
+    const contentRef = useRef<HTMLDivElement>(null);
     const [scale, setScale] = useState(0.5);
+    const [contentHeight, setContentHeight] = useState(A4_H);
 
     useEffect(() => {
-      const el = wrapRef.current;
-      if (!el) return;
+      const wrapper = wrapRef.current;
+      const content = contentRef.current;
+      if (!wrapper || !content) return;
+
       const update = () => {
-        const w = el.clientWidth;
+        const w = wrapper.clientWidth;
         setScale(Math.min(w / A4_W, 1));
+        setContentHeight(Math.max(A4_H, content.scrollHeight));
       };
+
       update();
       const ro = new ResizeObserver(update);
-      ro.observe(el);
+      ro.observe(wrapper);
+      ro.observe(content);
       return () => ro.disconnect();
-    }, []);
+    }, [data, templateId, accent, locale]);
 
     return (
-      <div ref={wrapRef} className="w-full">
+      <div ref={wrapRef} className="w-full pb-4">
         <div
-          className="mx-auto overflow-hidden rounded-xl shadow-2xl ring-1 ring-ink-200"
-          style={{ width: A4_W * scale, height: A4_H * scale }}
+          className="mx-auto overflow-visible rounded-xl shadow-2xl ring-1 ring-ink-200"
+          style={{ width: A4_W * scale, height: contentHeight * scale }}
         >
           <div
+            ref={contentRef}
             style={{
               transform: `scale(${scale})`,
               transformOrigin: 'top left',

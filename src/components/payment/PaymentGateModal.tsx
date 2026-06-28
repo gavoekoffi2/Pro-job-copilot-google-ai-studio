@@ -6,6 +6,8 @@ import {
   createGeniusPayCheckout,
   loadCheckoutUser,
   saveCheckoutUser,
+  savePendingCheckout,
+  clearPendingCheckout,
   verifyGeniusPayPayment,
   type CheckoutUser,
 } from '../../lib/payment';
@@ -53,7 +55,17 @@ export function PaymentGateModal({
       setReference(checkout.reference);
       setCheckoutUrl(checkout.checkoutUrl);
       setStatus(checkout.status);
-      window.open(checkout.checkoutUrl, '_blank', 'noopener,noreferrer');
+      savePendingCheckout({
+        reference: checkout.reference,
+        checkoutUrl: checkout.checkoutUrl,
+        user,
+        cv,
+        templateId,
+        accent,
+        locale,
+        createdAt: Date.now(),
+      });
+      window.location.assign(checkout.checkoutUrl);
     } catch (e: any) {
       setError(e?.message || 'Impossible de lancer le paiement.');
     } finally {
@@ -74,6 +86,7 @@ export function PaymentGateModal({
       }
       setBusy('download');
       await onPaid();
+      clearPendingCheckout();
       onClose();
     } catch (e: any) {
       setError(e?.message || 'Impossible de vérifier le paiement.');

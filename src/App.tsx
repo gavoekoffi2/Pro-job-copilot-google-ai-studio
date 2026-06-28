@@ -7,6 +7,7 @@ import { LandingPage } from './components/LandingPage';
 import { Spinner } from './components/ui/ui';
 import { exampleCV } from './lib/sampleData';
 import { DEFAULT_TEMPLATE } from './data/templates';
+import { PaymentReturnHandler } from './components/payment/PaymentReturnHandler';
 
 // Vues lourdes chargées à la demande (la landing reste instantanée).
 const CVBuilder = lazy(() =>
@@ -58,6 +59,7 @@ function AppShell() {
   return (
     <div className="min-h-screen bg-ink-50">
       <Navbar view={view} setView={setView} />
+      <PaymentReturnHandler />
 
       <main>
         {view === AppView.HOME ? (

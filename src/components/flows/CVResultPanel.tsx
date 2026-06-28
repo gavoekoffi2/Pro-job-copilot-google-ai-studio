@@ -52,7 +52,7 @@ export function CVResultPanel({
           {t.common.downloadPdf}
         </Button>
       </div>
-      <div className="max-h-[calc(100vh-12rem)] overflow-auto rounded-2xl bg-ink-100/50 p-4 sm:p-6">
+      <div className="max-h-[calc(100vh-7rem)] min-h-[520px] overflow-y-auto overflow-x-hidden overscroll-contain rounded-2xl bg-ink-100/50 p-4 sm:p-6">
         <PreviewPane ref={ref} data={cv} templateId={templateId} accent={accent} locale={locale} />
       </div>
     </div>
