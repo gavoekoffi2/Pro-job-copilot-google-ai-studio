@@ -133,58 +133,73 @@ function ensureKey() {
 }
 
 const VALID_LEVELS = ['Débutant', 'Intermédiaire', 'Avancé', 'Expert'];
+const EMPTY_TEXT_MARKERS = new Set(['null', 'undefined', 'n/a', 'na', 'néant', 'aucun', 'aucune']);
+
+function cleanText(value: unknown): string {
+  if (value == null) return '';
+  const text = String(value).trim();
+  return EMPTY_TEXT_MARKERS.has(text.toLowerCase()) ? '' : text;
+}
+
+function cleanTextArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.map(cleanText).filter(Boolean);
+}
 
 /** Réinjecte des ids stables et des valeurs par défaut sur une sortie IA partielle. */
 export function normalizeCV(partial: any, previous?: CVData): CVData {
   const p = partial?.personalInfo ?? {};
   return {
     personalInfo: {
-      fullName: p.fullName ?? '',
-      title: p.title ?? '',
-      email: p.email ?? '',
-      phone: p.phone ?? '',
-      address: p.address ?? '',
-      website: p.website ?? '',
-      linkedin: p.linkedin ?? '',
-      summary: p.summary ?? '',
+      fullName: cleanText(p.fullName),
+      title: cleanText(p.title),
+      email: cleanText(p.email),
+      phone: cleanText(p.phone),
+      address: cleanText(p.address),
+      website: cleanText(p.website),
+      linkedin: cleanText(p.linkedin),
+      summary: cleanText(p.summary),
       // La photo n'est jamais envoyée à l'IA : on la conserve depuis l'état précédent.
       photo: previous?.personalInfo.photo,
     },
     experiences: (partial?.experiences ?? []).map((e: any) => ({
       id: uid('exp'),
-      title: e.title ?? '',
-      company: e.company ?? '',
-      location: e.location ?? '',
-      startDate: e.startDate ?? '',
-      endDate: e.endDate ?? '',
+      title: cleanText(e.title),
+      company: cleanText(e.company),
+      location: cleanText(e.location),
+      startDate: cleanText(e.startDate),
+      endDate: cleanText(e.endDate),
       current: Boolean(e.current),
-      description: e.description ?? '',
+      description: cleanText(e.description),
     })),
     education: (partial?.education ?? []).map((e: any) => ({
       id: uid('edu'),
-      degree: e.degree ?? '',
-      school: e.school ?? '',
-      location: e.location ?? '',
-      year: e.year ?? '',
-      description: e.description ?? '',
+      degree: cleanText(e.degree),
+      school: cleanText(e.school),
+      location: cleanText(e.location),
+      year: cleanText(e.year),
+      description: cleanText(e.description),
     })),
-    skills: (partial?.skills ?? []).map((s: any) => ({
-      id: uid('sk'),
-      name: s.name ?? '',
-      level: VALID_LEVELS.includes(s.level) ? s.level : 'Intermédiaire',
-    })),
+    skills: (partial?.skills ?? []).map((s: any) => {
+      const level = cleanText(s.level);
+      return {
+        id: uid('sk'),
+        name: cleanText(s.name),
+        level: VALID_LEVELS.includes(level) ? level : 'Intermédiaire',
+      };
+    }),
     languages: (partial?.languages ?? []).map((l: any) => ({
       id: uid('lg'),
-      name: typeof l === 'string' ? l : l.name ?? '',
-      level: typeof l === 'string' ? '' : l.level ?? '',
+      name: typeof l === 'string' ? cleanText(l) : cleanText(l.name),
+      level: typeof l === 'string' ? '' : cleanText(l.level),
     })),
     certifications: (partial?.certifications ?? []).map((c: any) => ({
       id: uid('cert'),
-      name: c.name ?? '',
-      issuer: c.issuer ?? '',
-      year: c.year ?? '',
+      name: cleanText(c.name),
+      issuer: cleanText(c.issuer),
+      year: cleanText(c.year),
     })),
-    interests: partial?.interests ?? [],
+    interests: cleanTextArray(partial?.interests),
   };
 }
 
