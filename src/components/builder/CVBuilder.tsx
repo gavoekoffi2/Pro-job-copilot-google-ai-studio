@@ -6,6 +6,8 @@ import {
   GraduationCap,
   Heart,
   Languages as LangIcon,
+  Mic,
+  MicOff,
   Sparkles,
   Upload,
   User,
@@ -41,6 +43,28 @@ import { PaymentGateModal } from '../payment/PaymentGateModal';
 
 const LEVELS: SkillLevel[] = ['Débutant', 'Intermédiaire', 'Avancé', 'Expert'];
 
+type BrowserSpeechRecognition = {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+
+type SpeechRecognitionEventLike = {
+  results: ArrayLike<ArrayLike<{ transcript: string }>>;
+};
+
+type SpeechRecognitionConstructor = new () => BrowserSpeechRecognition;
+
+type SpeechWindow = Window & {
+  SpeechRecognition?: SpeechRecognitionConstructor;
+  webkitSpeechRecognition?: SpeechRecognitionConstructor;
+};
+
 interface BuilderProps {
   data: CVData;
   setData: (d: CVData) => void;
@@ -69,6 +93,8 @@ export function CVBuilder({
   const [busy, setBusy] = useState<null | 'apply' | 'optimize' | 'import' | 'pdf'>(null);
   const [error, setError] = useState<string | null>(null);
   const [paywallOpen, setPaywallOpen] = useState(false);
+  const [listening, setListening] = useState(false);
+  const speechRef = useRef<BrowserSpeechRecognition | null>(null);
 
   /* ----------------------------- mutations ----------------------------- */
   const setPersonal = (patch: Partial<CVData['personalInfo']>) =>
@@ -91,8 +117,15 @@ export function CVBuilder({
     try {
       const { mimeType, data: b64 } = await fileToUploadPayload(file);
       const parsed = await parseCVFromFile(b64, mimeType, file.name);
-      // Conserver la photo déjà chargée le cas échéant.
-      setData({ ...parsed, personalInfo: { ...parsed.personalInfo, photo: data.personalInfo.photo } });
+      // Conserver la photo et le choix d'affichage déjà chargés le cas échéant.
+      setData({
+        ...parsed,
+        personalInfo: {
+          ...parsed.personalInfo,
+          photo: data.personalInfo.photo,
+          showPhoto: data.personalInfo.showPhoto ?? true,
+        },
+      });
     } catch (e: any) {
       setError(e?.message ?? t.common.errorGeneric);
     } finally {
@@ -124,6 +157,44 @@ export function CVBuilder({
     } finally {
       setBusy(null);
     }
+  };
+
+  const onVoiceInput = () => {
+    setError(null);
+    if (listening) {
+      speechRef.current?.stop();
+      setListening(false);
+      return;
+    }
+
+    const speechWindow = window as SpeechWindow;
+    const Recognition = speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
+    if (!Recognition) {
+      setError(t.builder.ai.voiceUnsupported);
+      return;
+    }
+
+    const recognition = new Recognition();
+    recognition.lang = locale === 'fr' ? 'fr-FR' : 'en-US';
+    recognition.interimResults = false;
+    recognition.continuous = false;
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results)
+        .map((result) => result[0]?.transcript ?? '')
+        .join(' ')
+        .trim();
+      if (transcript) {
+        setAiInput((current) => `${current}${current.trim() ? ' ' : ''}${transcript}`);
+      }
+    };
+    recognition.onerror = () => {
+      setError(t.builder.ai.voiceError);
+      setListening(false);
+    };
+    recognition.onend = () => setListening(false);
+    speechRef.current = recognition;
+    setListening(true);
+    recognition.start();
   };
 
   const onDownload = () => {
@@ -208,6 +279,14 @@ export function CVBuilder({
                   className="w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm text-ink-900 placeholder:text-ink-300 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                 />
                 <Button
+                  variant={listening ? 'dark' : 'outline'}
+                  icon={listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                  onClick={onVoiceInput}
+                  className="shrink-0"
+                >
+                  {listening ? t.builder.ai.voiceStop : t.builder.ai.voiceStart}
+                </Button>
+                <Button
                   icon={<Wand2 className="h-4 w-4" />}
                   loading={busy === 'apply'}
                   onClick={onApply}
@@ -271,6 +350,15 @@ export function CVBuilder({
                     addLabel={t.builder.fields.addPhoto}
                     removeLabel={t.builder.fields.removePhoto}
                   />
+                  <label className="flex items-center gap-2 rounded-xl border border-ink-100 bg-white px-3 py-2 text-xs font-semibold text-ink-600">
+                    <input
+                      type="checkbox"
+                      checked={data.personalInfo.showPhoto !== false}
+                      onChange={(e) => setPersonal({ showPhoto: e.target.checked })}
+                      className="rounded border-ink-300 text-brand-600 focus:ring-brand-500"
+                    />
+                    {t.builder.fields.showPhoto}
+                  </label>
                   <input
                     ref={photoRef}
                     type="file"

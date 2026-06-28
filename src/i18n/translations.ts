@@ -166,6 +166,7 @@ export const fr = {
       photo: 'Photo',
       addPhoto: 'Ajouter une photo',
       removePhoto: 'Retirer',
+      showPhoto: 'Afficher la photo sur le CV',
       company: 'Entreprise',
       role: 'Poste',
       location: 'Lieu',
@@ -190,7 +191,11 @@ export const fr = {
       improveExp: 'Reformuler cette expérience',
       askLabel: 'Demander une modification à l’IA',
       askPlaceholder:
-        'Ex : « Ajoute une expérience de stagiaire marketing chez Orange en 2023 » ou « Rends mon résumé plus percutant »…',
+        'Ex : « Ajoute une expérience de responsable clientèle chez Togocom à Lomé en 2024 » ou « Rends mon résumé plus percutant »…',
+      voiceStart: 'Parler',
+      voiceStop: 'Arrêter',
+      voiceUnsupported: 'La dictée vocale gratuite du navigateur n’est pas disponible sur cet appareil. Essayez Chrome ou Edge.',
+      voiceError: 'Le micro n’a pas pu transcrire. Vérifiez l’autorisation du navigateur puis réessayez.',
       applied: "Modifications appliquées par l'IA",
     },
     design: {
@@ -440,6 +445,7 @@ export const en: typeof fr = {
       photo: 'Photo',
       addPhoto: 'Add a photo',
       removePhoto: 'Remove',
+      showPhoto: 'Show photo on CV',
       company: 'Company',
       role: 'Role',
       location: 'Location',
@@ -464,7 +470,11 @@ export const en: typeof fr = {
       improveExp: 'Rephrase this experience',
       askLabel: 'Ask AI for a change',
       askPlaceholder:
-        'E.g. “Add a marketing intern role at Orange in 2023” or “Make my summary more impactful”…',
+        'E.g. “Add a customer success role at Togocom in Lomé in 2024” or “Make my summary more impactful”…',
+      voiceStart: 'Speak',
+      voiceStop: 'Stop',
+      voiceUnsupported: 'Free browser voice dictation is not available on this device. Try Chrome or Edge.',
+      voiceError: 'The microphone could not transcribe. Check browser permission and try again.',
       applied: 'Changes applied by AI',
     },
     design: {

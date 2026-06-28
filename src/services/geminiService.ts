@@ -161,6 +161,7 @@ export function normalizeCV(partial: any, previous?: CVData): CVData {
       summary: cleanText(p.summary),
       // La photo n'est jamais envoyée à l'IA : on la conserve depuis l'état précédent.
       photo: previous?.personalInfo.photo,
+      showPhoto: previous?.personalInfo.showPhoto ?? true,
     },
     experiences: (partial?.experiences ?? []).map((e: any) => ({
       id: uid('exp'),
@@ -305,10 +306,13 @@ export async function optimizeCVContent(currentData: CVData): Promise<CVData> {
   ensureKey();
   const prompt = `
 Tu es un rédacteur de CV professionnel. Améliore le contenu du CV JSON suivant.
+RÈGLE ANTI-HALLUCINATION PRIORITAIRE : n'ajoute jamais de diplôme, entreprise, date, chiffre,
+compétence, langue, certification, lieu ou information personnelle qui n'existe pas déjà dans le CV.
+Si une donnée manque, laisse-la vide ou conserve l'information existante ; ne la remplace pas par une donnée plausible.
 1. Corrige l'orthographe et la grammaire.
-2. Rends le résumé ("summary") plus percutant et orienté résultats.
-3. Reformule les descriptions d'expériences avec des verbes d'action et des réalisations chiffrées si possible.
-4. Conserve les faits (dates, noms, entreprises) ; améliore uniquement la forme.
+2. Rends le résumé ("summary") plus percutant sans ajouter de faits nouveaux.
+3. Reformule les descriptions d'expériences avec des verbes d'action, mais n'ajoute des chiffres QUE s'ils sont déjà présents.
+4. Conserve strictement les faits (dates, noms, entreprises, lieux, diplômes).
 5. Garde la même langue que le CV original.
 
 Données actuelles :
@@ -331,7 +335,11 @@ export async function applyModifications(
 Tu es un assistant de rédaction de CV. Voici le CV actuel au format JSON et une demande de modification.
 Applique la demande en INTÉGRANT le changement au bon endroit (bonne section, bon ordre chronologique),
 avec une rédaction professionnelle et une mise en forme cohérente avec le reste du CV.
-Conserve tout le contenu existant non concerné par la demande.
+RÈGLE ANTI-HALLUCINATION PRIORITAIRE :
+- Si l'utilisateur demande d'ajouter une information précise, ajoute uniquement les détails explicitement fournis dans la demande.
+- Si un détail est absent (date, entreprise, lieu, diplôme, chiffre, contact), laisse ce champ vide au lieu d'inventer.
+- Ne crée jamais d'expérience, diplôme, certification, langue ou compétence plausible pour "compléter".
+- Conserve tout le contenu existant non concerné par la demande sans inventer de nouveaux faits.
 Réponds dans la même langue que le CV. Renvoie le CV COMPLET mis à jour (schéma JSON imposé).
 
 Demande de modification :
@@ -395,9 +403,11 @@ export async function parseCVFromText(rawText: string): Promise<CVData> {
   ensureKey();
   const prompt = `
 Transforme le texte brut de ce CV en JSON strictement formaté selon le schéma.
-Extrais toutes les informations possibles. Laisse vide les champs absents.
-Pour les compétences, estime le niveau (Intermédiaire/Avancé) selon le contexte.
-Conserve la langue d'origine.
+RÈGLE ANTI-HALLUCINATION PRIORITAIRE : extrais uniquement les informations écrites dans le texte.
+N'invente jamais de nom, e-mail, téléphone, poste, entreprise, dates, école, diplôme, compétence,
+langue, certification, niveau ou centre d'intérêt. Si une information est absente ou illisible, laisse
+le champ vide ou le tableau vide. Ne complète pas avec des exemples.
+Extrais toutes les informations visibles et conserve la langue d'origine.
 
 Texte brut :
 ${rawText.substring(0, 50000)}
@@ -442,11 +452,16 @@ puis exportée en PDF).
 4. Pour CHAQUE formation, compétence, langue, certification et centre d'intérêt visible, crée
    aussi une entrée distincte.
 
-RÈGLES STRICTES :
+RÈGLES STRICTES ANTI-HALLUCINATION :
 - N'OMETS RIEN de ce qui est visible. Ne te limite SURTOUT PAS au nom et aux coordonnées.
-- Recopie fidèlement les textes : n'invente pas, ne résume pas à l'excès les descriptions.
+- Recopie fidèlement les textes visibles : n'invente pas, ne complète pas, ne devine pas.
+- Si une zone est illisible ou si une donnée n'est pas clairement présente, laisse le champ vide ou le tableau vide.
+- Ne génère jamais de diplôme, école, entreprise, poste, date, lieu, chiffre, langue, niveau,
+  certification ou compétence plausible pour remplacer une donnée absente.
+- Pour les niveaux de compétences/langues, utilise uniquement un niveau écrit dans le CV ; sinon laisse vide
+  ou utilise "Intermédiaire" seulement si le schéma l'impose pour une compétence explicitement visible.
 - Conserve la langue d'origine du document.
-- Ne laisse un champ vide QUE si l'information est réellement absente du document.
+- Ne laisse un champ vide QUE si l'information est réellement absente ou illisible dans le document.
 
 Renvoie uniquement le JSON structuré selon le schéma imposé, avec TOUTES les sections remplies.
 `;

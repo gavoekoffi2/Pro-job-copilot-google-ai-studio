@@ -21,6 +21,7 @@ import {
 } from './templates/set3';
 import { ZurichTemplate, AccraTemplate, CasablancaTemplate } from './templates/set4';
 import { CapetownTemplate, MontrealTemplate, SavaneTemplate } from './templates/set5';
+import { LomeTemplate, KpalimeTemplate, MaritimeTemplate } from './templates/set6';
 
 const REGISTRY: Record<TemplateId, (p: TemplateProps) => React.JSX.Element> = {
   sahel: SahelTemplate,
@@ -41,6 +42,9 @@ const REGISTRY: Record<TemplateId, (p: TemplateProps) => React.JSX.Element> = {
   capetown: CapetownTemplate,
   montreal: MontrealTemplate,
   savane: SavaneTemplate,
+  lome: LomeTemplate,
+  kpalime: KpalimeTemplate,
+  maritime: MaritimeTemplate,
 };
 
 interface CVRendererProps {
@@ -57,9 +61,12 @@ interface CVRendererProps {
 export const CVRenderer = forwardRef<HTMLDivElement, CVRendererProps>(
   ({ templateId, data, accent, locale }, ref) => {
     const Template = REGISTRY[templateId] ?? SahelTemplate;
+    const renderData = data.personalInfo.showPhoto === false
+      ? { ...data, personalInfo: { ...data.personalInfo, photo: '__HIDE_PHOTO__' } }
+      : data;
     return (
       <div ref={ref} className="origin-top bg-white">
-        <Template data={data} accent={accent} locale={locale} />
+        <Template data={renderData} accent={accent} locale={locale} />
       </div>
     );
   },

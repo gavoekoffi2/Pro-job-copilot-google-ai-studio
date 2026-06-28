@@ -14,6 +14,7 @@ export function emptyCV(): CVData {
       linkedin: '',
       summary: '',
       photo: undefined,
+      showPhoto: true,
     },
     experiences: [],
     education: [],
@@ -28,23 +29,24 @@ export function emptyCV(): CVData {
 export function exampleCV(): CVData {
   return {
     personalInfo: {
-      fullName: 'Awa Diallo',
+      fullName: 'Afi Mensah',
       title: 'Cheffe de Projet Digital',
-      email: 'awa.diallo@email.com',
-      phone: '+225 07 12 34 56 78',
-      address: 'Abidjan, Côte d’Ivoire',
-      website: 'awadiallo.pro',
-      linkedin: 'linkedin.com/in/awadiallo',
+      email: 'afi.mensah@email.com',
+      phone: '+228 90 12 34 56',
+      address: 'Lomé, Togo',
+      website: 'afimensah.pro',
+      linkedin: 'linkedin.com/in/afimensah',
       summary:
-        "Cheffe de projet digital avec 6 ans d’expérience dans la conduite de produits numériques à fort impact en Afrique de l’Ouest. Spécialiste de la transformation digitale, je pilote des équipes pluridisciplinaires pour livrer des solutions qui augmentent l’engagement et le chiffre d’affaires.",
+        "Cheffe de projet digital avec 6 ans d’expérience dans la conduite de produits numériques à fort impact au Togo et en Afrique de l’Ouest. Spécialiste de la transformation digitale, je pilote des équipes pluridisciplinaires pour livrer des solutions qui augmentent l’engagement client et la performance opérationnelle.",
       photo: undefined,
+      showPhoto: true,
     },
     experiences: [
       {
         id: uid('exp'),
         title: 'Cheffe de Projet Digital Senior',
-        company: 'Orange Digital Center',
-        location: 'Abidjan',
+        company: 'Togo Digital Agency',
+        location: 'Lomé',
         startDate: '2022',
         endDate: '',
         current: true,
@@ -54,8 +56,8 @@ export function exampleCV(): CVData {
       {
         id: uid('exp'),
         title: 'Chargée de Projet Produit',
-        company: 'Wave Mobile Money',
-        location: 'Dakar',
+        company: 'Moov Africa Togo',
+        location: 'Lomé',
         startDate: '2019',
         endDate: '2022',
         current: false,
@@ -67,16 +69,16 @@ export function exampleCV(): CVData {
       {
         id: uid('edu'),
         degree: 'Master en Management des Systèmes d’Information',
-        school: 'INP-HB',
-        location: 'Yamoussoukro',
+        school: 'Université de Lomé',
+        location: 'Lomé',
         year: '2018',
         description: 'Major de promotion — mention Très Bien.',
       },
       {
         id: uid('edu'),
         degree: 'Licence en Informatique de Gestion',
-        school: 'Université Félix Houphouët-Boigny',
-        location: 'Abidjan',
+        school: 'ESGIS Togo',
+        location: 'Lomé',
         year: '2016',
         description: '',
       },
@@ -92,7 +94,7 @@ export function exampleCV(): CVData {
     languages: [
       { id: uid('lg'), name: 'Français', level: 'Natif' },
       { id: uid('lg'), name: 'Anglais', level: 'Courant' },
-      { id: uid('lg'), name: 'Dioula', level: 'Courant' },
+      { id: uid('lg'), name: 'Éwé', level: 'Courant' },
     ],
     certifications: [
       {

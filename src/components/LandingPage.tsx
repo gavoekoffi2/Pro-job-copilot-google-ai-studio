@@ -34,12 +34,12 @@ interface LandingProps {
 }
 
 const SHOWCASE: TemplateId[] = [
+  'lome',
+  'kpalime',
+  'maritime',
   'sahel',
   'dakar',
   'eclat',
-  'lagos',
-  'nairobi',
-  'horizon',
 ];
 
 export function LandingPage({ setView, onPickTemplate }: LandingProps) {
@@ -115,7 +115,7 @@ function Hero({ t, setView }: { t: any; setView: (v: AppView) => void }) {
           <div className="mt-12 flex flex-wrap gap-8">
             <Stat value="12K+" label={t.hero.stat1} />
             <Stat value="3×" label={t.hero.stat2} />
-            <Stat value="12" label={t.hero.stat3} />
+            <Stat value="15" label={t.hero.stat3} />
           </div>
         </motion.div>
 
@@ -369,30 +369,30 @@ function Testimonials({ t, locale }: { t: any; locale: string }) {
   const data = [
     {
       id: FACE_IMAGES.kwame,
-      name: 'Kwame Mensah',
-      role: locale === 'fr' ? 'Développeur Full-Stack — Accra' : 'Full-Stack Developer — Accra',
+      name: 'Kodjo Mensah',
+      role: locale === 'fr' ? 'Développeur Full-Stack — Lomé' : 'Full-Stack Developer — Lomé',
       quote:
         locale === 'fr'
-          ? "J'ai décroché 3 entretiens en deux semaines. L'analyse IA a transformé mon CV."
-          : 'I landed 3 interviews in two weeks. The AI analysis transformed my resume.',
+          ? "J'ai décroché 3 entretiens à Lomé en deux semaines. L'analyse IA a transformé mon CV."
+          : 'I landed 3 interviews in Lomé in two weeks. The AI analysis transformed my resume.',
     },
     {
       id: FACE_IMAGES.fatou,
-      name: 'Fatou Ndiaye',
-      role: locale === 'fr' ? 'Data Analyst — Dakar' : 'Data Analyst — Dakar',
+      name: 'Afi Lawson',
+      role: locale === 'fr' ? 'Data Analyst — Lomé' : 'Data Analyst — Lomé',
       quote:
         locale === 'fr'
-          ? 'La traduction en anglais était parfaite, avec le bon vocabulaire métier. Bluffant.'
-          : 'The English translation was flawless, with the right industry wording. Stunning.',
+          ? 'La traduction en anglais était parfaite, avec le bon vocabulaire métier pour postuler au Togo et à distance.'
+          : 'The English translation was flawless, with the right wording to apply in Togo and remotely.',
     },
     {
       id: FACE_IMAGES.amenan,
       name: 'Aménan Koffi',
-      role: locale === 'fr' ? 'Cheffe de projet — Abidjan' : 'Project Manager — Abidjan',
+      role: locale === 'fr' ? 'Cheffe de projet — Kara' : 'Project Manager — Kara',
       quote:
         locale === 'fr'
-          ? 'Les modèles sont magnifiques et vraiment professionnels. Mon CV inspire confiance.'
-          : 'The templates are gorgeous and truly professional. My CV inspires confidence.',
+          ? 'Les modèles Lomé et Kpalimé sont magnifiques. Mon CV inspire confiance dès le premier regard.'
+          : 'The Lomé and Kpalimé templates are gorgeous. My CV inspires confidence at first glance.',
     },
   ];
   return (

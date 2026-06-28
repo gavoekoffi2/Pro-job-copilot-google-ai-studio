@@ -53,6 +53,7 @@ export interface PersonalInfo {
   linkedin: string;
   summary: string;
   photo?: string; // chaîne base64 (data URL)
+  showPhoto?: boolean; // false = masquer la photo sur le CV exporté, sans supprimer l'image chargée
 }
 
 export interface CVData {
@@ -93,7 +94,10 @@ export type TemplateId =
   | 'casablanca'
   | 'capetown'
   | 'montreal'
-  | 'savane';
+  | 'savane'
+  | 'lome'
+  | 'kpalime'
+  | 'maritime';
 
 export type TemplateCategory =
   | 'Moderne'

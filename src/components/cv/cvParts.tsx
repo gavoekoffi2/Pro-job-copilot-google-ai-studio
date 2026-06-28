@@ -134,6 +134,7 @@ export function ProfilePhoto({
   accent: string;
   className?: string;
 }) {
+  if (src === '__HIDE_PHOTO__') return null;
   if (src) {
     return (
       <img

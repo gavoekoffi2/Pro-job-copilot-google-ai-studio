@@ -12,6 +12,9 @@ export const ACCENT_PRESETS = [
   '#dc2626', // rouge
   '#0d9488', // sarcelle
   '#0f172a', // encre
+  '#991b1b', // rouge profond
+  '#166534', // vert institutionnel
+  '#1e1b4b', // indigo nuit
 ] as const;
 
 /** Catalogue des modèles premium. */
@@ -152,6 +155,32 @@ export const TEMPLATES: TemplateMeta[] = [
     category: 'Professionnel',
     description: 'Mise en page équilibrée, sobre et corporate.',
     accent: '#4f46e5',
+    hasPhoto: false,
+  },
+
+  {
+    id: 'lome',
+    name: 'Lomé Signature',
+    category: 'Élégant',
+    description: 'Couverture éditoriale premium, contraste noir ivoire et signature exécutive.',
+    accent: '#991b1b',
+    hasPhoto: true,
+  },
+  {
+    id: 'kpalime',
+    name: 'Kpalimé Studio',
+    category: 'Créatif',
+    description: 'Design graphique haut de gamme, cartes superposées et rythme visuel fort.',
+    accent: '#166534',
+    hasPhoto: true,
+  },
+  {
+    id: 'maritime',
+    name: 'Maritime Executive',
+    category: 'Professionnel',
+    description: 'Grille luxe corporate, colonne prestige et finition cabinet international.',
+    accent: '#1e1b4b',
+    dark: true,
     hasPhoto: false,
   },
   {
