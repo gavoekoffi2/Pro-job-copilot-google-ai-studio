@@ -71,12 +71,33 @@ export async function verifyGeniusPayPayment(reference: string): Promise<{
 export async function recoverCheckoutCv(reference: string): Promise<PendingCheckout> {
   const response = await fetch(`/.netlify/functions/checkout-cv?reference=${encodeURIComponent(reference)}`);
   const data = await parseApiResponse(response);
+  const cv = data.cv || {};
+  const personalInfo = cv.personalInfo || {};
   return {
     reference: data.reference || reference,
     checkoutUrl: '',
     user: data.user || { name: '', email: '', phone: '' },
-    cv: data.cv,
-    templateId: data.templateId,
+    cv: {
+      personalInfo: {
+        fullName: personalInfo.fullName || data.user?.name || 'CV',
+        title: personalInfo.title || '',
+        email: personalInfo.email || data.user?.email || '',
+        phone: personalInfo.phone || data.user?.phone || '',
+        address: personalInfo.address || personalInfo.location || '',
+        website: personalInfo.website || '',
+        linkedin: personalInfo.linkedin || '',
+        summary: personalInfo.summary || cv.summary || '',
+        photo: personalInfo.photo,
+        showPhoto: personalInfo.showPhoto ?? false,
+      },
+      experiences: Array.isArray(cv.experiences) ? cv.experiences : [],
+      education: Array.isArray(cv.education) ? cv.education : [],
+      skills: Array.isArray(cv.skills) ? cv.skills : [],
+      languages: Array.isArray(cv.languages) ? cv.languages : [],
+      certifications: Array.isArray(cv.certifications) ? cv.certifications : [],
+      interests: Array.isArray(cv.interests) ? cv.interests : [],
+    },
+    templateId: data.templateId || 'lome',
     accent: data.accent || '#10b981',
     locale: data.locale || 'fr',
     createdAt: data.createdAt || Date.now(),
