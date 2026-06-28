@@ -1,10 +1,9 @@
 import { getStore } from '@netlify/blobs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 const STORE_NAME = 'pro-job-copilot-accounts';
-const LOCAL_STORE_PATH = join(dirname(fileURLToPath(import.meta.url)), '../../.netlify-local/accounts.json');
+const LOCAL_STORE_PATH = join(process.cwd(), '.netlify-local/accounts.json');
 
 async function readLocalData() {
   try {
