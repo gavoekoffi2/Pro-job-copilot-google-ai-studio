@@ -16,43 +16,58 @@ import {
  */
 export function PaymentReturnHandler() {
   // Capturé une seule fois : après nettoyage de l'URL, le bandeau doit rester visible.
-  const [paymentState] = useState(() => new URLSearchParams(window.location.search).get('payment'));
+  // GeniusPay peut revenir avec `?payment=success` OU seulement `?reference=...`
+  // selon le parcours de paiement. Les deux doivent déclencher la vérification.
+  const [returnParams] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get('payment');
+    const reference = params.get('reference') || params.get('transaction_id') || params.get('transaction');
+    return {
+      paymentState: payment || (reference ? 'success' : null),
+      reference,
+    };
+  });
   const [pending] = useState<PendingCheckout | null>(() => loadPendingCheckout());
   const [status, setStatus] = useState<'idle' | 'checking' | 'downloading' | 'done' | 'error'>(
-    paymentState ? 'checking' : 'idle',
+    returnParams.paymentState ? 'checking' : 'idle',
   );
   const [message, setMessage] = useState('');
   const previewRef = useRef<HTMLDivElement>(null);
   const didRun = useRef(false);
 
   useEffect(() => {
-    if (!paymentState || didRun.current) return;
+    if (!returnParams.paymentState || didRun.current) return;
     didRun.current = true;
 
     const cleanUrl = () => {
       const url = new URL(window.location.href);
       url.searchParams.delete('payment');
+      url.searchParams.delete('reference');
+      url.searchParams.delete('transaction_id');
+      url.searchParams.delete('transaction');
       window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
     };
 
     const run = async () => {
-      if (paymentState === 'error') {
+      if (returnParams.paymentState === 'error') {
         setStatus('error');
         setMessage('Le paiement a été annulé ou refusé. Vous pouvez relancer le téléchargement depuis le créateur de CV.');
         cleanUrl();
         return;
       }
 
-      if (!pending?.reference) {
+      const referenceToVerify = returnParams.reference || pending?.reference;
+
+      if (!pending?.cv?.personalInfo || !referenceToVerify) {
         setStatus('error');
-        setMessage('Paiement confirmé, mais le CV à télécharger n’a pas été retrouvé sur cet appareil. Rouvrez le CV puis cliquez sur Télécharger.');
+        setMessage('Paiement détecté, mais le CV à télécharger n’a pas été retrouvé sur cet appareil. Rouvrez le CV puis cliquez sur Télécharger.');
         cleanUrl();
         return;
       }
 
       try {
         setStatus('checking');
-        const result = await verifyGeniusPayPayment(pending.reference);
+        const result = await verifyGeniusPayPayment(referenceToVerify);
         if (!result.paid) {
           setStatus('error');
           setMessage(`Paiement non confirmé pour le moment. Statut actuel : ${result.status || 'pending'}. Cliquez sur le bouton ci-dessous après confirmation.`);
@@ -77,9 +92,9 @@ export function PaymentReturnHandler() {
     };
 
     run();
-  }, [paymentState, pending]);
+  }, [returnParams, pending]);
 
-  if (!paymentState || status === 'idle') return null;
+  if (!returnParams.paymentState || status === 'idle') return null;
 
   const retryDownload = async () => {
     if (!pending?.reference) return;
