@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { FileUp, FileText, Sparkles, UserCheck } from 'lucide-react';
 import type { CVData } from '../../types';
 import { useT } from '../../i18n/LanguageContext';
-import { fileToDataUrl, stripDataUrlPrefix } from '../../lib/utils';
+import { fileToUploadPayload } from '../../lib/utils';
 import { parseCVFromFile, parseCVFromText, hasApiKey } from '../../services/geminiService';
 import { Button } from '../ui/ui';
 
@@ -39,8 +39,7 @@ export function CVImporter({
   const onFile = async (file?: File) => {
     if (!file) return;
     await run(async () => {
-      const url = await fileToDataUrl(file);
-      const { mimeType, data } = stripDataUrlPrefix(url);
+      const { mimeType, data } = await fileToUploadPayload(file);
       return parseCVFromFile(data, mimeType, file.name);
     });
   };

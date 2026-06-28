@@ -24,7 +24,7 @@ import type {
   TemplateId,
 } from '../../types';
 import { useT } from '../../i18n/LanguageContext';
-import { uid, fileToDataUrl, stripDataUrlPrefix } from '../../lib/utils';
+import { uid, fileToDataUrl, fileToUploadPayload } from '../../lib/utils';
 import { exportElementToPdf, cvFileName } from '../../lib/pdf';
 import {
   applyModifications,
@@ -89,8 +89,7 @@ export function CVBuilder({
     setError(null);
     setBusy('import');
     try {
-      const url = await fileToDataUrl(file);
-      const { mimeType, data: b64 } = stripDataUrlPrefix(url);
+      const { mimeType, data: b64 } = await fileToUploadPayload(file);
       const parsed = await parseCVFromFile(b64, mimeType, file.name);
       // Conserver la photo déjà chargée le cas échéant.
       setData({ ...parsed, personalInfo: { ...parsed.personalInfo, photo: data.personalInfo.photo } });

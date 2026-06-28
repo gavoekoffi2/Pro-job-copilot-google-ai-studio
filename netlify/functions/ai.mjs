@@ -175,7 +175,15 @@ function modelForTask(task) {
   return task === 'analyze' ? gemini : generate;
 }
 
-async function callOpenRouter({ prompt, schema, file, task, systemPrompt, temperature = 0.2 }) {
+async function callOpenRouter({
+  prompt,
+  schema,
+  file,
+  task,
+  systemPrompt,
+  temperature = 0.2,
+  pdfEngine = 'pdf-text',
+}) {
   const apiKey = requireEnv('OPENROUTER_API_KEY');
   const model = modelForTask(task);
   const siteUrl =
@@ -197,9 +205,12 @@ async function callOpenRouter({ prompt, schema, file, task, systemPrompt, temper
     reasoning: { enabled: false },
   };
 
-  // Pour les PDF, OpenRouter doit extraire le texte via le plugin file-parser.
+  // Pour les PDF, OpenRouter traite le fichier via le plugin file-parser.
+  // - `pdf-text` : extrait la couche texte (gratuit, idéal pour un PDF numérique) ;
+  // - `mistral-ocr` : OCR pour les PDF SCANNÉS / composés d'images (CV photographiés,
+  //   image collée dans Word puis exportée en PDF) — où `pdf-text` ne trouve aucun texte.
   if (file?.base64Data && isPdf(file?.mimeType)) {
-    requestBody.plugins = [{ id: 'file-parser', pdf: { engine: 'pdf-text' } }];
+    requestBody.plugins = [{ id: 'file-parser', pdf: { engine: pdfEngine } }];
   }
 
   const response = await fetch(OPENROUTER_API_URL, {
@@ -254,6 +265,59 @@ ${String(badText || '').slice(0, 60000)}
   });
 }
 
+/**
+ * Détecte un résultat d'extraction « vide » : toutes les chaînes vides, tous les
+ * tableaux vides, etc. C'est le cas typique d'un PDF scanné passé en `pdf-text`
+ * (aucune couche texte) -> on bascule alors vers un moteur OCR.
+ */
+function isEmptyExtraction(value) {
+  if (value == null) return true;
+  if (typeof value === 'string') return value.trim() === '';
+  if (typeof value === 'number') return false;
+  if (typeof value === 'boolean') return value === false;
+  if (Array.isArray(value)) return value.every(isEmptyExtraction);
+  if (typeof value === 'object') return Object.values(value).every(isEmptyExtraction);
+  return false;
+}
+
+/**
+ * Parse la réponse, avec réparation automatique si le JSON est imparfait.
+ * Lève une erreur (avec statusCode) si la réponse est irrécupérable.
+ */
+async function parseWithRepair(result, schema, task) {
+  try {
+    return {
+      parsed: parseJsonResponse(result.text),
+      model: result.model,
+      provider: result.provider,
+      repaired: false,
+    };
+  } catch (parseError) {
+    // Réponse coupée par la limite de tokens : message exploitable, pas de réparation possible.
+    if (result.finishReason === 'length') {
+      const error = new Error(
+        "La réponse de l'IA a été tronquée (limite de longueur). Réessayez ; pour un CV très long, simplifiez-le ou augmentez OPENROUTER_MAX_TOKENS.",
+      );
+      error.statusCode = 502;
+      throw error;
+    }
+    // Deuxième chance : certains modèles renvoient du texte explicatif, des virgules
+    // finales ou un objet JSON imparfait malgré response_format. On répare côté serveur.
+    const repaired = await repairJsonResponse({ badText: result.text, schema, task });
+    if (!repaired.ok) {
+      const error = new Error(repaired.error);
+      error.statusCode = repaired.status || 502;
+      throw error;
+    }
+    return {
+      parsed: parseJsonResponse(repaired.text),
+      model: repaired.model,
+      provider: repaired.provider,
+      repaired: true,
+    };
+  }
+}
+
 export async function handler(event) {
   if (event.httpMethod !== 'POST') {
     return json(405, { error: 'Method not allowed' });
@@ -266,40 +330,71 @@ export async function handler(event) {
       return json(400, { error: 'Missing prompt' });
     }
 
-    const result = await callOpenRouter({ prompt, schema, file, task });
+    // Chaîne de moteurs pour les PDF : on tente d'abord l'extraction du texte
+    // (gratuite, parfaite pour un PDF numérique), puis l'OCR (mistral-ocr) si le PDF
+    // est scanné / composé d'images et que le texte extrait est vide.
+    const usePdfChain = Boolean(file?.base64Data && isPdf(file?.mimeType));
+    const engines = usePdfChain
+      ? (process.env.OPENROUTER_PDF_ENGINES || 'pdf-text,mistral-ocr')
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [undefined];
 
-    if (!result.ok) {
-      return json(result.status || 502, { error: result.error, provider: 'openrouter' });
-    }
+    let lastEmpty = null;
+    let lastError = null;
 
-    try {
-      const parsed = parseJsonResponse(result.text);
-      return json(200, { result: parsed, model: result.model, provider: result.provider });
-    } catch (parseError) {
-      // Si la réponse a été coupée par la limite de tokens, donne un message exploitable.
-      if (result.finishReason === 'length') {
-        return json(502, {
-          error:
-            "La réponse de l'IA a été tronquée (limite de longueur). Réessayez ; pour un CV très long, simplifiez-le ou augmentez OPENROUTER_MAX_TOKENS.",
-          provider: 'openrouter',
-        });
+    for (const pdfEngine of engines) {
+      let result;
+      try {
+        result = await callOpenRouter({ prompt, schema, file, task, pdfEngine });
+      } catch (e) {
+        lastError = e;
+        continue;
+      }
+      if (!result.ok) {
+        lastError = Object.assign(new Error(result.error), { statusCode: result.status || 502 });
+        continue;
       }
 
-      // Deuxième chance : certains modèles renvoient parfois du texte explicatif,
-      // des virgules finales ou un objet JSON imparfait malgré response_format.
-      // On répare côté serveur au lieu de bloquer l'utilisateur avec "JSON invalide".
-      const repaired = await repairJsonResponse({ badText: result.text, schema, task });
-      if (!repaired.ok) {
-        return json(repaired.status || 502, { error: repaired.error, provider: 'openrouter' });
+      let out;
+      try {
+        out = await parseWithRepair(result, schema, task);
+      } catch (e) {
+        lastError = e;
+        continue;
       }
-      const parsed = parseJsonResponse(repaired.text);
+
+      // PDF scanné + `pdf-text` -> JSON vide : on garde de côté et on tente le moteur OCR suivant.
+      if (usePdfChain && engines.length > 1 && isEmptyExtraction(out.parsed)) {
+        lastEmpty = out;
+        continue;
+      }
+
       return json(200, {
-        result: parsed,
-        model: repaired.model,
-        provider: repaired.provider,
-        repaired: true,
+        result: out.parsed,
+        model: out.model,
+        provider: out.provider,
+        ...(out.repaired ? { repaired: true } : {}),
       });
     }
+
+    // Tous les moteurs tentés. On privilégie un résultat (même vide, le front
+    // affichera un message clair) plutôt qu'une erreur opaque.
+    if (lastEmpty) {
+      return json(200, {
+        result: lastEmpty.parsed,
+        model: lastEmpty.model,
+        provider: lastEmpty.provider,
+      });
+    }
+    if (lastError) {
+      return json(Number(lastError.statusCode) || 502, {
+        error: lastError.message,
+        provider: 'openrouter',
+      });
+    }
+    return json(502, { error: "Aucune réponse de l'IA.", provider: 'openrouter' });
   } catch (error) {
     const statusCode = Number(error?.statusCode) || 500;
     return json(statusCode, {

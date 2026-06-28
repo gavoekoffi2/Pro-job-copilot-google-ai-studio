@@ -188,6 +188,26 @@ export function normalizeCV(partial: any, previous?: CVData): CVData {
   };
 }
 
+/** Vrai si l'extraction n'a remonté aucune information exploitable. */
+function isCVEmpty(cv: CVData): boolean {
+  const p = cv.personalInfo;
+  const hasPersonal = [p.fullName, p.title, p.email, p.phone, p.summary, p.address].some(
+    (v) => (v ?? '').trim().length > 0,
+  );
+  return (
+    !hasPersonal &&
+    cv.experiences.length === 0 &&
+    cv.education.length === 0 &&
+    cv.skills.length === 0 &&
+    cv.languages.length === 0 &&
+    cv.certifications.length === 0 &&
+    cv.interests.length === 0
+  );
+}
+
+const EMPTY_EXTRACTION_MESSAGE =
+  "Aucune information n'a pu être détectée dans ce document. Si votre CV est une image scannée ou une photo, assurez-vous qu'il est net et bien lisible, puis réessayez (un PDF ou une photo plus nette donne de meilleurs résultats).";
+
 /** Retire la photo (lourde) avant tout envoi à l'IA. */
 function stripPhoto(data: CVData): CVData {
   return {
@@ -354,7 +374,9 @@ Texte brut :
 ${rawText.substring(0, 50000)}
 `;
   const result = await generateJson(prompt, cvSchema);
-  return normalizeCV(result);
+  const cv = normalizeCV(result);
+  if (isCVEmpty(cv)) throw new Error(EMPTY_EXTRACTION_MESSAGE);
+  return cv;
 }
 
 /** Structure un CV depuis un fichier (PDF ou image) en CVData. */
@@ -364,10 +386,26 @@ export async function parseCVFromFile(
   filename?: string,
 ): Promise<CVData> {
   ensureKey();
+
+  // Garde-fou de taille : la fonction Netlify (sync) limite la requête à ~6 Mo.
+  // Le base64 gonfle la taille d'environ 1/3 ; on bloque au-delà avec un message clair.
+  const approxBytes = Math.ceil((base64Data.length * 3) / 4);
+  if (approxBytes > 4_500_000) {
+    throw new Error(
+      'Ce fichier est trop volumineux (max ~4,5 Mo). Compressez votre CV, réduisez le nombre de pages, ou importez-le sous forme d\'image (JPG/PNG) ou de PDF plus léger.',
+    );
+  }
+
   const prompt = `
-Analyse ce document (CV). Transforme son contenu en JSON strictement formaté selon le schéma fourni.
-Extrais le contact, les expériences, formations, compétences, langues, certifications et centres d'intérêt.
-Conserve la langue d'origine. Laisse vide ce qui est absent.
+Tu reçois un CV sous forme de fichier (PDF ou image), éventuellement SCANNÉ ou PHOTOGRAPHIÉ
+(par exemple une image collée dans un document puis exportée en PDF).
+Effectue si nécessaire une reconnaissance optique de caractères (OCR) pour lire TOUT le texte
+visible, même lorsque le document est une image ou un scan de mauvaise qualité.
+Transforme ensuite son contenu en JSON strictement formaté selon le schéma fourni.
+Extrais le contact (nom complet, titre/poste, e-mail, téléphone, adresse, sites/LinkedIn),
+le résumé, les expériences, les formations, les compétences, les langues, les certifications
+et les centres d'intérêt.
+Conserve la langue d'origine. Ne laisse vide QUE ce qui est réellement absent du document.
 `;
   const result = await postAi({
     prompt,
@@ -375,5 +413,7 @@ Conserve la langue d'origine. Laisse vide ce qui est absent.
     task: 'generate',
     file: { base64Data, mimeType, filename },
   });
-  return normalizeCV(result);
+  const cv = normalizeCV(result);
+  if (isCVEmpty(cv)) throw new Error(EMPTY_EXTRACTION_MESSAGE);
+  return cv;
 }

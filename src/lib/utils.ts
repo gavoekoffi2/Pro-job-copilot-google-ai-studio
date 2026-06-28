@@ -42,6 +42,67 @@ export function stripDataUrlPrefix(dataUrl: string): { mimeType: string; data: s
   return { mimeType: match[1], data: match[2] };
 }
 
+/**
+ * Redimensionne une image (scan/photo de CV) et la réencode en JPEG.
+ * Objectif : rester sous la limite de taille de requête (fonction Netlify ~6 Mo)
+ * tout en gardant une résolution suffisante pour l'OCR. On ne fait jamais
+ * d'upscale (l'échelle est bornée à 1).
+ */
+function downscaleImage(file: File, maxDim = 2400, quality = 0.85): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const { width, height } = img;
+      if (!width || !height) {
+        reject(new Error('Image illisible'));
+        return;
+      }
+      const scale = Math.min(1, maxDim / Math.max(width, height));
+      const w = Math.max(1, Math.round(width * scale));
+      const h = Math.max(1, Math.round(height * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Canvas indisponible'));
+        return;
+      }
+      // Fond blanc : les PNG transparents deviendraient noirs en JPEG.
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Impossible de charger l'image"));
+    };
+    img.src = objectUrl;
+  });
+}
+
+/**
+ * Prépare un fichier (CV) pour l'envoi à l'IA : les images sont compressées /
+ * redimensionnées pour fiabiliser l'OCR et éviter de dépasser la limite de
+ * requête ; les autres fichiers (PDF) sont transmis tels quels.
+ */
+export async function fileToUploadPayload(
+  file: File,
+): Promise<{ mimeType: string; data: string }> {
+  if (file.type.startsWith('image/')) {
+    try {
+      const dataUrl = await downscaleImage(file);
+      return stripDataUrlPrefix(dataUrl);
+    } catch {
+      /* Repli sur le fichier d'origine si le redimensionnement échoue. */
+    }
+  }
+  return stripDataUrlPrefix(await fileToDataUrl(file));
+}
+
 /** Convertit un CVData en texte lisible (pour l'analyse / l'adaptation). */
 export function isLightColor(hex: string): boolean {
   const c = hex.replace('#', '');
