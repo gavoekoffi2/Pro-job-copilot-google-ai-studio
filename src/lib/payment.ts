@@ -4,6 +4,10 @@ export interface CheckoutUser {
   name: string;
   email: string;
   phone: string;
+  /** Mot de passe saisi uniquement au moment de créer/connecter le compte. */
+  password?: string;
+  /** Jeton de session renvoyé par le serveur après connexion. */
+  sessionToken?: string;
 }
 
 export interface CreateCheckoutPayload {
@@ -125,8 +129,17 @@ export function loadCheckoutUser(): CheckoutUser | null {
   }
 }
 
+export function publicCheckoutUser(user: CheckoutUser): CheckoutUser {
+  return {
+    name: user.name.trim(),
+    email: user.email.trim().toLowerCase(),
+    phone: user.phone.trim(),
+    sessionToken: user.sessionToken,
+  };
+}
+
 export function saveCheckoutUser(user: CheckoutUser) {
-  localStorage.setItem(CHECKOUT_USER_KEY, JSON.stringify(user));
+  localStorage.setItem(CHECKOUT_USER_KEY, JSON.stringify(publicCheckoutUser(user)));
 }
 
 export function savePendingCheckout(checkout: PendingCheckout) {

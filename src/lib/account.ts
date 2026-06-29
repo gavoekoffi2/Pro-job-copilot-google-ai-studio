@@ -63,6 +63,7 @@ export function saveAccountUser(user: CheckoutUser) {
     name: user.name.trim(),
     email: user.email.trim().toLowerCase(),
     phone: user.phone.trim(),
+    sessionToken: user.sessionToken,
   }));
 }
 
@@ -77,7 +78,7 @@ export async function registerAccount(user: CheckoutUser): Promise<AccountPayloa
     body: JSON.stringify({ action: 'register', user }),
   });
   const data = await parseApiResponse(response) as AccountPayload;
-  saveAccountUser(user);
+  if (data.user) saveAccountUser(data.user);
   return data;
 }
 
@@ -90,10 +91,12 @@ export async function listAccountCvs(user: CheckoutUser): Promise<AccountPayload
   return parseApiResponse(response) as Promise<AccountPayload>;
 }
 
-export async function getAccountCv(email: string, id: string): Promise<{ user: CheckoutUser; cv: SavedCvRecord }> {
-  const response = await fetch(
-    `/.netlify/functions/account-cvs?email=${encodeURIComponent(email)}&id=${encodeURIComponent(id)}`,
-  );
+export async function getAccountCv(user: CheckoutUser, id: string): Promise<{ user: CheckoutUser; cv: SavedCvRecord }> {
+  const response = await fetch('/.netlify/functions/account-cvs', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'get', user, id }),
+  });
   return parseApiResponse(response) as Promise<{ user: CheckoutUser; cv: SavedCvRecord }>;
 }
 
@@ -104,6 +107,6 @@ export async function saveAccountCv(payload: SaveCvPayload): Promise<{ cv: Saved
     body: JSON.stringify({ action: 'save', ...payload }),
   });
   const data = await parseApiResponse(response) as { cv: SavedCvRecord; account: AccountPayload };
-  saveAccountUser(payload.user);
+  if (data.account?.user) saveAccountUser(data.account.user);
   return data;
 }

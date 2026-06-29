@@ -56,9 +56,11 @@ export function AccountView({ onOpenCv, onUserChange }: AccountViewProps) {
     setBusy('account');
     try {
       const account = await registerAccount(user);
-      saveAccountUser(user);
+      const connectedUser = account.user || user;
+      saveAccountUser(connectedUser);
+      setUser(connectedUser);
       setConnected(true);
-      onUserChange(user);
+      onUserChange(connectedUser);
       setCvs(account.cvs || []);
       setMessage('Compte créé/connecté. Vos prochains CV seront sauvegardés ici.');
     } catch (err) {
@@ -81,7 +83,7 @@ export function AccountView({ onOpenCv, onUserChange }: AccountViewProps) {
     setError(null);
     setBusy(summary.id);
     try {
-      const result = await getAccountCv(user.email, summary.id);
+      const result = await getAccountCv(user, summary.id);
       onUserChange(result.user);
       onOpenCv({
         cvId: result.cv.id,
@@ -132,11 +134,12 @@ export function AccountView({ onOpenCv, onUserChange }: AccountViewProps) {
       <div className="mt-6 grid gap-6 lg:grid-cols-[390px_1fr]">
         <div className="rounded-3xl border border-ink-100 bg-white p-5 shadow-soft">
           <h2 className="font-display text-xl font-extrabold text-ink-950">Créer / retrouver un compte</h2>
-          <p className="mt-1 text-sm text-ink-500">Même email + téléphone = mêmes CV récupérés.</p>
+          <p className="mt-1 text-sm text-ink-500">Email + mot de passe = vos CV récupérés sur n’importe quel appareil.</p>
 
           <div className="mt-5 space-y-3">
             <Field label="Nom complet" value={user.name} onChange={(value) => updateUser({ name: value })} />
             <Field label="Email" type="email" value={user.email} onChange={(value) => updateUser({ email: value })} placeholder="client@email.com" />
+            <Field label="Mot de passe" type="password" value={user.password || ''} onChange={(value) => updateUser({ password: value })} placeholder="Minimum 6 caractères" />
             <Field label="Téléphone" value={user.phone} onChange={(value) => updateUser({ phone: value })} placeholder="+228..." />
           </div>
 
@@ -147,7 +150,7 @@ export function AccountView({ onOpenCv, onUserChange }: AccountViewProps) {
             <Button
               icon={<Save className="h-4 w-4" />}
               loading={busy === 'account'}
-              disabled={!user.name.trim() || !user.email.trim() || !user.phone.trim()}
+              disabled={!user.name.trim() || !user.email.trim() || !user.phone.trim() || (!user.sessionToken && (user.password?.length || 0) < 6)}
               onClick={connect}
             >
               Créer / connecter le compte

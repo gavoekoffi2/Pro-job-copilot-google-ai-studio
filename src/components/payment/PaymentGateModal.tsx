@@ -9,9 +9,10 @@ import {
   savePendingCheckout,
   clearPendingCheckout,
   verifyGeniusPayPayment,
+  publicCheckoutUser,
   type CheckoutUser,
 } from '../../lib/payment';
-import { saveAccountCv, saveAccountUser } from '../../lib/account';
+import { registerAccount, saveAccountCv, saveAccountUser } from '../../lib/account';
 
 export function PaymentGateModal({
   open,
@@ -51,16 +52,20 @@ export function PaymentGateModal({
     setError(null);
     setBusy('create');
     try {
-      saveCheckoutUser(user);
-      saveAccountUser(user);
-      const checkout = await createGeniusPayCheckout({ user, cv, templateId, accent, locale });
+      const account = await registerAccount(user);
+      const accountUser = account.user || user;
+      saveCheckoutUser(accountUser);
+      saveAccountUser(accountUser);
+      setUser(accountUser);
+      await saveAccountCv({ user: accountUser, cv, templateId, accent, locale, paid: false });
+      const checkout = await createGeniusPayCheckout({ user: publicCheckoutUser(accountUser), cv, templateId, accent, locale });
       setReference(checkout.reference);
       setCheckoutUrl(checkout.checkoutUrl);
       setStatus(checkout.status);
       savePendingCheckout({
         reference: checkout.reference,
         checkoutUrl: checkout.checkoutUrl,
-        user,
+        user: accountUser,
         cv,
         templateId,
         accent,
@@ -108,7 +113,7 @@ export function PaymentGateModal({
             </p>
             <h2 className="mt-3 font-display text-2xl font-extrabold">Téléchargement du CV</h2>
             <p className="mt-1 text-sm text-ink-200">
-              Créez/connectez votre compte, payez 500 FCFA, puis votre CV est sauvegardé et téléchargé.
+              Créez/connectez votre compte avec email + mot de passe, payez 500 FCFA, puis votre CV est sauvegardé et téléchargé.
             </p>
           </div>
           <button onClick={onClose} className="rounded-full p-2 text-white/70 hover:bg-white/10 hover:text-white" aria-label="Fermer">
@@ -125,7 +130,7 @@ export function PaymentGateModal({
               <div>
                 <h3 className="font-bold text-ink-950">Compte utilisateur</h3>
                 <p className="text-sm text-ink-600">
-                  L’utilisateur travaille gratuitement. Le compte est demandé seulement au téléchargement pour retrouver son CV plus tard.
+                  L’utilisateur travaille gratuitement. Au téléchargement, il crée/ouvre son compte avec email + mot de passe pour retrouver son CV plus tard.
                 </p>
               </div>
             </div>
@@ -135,6 +140,9 @@ export function PaymentGateModal({
               <Field label="Téléphone" value={user.phone} onChange={(v) => updateUser({ phone: v })} placeholder="+228..." />
               <div className="sm:col-span-2">
                 <Field label="Email" type="email" value={user.email} onChange={(v) => updateUser({ email: v })} placeholder="client@email.com" />
+              </div>
+              <div className="sm:col-span-2">
+                <Field label="Mot de passe" type="password" value={user.password || ''} onChange={(v) => updateUser({ password: v })} placeholder="Minimum 6 caractères" />
               </div>
             </div>
           </div>
@@ -169,7 +177,7 @@ export function PaymentGateModal({
                 className="w-full"
                 icon={<CreditCard className="h-4 w-4" />}
                 loading={busy === 'create'}
-                disabled={!user.name.trim() || !user.email.trim() || !user.phone.trim()}
+                disabled={!user.name.trim() || !user.email.trim() || !user.phone.trim() || (!user.sessionToken && (user.password?.length || 0) < 6)}
                 onClick={startPayment}
               >
                 Créer le compte et payer 500 FCFA

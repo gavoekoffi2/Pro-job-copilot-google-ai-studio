@@ -1,5 +1,12 @@
 import { json } from './_utils.mjs';
-import { cleanAccountUser, loadAccount, publicAccount, saveUserCv, upsertAccount } from './_account-store.mjs';
+import {
+  authenticateAccount,
+  cleanAccountUser,
+  loadAccount,
+  publicAccount,
+  registerOrLoginAccount,
+  saveUserCv,
+} from './_account-store.mjs';
 
 function parseBody(event) {
   return JSON.parse(event.body || '{}');
@@ -8,21 +15,7 @@ function parseBody(event) {
 export async function handler(event) {
   try {
     if (event.httpMethod === 'GET') {
-      const params = new URLSearchParams(event.rawQuery || '');
-      const email = String(params.get('email') || '').trim().toLowerCase();
-      const id = String(params.get('id') || '').trim();
-      if (!email) return json(400, { error: 'Email compte manquant.' });
-
-      const account = await loadAccount(email);
-      if (!account) return json(200, { user: null, cvs: [] });
-
-      if (id) {
-        const cv = (account.cvs || []).find((item) => item.id === id);
-        if (!cv) return json(404, { error: 'CV introuvable dans ce compte.' });
-        return json(200, { user: account.user, cv });
-      }
-
-      return json(200, publicAccount(account));
+      return json(405, { error: 'Utilisez la connexion email + mot de passe depuis l’application.' });
     }
 
     if (event.httpMethod !== 'POST') {
@@ -31,21 +24,33 @@ export async function handler(event) {
 
     const payload = parseBody(event);
     const action = payload.action || 'save';
-    const user = cleanAccountUser(payload.user);
 
-    if (action === 'register') {
-      const account = await upsertAccount(user);
-      return json(200, publicAccount(account));
+    if (action === 'register' || action === 'login') {
+      const { account, sessionToken } = await registerOrLoginAccount(payload.user);
+      return json(200, publicAccount(account, sessionToken));
     }
 
+    const account = await authenticateAccount(payload.user);
+    const user = account.user;
+
     if (action === 'list') {
-      const account = (await loadAccount(user.email)) || (await upsertAccount(user));
-      return json(200, publicAccount(account));
+      return json(200, publicAccount(account, payload.user?.sessionToken || ''));
+    }
+
+    if (action === 'get') {
+      const id = String(payload.id || '').trim();
+      if (!id) return json(400, { error: 'Identifiant CV manquant.' });
+      const cv = (account.cvs || []).find((item) => item.id === id);
+      if (!cv) return json(404, { error: 'CV introuvable dans ce compte.' });
+      const publicUser = payload.user?.sessionToken ? { ...user, sessionToken: payload.user.sessionToken } : user;
+      return json(200, { user: publicUser, cv });
     }
 
     if (action === 'save') {
+      // Vérifie que les infos publiques restent propres, mais l’accès vient de authenticateAccount.
+      cleanAccountUser({ ...user, ...payload.user, password: undefined });
       const record = await saveUserCv({
-        user,
+        user: { ...user, ...payload.user, sessionToken: undefined, password: undefined },
         cv: payload.cv,
         templateId: payload.templateId,
         accent: payload.accent,
@@ -54,8 +59,8 @@ export async function handler(event) {
         paid: payload.paid,
         reference: payload.reference,
       });
-      const account = await loadAccount(user.email);
-      return json(200, { cv: record, account: publicAccount(account) });
+      const updated = await loadAccount(user.email);
+      return json(200, { cv: record, account: publicAccount(updated, payload.user?.sessionToken || '') });
     }
 
     return json(400, { error: 'Action compte inconnue.' });
