@@ -67,7 +67,7 @@ export async function createGeniusPayCheckout(payload: CreateCheckoutPayload): P
   return parseApiResponse(response) as Promise<CheckoutResult>;
 }
 
-export async function verifyGeniusPayPayment(reference: string): Promise<{
+export async function verifyGeniusPayPayment(reference: string, providerStatus?: string | null): Promise<{
   reference: string;
   status: string;
   paid: boolean;
@@ -75,9 +75,9 @@ export async function verifyGeniusPayPayment(reference: string): Promise<{
   currency?: string;
   paymentMethod?: string | null;
 }> {
-  const response = await fetch(
-    `/.netlify/functions/geniuspay-payment-status?reference=${encodeURIComponent(reference)}`,
-  );
+  const params = new URLSearchParams({ reference });
+  if (providerStatus) params.set('provider_status', providerStatus);
+  const response = await fetch(`/.netlify/functions/geniuspay-payment-status?${params.toString()}`);
   return parseApiResponse(response);
 }
 

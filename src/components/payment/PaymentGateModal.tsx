@@ -113,7 +113,7 @@ export function PaymentGateModal({
             </p>
             <h2 className="mt-3 font-display text-2xl font-extrabold">Téléchargement du CV</h2>
             <p className="mt-1 text-sm text-ink-200">
-              Créez/connectez votre compte avec email + mot de passe, payez 500 FCFA, puis votre CV est sauvegardé et téléchargé.
+              Créez votre compte, réglez les frais de téléchargement, puis recevez votre CV en PDF.
             </p>
           </div>
           <button onClick={onClose} className="rounded-full p-2 text-white/70 hover:bg-white/10 hover:text-white" aria-label="Fermer">
@@ -130,7 +130,7 @@ export function PaymentGateModal({
               <div>
                 <h3 className="font-bold text-ink-950">Compte utilisateur</h3>
                 <p className="text-sm text-ink-600">
-                  L’utilisateur travaille gratuitement. Au téléchargement, il crée/ouvre son compte avec email + mot de passe pour retrouver son CV plus tard.
+                  Créez ou ouvrez votre compte pour sauvegarder votre CV et le retrouver plus tard dans votre espace personnel.
                 </p>
               </div>
             </div>

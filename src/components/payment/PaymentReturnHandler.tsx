@@ -23,6 +23,7 @@ export function PaymentReturnHandler() {
   // selon le parcours de paiement. Les deux doivent déclencher la vérification.
   const [returnParams] = useState(() => {
     const params = new URLSearchParams(window.location.search);
+    const providerStatus = params.get('status');
     const payment = params.get('payment');
     const reference =
       params.get('reference') ||
@@ -35,10 +36,11 @@ export function PaymentReturnHandler() {
       params.get('token') ||
       params.get('id');
     const hasPaymentReturnParam = Array.from(params.keys()).some((key) =>
-      /payment|genius|reference|transaction|checkout|order|token/i.test(key),
+      /payment|status|genius|reference|transaction|checkout|order|token/i.test(key),
     );
     return {
-      paymentState: payment || (reference || hasPaymentReturnParam ? 'success' : null),
+      paymentState: payment || providerStatus || (reference || hasPaymentReturnParam ? 'success' : null),
+      providerStatus,
       reference,
     };
   });
@@ -57,6 +59,7 @@ export function PaymentReturnHandler() {
     const cleanUrl = () => {
       const url = new URL(window.location.href);
       url.searchParams.delete('payment');
+      url.searchParams.delete('status');
       url.searchParams.delete('reference');
       url.searchParams.delete('ref');
       url.searchParams.delete('transaction_id');
@@ -101,7 +104,7 @@ export function PaymentReturnHandler() {
 
       try {
         setStatus('checking');
-        const result = await verifyGeniusPayPayment(referenceToVerify);
+        const result = await verifyGeniusPayPayment(referenceToVerify, returnParams.providerStatus);
         if (!result.paid) {
           setStatus('error');
           setMessage(`Paiement non confirmé pour le moment. Statut actuel : ${result.status || 'pending'}. Cliquez sur le bouton ci-dessous après confirmation.`);
@@ -144,7 +147,7 @@ export function PaymentReturnHandler() {
     setMessage('');
     setStatus('checking');
     try {
-      const result = await verifyGeniusPayPayment(pending.reference);
+      const result = await verifyGeniusPayPayment(pending.reference, returnParams.providerStatus);
       if (!result.paid) {
         setStatus('error');
         setMessage(`Paiement non confirmé pour le moment. Statut actuel : ${result.status || 'pending'}.`);
