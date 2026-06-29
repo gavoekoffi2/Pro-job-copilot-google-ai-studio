@@ -429,7 +429,7 @@ export async function handler(event) {
     // est scanné / composé d'images et que le texte extrait est vide.
     const usePdfChain = Boolean(file?.base64Data && isPdf(file?.mimeType));
     const engines = usePdfChain
-      ? (process.env.OPENROUTER_PDF_ENGINES || 'pdf-text')
+      ? (process.env.OPENROUTER_PDF_ENGINES || 'pdf-text,mistral-ocr')
           .split(',')
           .map((s) => s.trim())
           .filter(Boolean)
@@ -473,19 +473,20 @@ export async function handler(event) {
       });
     }
 
-    // Tous les moteurs tentés. On privilégie un résultat (même vide, le front
-    // affichera un message clair) plutôt qu'une erreur opaque.
+    // Si `pdf-text` a donné un JSON vide puis que l'OCR échoue/timeout,
+    // on renvoie l'erreur OCR claire plutôt que le résultat vide qui déclenche
+    // « Aucune information détectée » côté front.
+    if (lastError) {
+      return json(Number(lastError.statusCode) || 502, {
+        error: lastError.message,
+        provider: 'openrouter',
+      });
+    }
     if (lastEmpty) {
       return json(200, {
         result: lastEmpty.parsed,
         model: lastEmpty.model,
         provider: lastEmpty.provider,
-      });
-    }
-    if (lastError) {
-      return json(Number(lastError.statusCode) || 502, {
-        error: lastError.message,
-        provider: 'openrouter',
       });
     }
     return json(502, { error: "Aucune réponse de l'IA.", provider: 'openrouter' });
