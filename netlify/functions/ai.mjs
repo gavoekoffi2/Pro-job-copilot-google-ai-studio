@@ -1,8 +1,14 @@
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
-// Budget de sortie généreux : une traduction/adaptation renvoie le CV COMPLET en JSON,
-// ce qui peut être volumineux. Un budget trop faible tronque la réponse -> JSON invalide.
-const DEFAULT_MAX_TOKENS = 8192;
+// Netlify coupe cette fonction synchrone à 30 s. On garde donc une marge côté
+// OpenRouter pour renvoyer une erreur JSON propre au front au lieu d'un 502
+// `Sandbox.Timedout` opaque.
+const OPENROUTER_TIMEOUT_MS = Number(process.env.OPENROUTER_TIMEOUT_MS || 24000);
+
+// Budgets par défaut plus rapides. Les gros budgets (8192+) ralentissent parfois
+// Gemini/OpenRouter jusqu'au timeout Netlify, surtout sur extraction PDF/OCR.
+const DEFAULT_MAX_TOKENS_GENERATE = 4096;
+const DEFAULT_MAX_TOKENS_ANALYZE = 2048;
 
 function json(statusCode, body) {
   return {
@@ -203,6 +209,11 @@ function modelForTask(task) {
   return task === 'analyze' ? gemini : generate;
 }
 
+function maxTokensForTask(task) {
+  if (process.env.OPENROUTER_MAX_TOKENS) return Number(process.env.OPENROUTER_MAX_TOKENS);
+  return task === 'analyze' ? DEFAULT_MAX_TOKENS_ANALYZE : DEFAULT_MAX_TOKENS_GENERATE;
+}
+
 async function callOpenRouter({
   prompt,
   schema,
@@ -228,7 +239,7 @@ async function callOpenRouter({
       { role: 'user', content: openRouterUserContent(prompt, file) },
     ],
     temperature,
-    max_tokens: Number(process.env.OPENROUTER_MAX_TOKENS || DEFAULT_MAX_TOKENS),
+    max_tokens: maxTokensForTask(task),
     response_format: responseFormat || { type: 'json_object' },
     // Par défaut, la « réflexion » est coupée (elle consomme le budget et tronque le JSON).
     // Pour l'EXTRACTION depuis un fichier/image, on l'active : le modèle a besoin de
@@ -244,16 +255,34 @@ async function callOpenRouter({
     requestBody.plugins = [{ id: 'file-parser', pdf: { engine: pdfEngine } }];
   }
 
-  const response = await fetch(OPENROUTER_API_URL, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': siteUrl,
-      'X-Title': 'Pro Job Copilot',
-    },
-    body: JSON.stringify(requestBody),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), OPENROUTER_TIMEOUT_MS);
+  let response;
+  try {
+    response = await fetch(OPENROUTER_API_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': siteUrl,
+        'X-Title': 'Pro Job Copilot',
+      },
+      body: JSON.stringify(requestBody),
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      return {
+        ok: false,
+        status: 504,
+        error:
+          "Le service IA met trop de temps à répondre. Réessayez avec un CV plus léger, ou importez le texte du CV plutôt qu'un PDF scanné.",
+      };
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
@@ -380,14 +409,19 @@ export async function handler(event) {
     //  - raisonnement activé (le modèle parcourt tout le document) ;
     //  - température 0 (fidélité maximale à ce qui est écrit).
     const isExtraction = Boolean(file?.base64Data && schema);
-    const responseFormat = isExtraction
+    const useStrictExtraction = process.env.OPENROUTER_STRICT_EXTRACTION === 'true';
+    const responseFormat = isExtraction && useStrictExtraction
       ? {
           type: 'json_schema',
           json_schema: { name: 'cv_extraction', strict: true, schema: buildStrictSchema(schema) },
         }
       : undefined;
     const callOptions = isExtraction
-      ? { responseFormat, enableReasoning: true, temperature: 0 }
+      ? {
+          responseFormat,
+          enableReasoning: process.env.OPENROUTER_ENABLE_EXTRACTION_REASONING === 'true',
+          temperature: 0,
+        }
       : {};
 
     // Chaîne de moteurs pour les PDF : on tente d'abord l'extraction du texte
@@ -395,7 +429,7 @@ export async function handler(event) {
     // est scanné / composé d'images et que le texte extrait est vide.
     const usePdfChain = Boolean(file?.base64Data && isPdf(file?.mimeType));
     const engines = usePdfChain
-      ? (process.env.OPENROUTER_PDF_ENGINES || 'pdf-text,mistral-ocr')
+      ? (process.env.OPENROUTER_PDF_ENGINES || 'pdf-text')
           .split(',')
           .map((s) => s.trim())
           .filter(Boolean)
