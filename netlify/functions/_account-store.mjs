@@ -3,8 +3,8 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { randomBytes, scryptSync, timingSafeEqual, createHash } from 'node:crypto';
 
-const STORE_NAME = 'pro-job-copilot-accounts';
-const LOCAL_STORE_PATH = join(process.cwd(), '.netlify-local/accounts.json');
+const STORE_NAME = 'jobtask-ai-accounts';
+const LOCAL_STORE_PATH = join(process.cwd(), '.jobtask-data/accounts.json');
 
 async function readLocalData() {
   try {
