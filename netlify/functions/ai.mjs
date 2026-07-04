@@ -36,7 +36,7 @@ function requireEnv(name) {
 }
 
 function systemPromptForSchema(schema) {
-  return `Tu es une API JSON stricte pour Pro Job Copilot.
+  return `Tu es une API JSON stricte pour JobTask AI.
 Réponds UNIQUEMENT avec un objet JSON valide, sans markdown, sans balises de réflexion, sans commentaire, sans texte avant ou après.
 Commence ta réponse par "{" et termine-la par "}".
 Le JSON doit respecter cette structure attendue autant que possible :
@@ -265,7 +265,7 @@ async function callOpenRouter({
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': siteUrl,
-        'X-Title': 'Pro Job Copilot',
+        'X-Title': 'JobTask AI',
       },
       body: JSON.stringify(requestBody),
       signal: controller.signal,

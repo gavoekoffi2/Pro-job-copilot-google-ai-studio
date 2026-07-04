@@ -49,7 +49,7 @@ export async function handler(event) {
     const createPaymentPayload = {
       amount: CV_DOWNLOAD_PRICE_XOF,
       currency: 'XOF',
-      description: 'Téléchargement CV Pro Job Copilot',
+      description: 'Téléchargement CV JobTask AI',
       customer: user,
       success_url: `${origin}/?payment=success`,
       error_url: `${origin}/?payment=error`,

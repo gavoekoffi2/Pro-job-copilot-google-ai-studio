@@ -5,7 +5,7 @@
 
 export const fr = {
   common: {
-    appName: 'Pro Job Copilot',
+    appName: 'JobTask AI',
     start: 'Commencer',
     startFree: 'Commencer gratuitement',
     tryFree: 'Essayer gratuitement',
@@ -123,7 +123,7 @@ export const fr = {
 
   ctaBand: {
     title: 'Prêt à décrocher votre prochain emploi ?',
-    subtitle: "Rejoignez des milliers de talents qui font confiance à Pro Job Copilot.",
+    subtitle: "Rejoignez des milliers de talents qui font confiance à JobTask AI.",
     button: 'Créer mon CV maintenant',
   },
 
@@ -288,7 +288,7 @@ export const fr = {
 
 export const en: typeof fr = {
   common: {
-    appName: 'Pro Job Copilot',
+    appName: 'JobTask AI',
     start: 'Get started',
     startFree: 'Start for free',
     tryFree: 'Try for free',
@@ -402,7 +402,7 @@ export const en: typeof fr = {
 
   ctaBand: {
     title: 'Ready to land your next job?',
-    subtitle: 'Join thousands of talents who trust Pro Job Copilot.',
+    subtitle: 'Join thousands of talents who trust JobTask AI.',
     button: 'Build my CV now',
   },
 

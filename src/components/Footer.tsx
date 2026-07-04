@@ -64,7 +64,7 @@ export function Footer({ setView }: { setView: (v: AppView) => void }) {
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-xs text-ink-500 sm:flex-row">
-          <p>© {new Date().getFullYear()} Pro Job Copilot. {t.footer.rights}</p>
+          <p>© {new Date().getFullYear()} JobTask AI. {t.footer.rights}</p>
           <p className="inline-flex items-center gap-1.5">
             {t.footer.madeWith} <Heart className="h-3.5 w-3.5 fill-gold-500 text-gold-500" />
           </p>

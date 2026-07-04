@@ -1,5 +1,5 @@
 /* =========================================================================
-   Modèle de données — Pro Job Copilot
+   Modèle de données — JobTask AI
    ========================================================================= */
 
 export type SkillLevel = 'Débutant' | 'Intermédiaire' | 'Avancé' | 'Expert';

@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🚀 Pro Job Copilot
+# 🚀 JobTask AI
 
 ### Votre carrière, propulsée par l'IA — le copilote des talents africains
 
