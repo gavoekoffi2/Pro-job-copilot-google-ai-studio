@@ -7,7 +7,7 @@ const STORE_NAME = 'jobtask-ai-accounts';
 const LOCAL_STORE_PATH = join(process.cwd(), '.jobtask-data/accounts.json');
 const INDEX_KEY = 'accounts:index';
 const DEFAULT_SUPER_ADMIN_EMAIL = (process.env.JOBTASK_SUPER_ADMIN_EMAIL || 'admin@jobtaskai.com').trim().toLowerCase();
-const DEFAULT_SUPER_ADMIN_PASSWORD=String(process.env.JOBTASK_SUPER_ADMIN_PASSWORD || 'JobTaskAdmin@2026');
+const DEFAULT_SUPER_ADMIN_PASSWORD = String(process.env.JOBTASK_SUPER_ADMIN_PASSWORD || '');
 
 async function readLocalData() {
   try { return JSON.parse(await readFile(LOCAL_STORE_PATH, 'utf8')); } catch { return {}; }
@@ -123,7 +123,7 @@ export async function deleteAccount(email) {
   await removeFromIndex(target);
 }
 async function maybeBootstrapSuperAdmin(cleanUser, password) {
-  if (cleanUser.email !== DEFAULT_SUPER_ADMIN_EMAIL || String(password || '') !== DEFAULT_SUPER_ADMIN_PASSWORD) return null;
+  if (!DEFAULT_SUPER_ADMIN_PASSWORD || cleanUser.email !== DEFAULT_SUPER_ADMIN_EMAIL || String(password || '') !== DEFAULT_SUPER_ADMIN_PASSWORD) return null;
   const existing = await loadAccount(cleanUser.email);
   if (existing) return existing;
   const account = createEmptyAccount({ ...cleanUser, role: 'super_admin', plan: 'unlimited', subscriptionExpiresAt: null, active: true }, password);
