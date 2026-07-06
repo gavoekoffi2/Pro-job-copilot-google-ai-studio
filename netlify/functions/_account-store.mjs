@@ -148,6 +148,19 @@ export async function registerOrLoginAccount(user = {}) {
   await saveAccount(account);
   return { account, sessionToken };
 }
+export async function loginAccount(user = {}) {
+  const cleanUser = cleanAccountUser(user, { requireName: false, requirePhone: false });
+  const password = cleanPassword(user.password);
+  const account = await loadAccount(cleanUser.email);
+  if (!account) { const error = new Error('Compte introuvable. Cliquez sur “S’inscrire” pour créer votre compte.'); error.statusCode = 404; throw error; }
+  if (!account.auth?.passwordHash || !verifyPassword(password, account.auth.passwordHash)) { const error = new Error('Email ou mot de passe incorrect.'); error.statusCode = 401; throw error; }
+  if (account.user?.active === false && effectiveAccess(account.user).role !== 'super_admin') { const error = new Error('Compte désactivé. Contactez l’administrateur.'); error.statusCode = 403; throw error; }
+  const sessionToken = newSessionToken();
+  account.auth.sessions = [{ hash: hashSessionToken(sessionToken), createdAt: Date.now() }, ...(account.auth.sessions || []).slice(0, 4)];
+  account.lastLoginAt = Date.now();
+  await saveAccount(account);
+  return { account, sessionToken };
+}
 export async function authenticateAccount(user = {}) {
   const cleanUser = cleanAccountUser(user, { requireName: false, requirePhone: false });
   const account = await loadAccount(cleanUser.email);

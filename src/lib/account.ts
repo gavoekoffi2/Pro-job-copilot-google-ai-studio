@@ -90,6 +90,17 @@ export async function registerAccount(user: CheckoutUser): Promise<AccountPayloa
   return data;
 }
 
+export async function loginAccount(user: Pick<CheckoutUser, 'email' | 'password'>): Promise<AccountPayload> {
+  const response = await fetch('/.netlify/functions/account-cvs', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'login', user }),
+  });
+  const data = await parseApiResponse(response) as AccountPayload;
+  if (data.user) saveAccountUser(data.user);
+  return data;
+}
+
 export async function listAccountCvs(user: CheckoutUser): Promise<AccountPayload> {
   const response = await fetch('/.netlify/functions/account-cvs', {
     method: 'POST',

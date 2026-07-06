@@ -3,6 +3,7 @@ import {
   authenticateAccount,
   cleanAccountUser,
   loadAccount,
+  loginAccount,
   publicAccount,
   registerOrLoginAccount,
   saveUserCv,
@@ -25,7 +26,12 @@ export async function handler(event) {
     const payload = parseBody(event);
     const action = payload.action || 'save';
 
-    if (action === 'register' || action === 'login') {
+    if (action === 'login') {
+      const { account, sessionToken } = await loginAccount(payload.user);
+      return json(200, publicAccount(account, sessionToken));
+    }
+
+    if (action === 'register') {
       const { account, sessionToken } = await registerOrLoginAccount(payload.user);
       return json(200, publicAccount(account, sessionToken));
     }
