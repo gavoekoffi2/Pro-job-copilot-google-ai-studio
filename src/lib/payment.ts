@@ -4,6 +4,14 @@ export interface CheckoutUser {
   name: string;
   email: string;
   phone: string;
+  role?: 'user' | 'admin' | 'super_admin';
+  plan?: 'free' | 'pro' | 'unlimited';
+  active?: boolean;
+  subscriptionExpiresAt?: number | null;
+  isAdmin?: boolean;
+  isSuperAdmin?: boolean;
+  isUnlimited?: boolean;
+  canDownloadPdf?: boolean;
   /** Mot de passe saisi uniquement au moment de créer/connecter le compte. */
   password?: string;
   /** Jeton de session renvoyé par le serveur après connexion. */
@@ -134,6 +142,14 @@ export function publicCheckoutUser(user: CheckoutUser): CheckoutUser {
     name: user.name.trim(),
     email: user.email.trim().toLowerCase(),
     phone: user.phone.trim(),
+    role: user.role,
+    plan: user.plan,
+    active: user.active,
+    subscriptionExpiresAt: user.subscriptionExpiresAt,
+    isAdmin: user.isAdmin,
+    isSuperAdmin: user.isSuperAdmin,
+    isUnlimited: user.isUnlimited,
+    canDownloadPdf: user.canDownloadPdf,
     sessionToken: user.sessionToken,
   };
 }

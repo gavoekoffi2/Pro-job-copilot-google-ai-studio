@@ -9,6 +9,7 @@ dist-ssr
 .netlify
 *.local
 *.tsbuildinfo
+.jobtask-data
 
 # Environment
 .env

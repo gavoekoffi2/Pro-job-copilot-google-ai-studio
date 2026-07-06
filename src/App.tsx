@@ -30,6 +30,9 @@ const TailorView = lazy(() =>
 const AccountView = lazy(() =>
   import('./components/account/AccountView').then((m) => ({ default: m.AccountView })),
 );
+const AdminDashboard = lazy(() =>
+  import('./components/admin/AdminDashboard').then((m) => ({ default: m.AdminDashboard })),
+);
 
 function ViewLoader() {
   return (
@@ -151,6 +154,7 @@ function AppShell() {
             {view === AppView.ACCOUNT && (
               <AccountView onOpenCv={openSavedCv} onUserChange={setAccountUser} />
             )}
+            {view === AppView.ADMIN && <AdminDashboard />}
           </Suspense>
         )}
       </main>

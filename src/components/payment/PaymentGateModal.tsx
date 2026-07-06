@@ -13,6 +13,7 @@ import {
   type CheckoutUser,
 } from '../../lib/payment';
 import { registerAccount, saveAccountCv, saveAccountUser } from '../../lib/account';
+import { loadPublicSettings } from '../../lib/admin';
 
 export function PaymentGateModal({
   open,
@@ -37,11 +38,15 @@ export function PaymentGateModal({
   const [busy, setBusy] = useState<null | 'create' | 'verify' | 'download'>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const [price, setPrice] = useState(500);
 
   useEffect(() => {
     if (!open) return;
     const saved = loadCheckoutUser();
     if (saved) setUser(saved);
+    void loadPublicSettings()
+      .then((settings) => setPrice(settings.cvDownloadPriceXof || 500))
+      .catch(() => setPrice(500));
   }, [open]);
 
   if (!open) return null;
@@ -153,7 +158,7 @@ export function PaymentGateModal({
                 <p className="text-sm font-bold text-ink-950">Prix du téléchargement</p>
                 <p className="text-xs text-ink-500">Paiement unique pour débloquer ce CV en PDF.</p>
               </div>
-              <p className="font-display text-3xl font-extrabold text-ink-950">500 FCFA</p>
+              <p className="font-display text-3xl font-extrabold text-ink-950">{price.toLocaleString('fr-FR')} FCFA</p>
             </div>
           </div>
 
@@ -180,7 +185,7 @@ export function PaymentGateModal({
                 disabled={!user.name.trim() || !user.email.trim() || !user.phone.trim() || (!user.sessionToken && (user.password?.length || 0) < 6)}
                 onClick={startPayment}
               >
-                Créer le compte et payer 500 FCFA
+                Créer le compte et payer {price.toLocaleString('fr-FR')} FCFA
               </Button>
             ) : (
               <Button

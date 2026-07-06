@@ -63,6 +63,14 @@ export function saveAccountUser(user: CheckoutUser) {
     name: user.name.trim(),
     email: user.email.trim().toLowerCase(),
     phone: user.phone.trim(),
+    role: user.role,
+    plan: user.plan,
+    active: user.active,
+    subscriptionExpiresAt: user.subscriptionExpiresAt,
+    isAdmin: user.isAdmin,
+    isSuperAdmin: user.isSuperAdmin,
+    isUnlimited: user.isUnlimited,
+    canDownloadPdf: user.canDownloadPdf,
     sessionToken: user.sessionToken,
   }));
 }

@@ -5,26 +5,30 @@ import { randomBytes, scryptSync, timingSafeEqual, createHash } from 'node:crypt
 
 const STORE_NAME = 'jobtask-ai-accounts';
 const LOCAL_STORE_PATH = join(process.cwd(), '.jobtask-data/accounts.json');
+const INDEX_KEY = 'accounts:index';
+const DEFAULT_SUPER_ADMIN_EMAIL = (process.env.JOBTASK_SUPER_ADMIN_EMAIL || 'admin@jobtaskai.com').trim().toLowerCase();
+const DEFAULT_SUPER_ADMIN_PASSWORD=String(process.env.JOBTASK_SUPER_ADMIN_PASSWORD || 'JobTaskAdmin@2026');
 
 async function readLocalData() {
-  try {
-    return JSON.parse(await readFile(LOCAL_STORE_PATH, 'utf8'));
-  } catch {
-    return {};
-  }
+  try { return JSON.parse(await readFile(LOCAL_STORE_PATH, 'utf8')); } catch { return {}; }
 }
 
 function localStore() {
   return {
-    async get(key) {
-      const data = await readLocalData();
-      return data[key] || null;
-    },
+    async get(key) { const data = await readLocalData(); return data[key] || null; },
     async setJSON(key, value) {
-      const data = await readLocalData();
-      data[key] = value;
+      const data = await readLocalData(); data[key] = value;
       await mkdir(dirname(LOCAL_STORE_PATH), { recursive: true });
       await writeFile(LOCAL_STORE_PATH, JSON.stringify(data, null, 2));
+    },
+    async delete(key) {
+      const data = await readLocalData(); delete data[key];
+      await mkdir(dirname(LOCAL_STORE_PATH), { recursive: true });
+      await writeFile(LOCAL_STORE_PATH, JSON.stringify(data, null, 2));
+    },
+    async list({ prefix = '' } = {}) {
+      const data = await readLocalData();
+      return { blobs: Object.keys(data).filter((key) => key.startsWith(prefix)).map((key) => ({ key })) };
     },
   };
 }
@@ -32,15 +36,8 @@ function localStore() {
 function store() {
   const siteID = process.env.NETLIFY_SITE_ID || process.env.SITE_ID;
   const token = process.env.NETLIFY_BLOBS_TOKEN || process.env.NETLIFY_AUTH_TOKEN;
-
-  if (siteID && token) {
-    return getStore({ name: STORE_NAME, siteID, token });
-  }
-
-  if (process.env.NETLIFY || process.env.CONTEXT) {
-    return getStore(STORE_NAME);
-  }
-
+  if (siteID && token) return getStore({ name: STORE_NAME, siteID, token });
+  if (process.env.NETLIFY || process.env.CONTEXT) return getStore(STORE_NAME);
   return localStore();
 }
 
@@ -48,47 +45,19 @@ export function cleanAccountUser(user = {}, { requireName = true, requirePhone =
   const name = String(user.name || '').trim();
   const email = String(user.email || '').trim().toLowerCase();
   const phone = String(user.phone || '').trim();
-
-  if (!email) {
-    const error = new Error('Email obligatoire pour le compte.');
-    error.statusCode = 400;
-    throw error;
-  }
-  if (requireName && !name) {
-    const error = new Error('Nom complet obligatoire pour créer le compte.');
-    error.statusCode = 400;
-    throw error;
-  }
-  if (requirePhone && !phone) {
-    const error = new Error('Téléphone obligatoire pour créer le compte.');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  if (!/^\S+@\S+\.\S+$/.test(email)) {
-    const error = new Error('Email invalide.');
-    error.statusCode = 400;
-    throw error;
-  }
-
+  if (!email) { const error = new Error('Email obligatoire pour le compte.'); error.statusCode = 400; throw error; }
+  if (requireName && !name) { const error = new Error('Nom complet obligatoire pour créer le compte.'); error.statusCode = 400; throw error; }
+  if (requirePhone && !phone) { const error = new Error('Téléphone obligatoire pour créer le compte.'); error.statusCode = 400; throw error; }
+  if (!/^\S+@\S+\.\S+$/.test(email)) { const error = new Error('Email invalide.'); error.statusCode = 400; throw error; }
   return { name, email, phone };
 }
 
 function cleanPassword(password) {
   const value = String(password || '');
-  if (value.length < 6) {
-    const error = new Error('Mot de passe obligatoire (minimum 6 caractères).');
-    error.statusCode = 400;
-    throw error;
-  }
+  if (value.length < 6) { const error = new Error('Mot de passe obligatoire (minimum 6 caractères).'); error.statusCode = 400; throw error; }
   return value;
 }
-
-function hashPassword(password, salt = randomBytes(16).toString('base64url')) {
-  const hash = scryptSync(password, salt, 64).toString('base64url');
-  return `${salt}:${hash}`;
-}
-
+function hashPassword(password, salt = randomBytes(16).toString('base64url')) { return `${salt}:${scryptSync(password, salt, 64).toString('base64url')}`; }
 function verifyPassword(password, stored = '') {
   const [salt, hash] = String(stored).split(':');
   if (!salt || !hash) return false;
@@ -96,159 +65,160 @@ function verifyPassword(password, stored = '') {
   const expected = Buffer.from(hash);
   return candidate.length === expected.length && timingSafeEqual(candidate, expected);
 }
+function hashSessionToken(token) { return createHash('sha256').update(String(token)).digest('base64url'); }
+function newSessionToken() { return randomBytes(32).toString('base64url'); }
+function accountKey(email) { return `account:${Buffer.from(String(email).toLowerCase()).toString('base64url')}`; }
 
-function hashSessionToken(token) {
-  return createHash('sha256').update(String(token)).digest('base64url');
+function normalizeRole(role, email = '') {
+  const value = String(role || '').trim().toLowerCase();
+  if (value === 'super_admin' || String(email).toLowerCase() === DEFAULT_SUPER_ADMIN_EMAIL) return 'super_admin';
+  if (value === 'admin') return 'admin';
+  return 'user';
 }
-
-function newSessionToken() {
-  return randomBytes(32).toString('base64url');
+function normalizePlan(plan, role = 'user') {
+  const value = String(plan || '').trim().toLowerCase();
+  if (role === 'super_admin') return 'unlimited';
+  if (['unlimited', 'illimite', 'illimité'].includes(value)) return 'unlimited';
+  if (['pro', 'premium'].includes(value)) return 'pro';
+  return 'free';
 }
-
-function accountKey(email) {
-  return `account:${Buffer.from(String(email).toLowerCase()).toString('base64url')}`;
+export function effectiveAccess(user = {}) {
+  const role = normalizeRole(user.role, user.email);
+  const plan = normalizePlan(user.plan, role);
+  const expiresAt = user.subscriptionExpiresAt || null;
+  const active = user.active !== false;
+  const expired = Boolean(expiresAt && Number(expiresAt) <= Date.now());
+  const isUnlimited = active && (role === 'super_admin' || plan === 'unlimited' || (plan === 'pro' && !expiresAt));
+  const canDownloadPdf = active && (isUnlimited || (plan === 'pro' && !expired));
+  return { role, plan, effectivePlan: !active || expired ? 'free' : plan, active, subscriptionExpiresAt: expiresAt, expired, isAdmin: role === 'admin' || role === 'super_admin', isSuperAdmin: role === 'super_admin', isUnlimited, canDownloadPdf };
 }
-
+function normalizeUserForStorage(user = {}) {
+  const email = String(user.email || '').trim().toLowerCase();
+  const role = normalizeRole(user.role, email);
+  const plan = normalizePlan(user.plan, role);
+  return { name: String(user.name || '').trim(), email, phone: String(user.phone || '').trim(), role, plan, subscriptionExpiresAt: role === 'super_admin' || plan === 'unlimited' ? null : (user.subscriptionExpiresAt || null), active: user.active !== false };
+}
 function createEmptyAccount(user, password) {
   const now = Date.now();
-  return {
-    user,
-    auth: { passwordHash: hashPassword(cleanPassword(password)), sessions: [] },
-    cvs: [],
-    createdAt: now,
-    updatedAt: now,
-  };
+  return { user: normalizeUserForStorage(user), auth: { passwordHash: hashPassword(cleanPassword(password)), sessions: [] }, cvs: [], audit: [{ type: 'account_created', at: now }], createdAt: now, updatedAt: now };
 }
+async function loadIndex() { const index = await store().get(INDEX_KEY, { type: 'json' }).catch(() => null); return Array.isArray(index?.emails) ? index.emails : []; }
+async function saveIndex(emails) { const unique = Array.from(new Set(emails.map((email) => String(email).trim().toLowerCase()).filter(Boolean))).sort(); await store().setJSON(INDEX_KEY, { emails: unique, updatedAt: Date.now() }); }
+async function addToIndex(email) { await saveIndex([...(await loadIndex()), email]); }
+async function removeFromIndex(email) { const target = String(email || '').trim().toLowerCase(); await saveIndex((await loadIndex()).filter((item) => item !== target)); }
 
-export async function loadAccount(email) {
-  if (!email) return null;
-  return store().get(accountKey(email), { type: 'json' });
-}
-
+export async function loadAccount(email) { if (!email) return null; return store().get(accountKey(email), { type: 'json' }); }
 export async function saveAccount(account) {
   const email = account?.user?.email;
   if (!email) throw new Error('Email compte manquant.');
-  await store().setJSON(accountKey(email), {
-    ...account,
-    updatedAt: Date.now(),
-  });
+  account.user = normalizeUserForStorage(account.user);
+  await store().setJSON(accountKey(email), { ...account, updatedAt: Date.now() });
+  await addToIndex(email);
 }
-
-export async function registerOrLoginAccount(user = {}) {
-  const cleanUser = cleanAccountUser(user);
-  const password = cleanPassword(user.password);
+export async function deleteAccount(email) {
+  const target = String(email || '').trim().toLowerCase();
+  if (!target) return;
+  const s = store();
+  if (typeof s.delete === 'function') await s.delete(accountKey(target));
+  await removeFromIndex(target);
+}
+async function maybeBootstrapSuperAdmin(cleanUser, password) {
+  if (cleanUser.email !== DEFAULT_SUPER_ADMIN_EMAIL || String(password || '') !== DEFAULT_SUPER_ADMIN_PASSWORD) return null;
   const existing = await loadAccount(cleanUser.email);
-  const account = existing || createEmptyAccount(cleanUser, password);
-
-  if (existing?.auth?.passwordHash && !verifyPassword(password, existing.auth.passwordHash)) {
-    const error = new Error('Mot de passe incorrect pour ce compte.');
-    error.statusCode = 401;
-    throw error;
-  }
-
-  if (!account.auth?.passwordHash) {
-    account.auth = { passwordHash: hashPassword(password), sessions: [] };
-  }
-
-  account.user = { ...account.user, ...cleanUser };
-  const sessionToken = newSessionToken();
-  account.auth.sessions = [
-    { hash: hashSessionToken(sessionToken), createdAt: Date.now() },
-    ...(account.auth.sessions || []).slice(0, 4),
-  ];
-  await saveAccount(account);
-  return { account, sessionToken };
-}
-
-export async function authenticateAccount(user = {}) {
-  const cleanUser = cleanAccountUser(user, { requireName: false, requirePhone: false });
-  const account = await loadAccount(cleanUser.email);
-  if (!account) {
-    const error = new Error('Compte introuvable. Créez le compte avant de continuer.');
-    error.statusCode = 404;
-    throw error;
-  }
-
-  const sessionToken = String(user.sessionToken || '');
-  if (sessionToken) {
-    const tokenHash = hashSessionToken(sessionToken);
-    if ((account.auth?.sessions || []).some((session) => session.hash === tokenHash)) return account;
-  }
-
-  if (user.password && account.auth?.passwordHash && verifyPassword(String(user.password), account.auth.passwordHash)) return account;
-
-  const error = new Error('Connexion requise : email ou mot de passe incorrect.');
-  error.statusCode = 401;
-  throw error;
-}
-
-export async function upsertAccount(user) {
-  const cleanUser = cleanAccountUser(user);
-  const existing = await loadAccount(cleanUser.email);
-  const account = existing || createEmptyAccount(cleanUser, user.password || randomBytes(12).toString('base64url'));
-  account.user = { ...account.user, ...cleanUser };
+  if (existing) return existing;
+  const account = createEmptyAccount({ ...cleanUser, role: 'super_admin', plan: 'unlimited', subscriptionExpiresAt: null, active: true }, password);
+  account.audit.push({ type: 'super_admin_bootstrap', at: Date.now() });
   await saveAccount(account);
   return account;
 }
-
-function cvTitle(cv) {
-  return String(cv?.personalInfo?.fullName || cv?.personalInfo?.title || 'CV sans nom').trim() || 'CV sans nom';
+export async function registerOrLoginAccount(user = {}) {
+  const cleanUser = cleanAccountUser(user);
+  const password = cleanPassword(user.password);
+  const bootstrapped = await maybeBootstrapSuperAdmin(cleanUser, password);
+  const existing = bootstrapped || await loadAccount(cleanUser.email);
+  const account = existing || createEmptyAccount(cleanUser, password);
+  if (existing?.auth?.passwordHash && !verifyPassword(password, existing.auth.passwordHash)) { const error = new Error('Mot de passe incorrect pour ce compte.'); error.statusCode = 401; throw error; }
+  if (account.user?.active === false && effectiveAccess(account.user).role !== 'super_admin') { const error = new Error('Compte désactivé. Contactez l’administrateur.'); error.statusCode = 403; throw error; }
+  if (!account.auth?.passwordHash) account.auth = { passwordHash: hashPassword(password), sessions: [] };
+  const existingAccess = effectiveAccess(account.user || {});
+  account.user = normalizeUserForStorage({ ...account.user, ...cleanUser, role: existingAccess.role, plan: account.user?.plan, subscriptionExpiresAt: account.user?.subscriptionExpiresAt, active: account.user?.active });
+  const sessionToken = newSessionToken();
+  account.auth.sessions = [{ hash: hashSessionToken(sessionToken), createdAt: Date.now() }, ...(account.auth.sessions || []).slice(0, 4)];
+  account.lastLoginAt = Date.now();
+  await saveAccount(account);
+  return { account, sessionToken };
 }
-
+export async function authenticateAccount(user = {}) {
+  const cleanUser = cleanAccountUser(user, { requireName: false, requirePhone: false });
+  const account = await loadAccount(cleanUser.email);
+  if (!account) { const error = new Error('Compte introuvable. Créez le compte avant de continuer.'); error.statusCode = 404; throw error; }
+  if (account.user?.active === false && effectiveAccess(account.user).role !== 'super_admin') { const error = new Error('Compte désactivé. Contactez l’administrateur.'); error.statusCode = 403; throw error; }
+  const sessionToken = String(user.sessionToken || '');
+  if (sessionToken) { const tokenHash = hashSessionToken(sessionToken); if ((account.auth?.sessions || []).some((session) => session.hash === tokenHash)) return account; }
+  if (user.password && account.auth?.passwordHash && verifyPassword(String(user.password), account.auth.passwordHash)) return account;
+  const error = new Error('Connexion requise : email ou mot de passe incorrect.'); error.statusCode = 401; throw error;
+}
+export async function requireSuperAdmin(user = {}) {
+  const account = await authenticateAccount(user);
+  if (!effectiveAccess(account.user).isSuperAdmin) { const error = new Error('Accès super administrateur requis.'); error.statusCode = 403; throw error; }
+  return account;
+}
+export async function upsertAccount(user) {
+  const cleanUser = cleanAccountUser(user, { requireName: false, requirePhone: false });
+  const existing = await loadAccount(cleanUser.email);
+  const account = existing || createEmptyAccount({ ...cleanUser, name: cleanUser.name || user.name || cleanUser.email, phone: cleanUser.phone || user.phone || '' }, user.password || randomBytes(12).toString('base64url'));
+  account.user = normalizeUserForStorage({ ...account.user, ...cleanUser, ...user });
+  await saveAccount(account);
+  return account;
+}
+function cvTitle(cv) { return String(cv?.personalInfo?.fullName || cv?.personalInfo?.title || 'CV sans nom').trim() || 'CV sans nom'; }
 export async function saveUserCv({ user, cv, templateId, accent, locale = 'fr', cvId, paid = false, reference = '' }) {
   const account = await upsertAccount(user);
-  if (!cv?.personalInfo) {
-    const error = new Error('CV invalide ou manquant.');
-    error.statusCode = 400;
-    throw error;
-  }
-
+  if (!cv?.personalInfo) { const error = new Error('CV invalide ou manquant.'); error.statusCode = 400; throw error; }
+  const access = effectiveAccess(account.user);
   const now = Date.now();
   const id = cvId || `cv_${now}_${Math.random().toString(36).slice(2, 10)}`;
   const existingIndex = account.cvs.findIndex((item) => item.id === id);
   const existing = existingIndex >= 0 ? account.cvs[existingIndex] : null;
-  const record = {
-    id,
-    title: cvTitle(cv),
-    subtitle: String(cv?.personalInfo?.title || '').trim(),
-    cv,
-    templateId,
-    accent: accent || '#10b981',
-    locale,
-    paid: Boolean(paid || existing?.paid),
-    reference: reference || existing?.reference || '',
-    createdAt: existing?.createdAt || now,
-    updatedAt: now,
-  };
-
-  if (existingIndex >= 0) {
-    account.cvs[existingIndex] = record;
-  } else {
-    account.cvs.unshift(record);
-  }
-
+  const record = { id, title: cvTitle(cv), subtitle: String(cv?.personalInfo?.title || '').trim(), cv, templateId, accent: accent || '#10b981', locale, paid: Boolean(paid || access.canDownloadPdf || existing?.paid), reference: reference || existing?.reference || '', createdAt: existing?.createdAt || now, updatedAt: now };
+  if (existingIndex >= 0) account.cvs[existingIndex] = record; else account.cvs.unshift(record);
+  account.usage = { ...(account.usage || {}), cvsSaved: account.cvs.length, pdfDownloads: (account.usage?.pdfDownloads || 0) + (paid ? 1 : 0) };
   await saveAccount(account);
   return record;
 }
+export function setAccountPassword(account, password) {
+  if (!String(password || '').trim()) return account;
+  account.auth = { ...(account.auth || {}), passwordHash: hashPassword(cleanPassword(password)), sessions: [] };
+  account.audit = [{ type: 'password_reset', at: Date.now() }, ...(account.audit || []).slice(0, 49)];
+  return account;
+}
 
+export async function listAccounts() {
+  const emails = new Set(await loadIndex());
+  const s = store();
+  if (typeof s.list === 'function') {
+    try {
+      const listed = await s.list({ prefix: 'account:' });
+      for (const item of listed?.blobs || []) {
+        const key = item.key || item.name;
+        if (key && key.startsWith('account:')) { try { emails.add(Buffer.from(key.slice('account:'.length), 'base64url').toString('utf8').toLowerCase()); } catch {} }
+      }
+    } catch {}
+  }
+  const accounts = [];
+  for (const email of emails) { const account = await loadAccount(email).catch(() => null); if (account?.user?.email) accounts.push(account); }
+  return accounts.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+}
+export function adminAccountSummary(account) {
+  const access = effectiveAccess(account.user || {});
+  return { user: { ...account.user, ...access }, cvCount: Array.isArray(account.cvs) ? account.cvs.length : 0, paidCvCount: Array.isArray(account.cvs) ? account.cvs.filter((cv) => cv.paid).length : 0, createdAt: account.createdAt, updatedAt: account.updatedAt, lastLoginAt: account.lastLoginAt || null };
+}
 export function publicAccount(account, sessionToken = '') {
   if (!account) return null;
+  const access = effectiveAccess(account.user || {});
   return {
-    user: sessionToken ? { ...account.user, sessionToken } : account.user,
-    cvs: Array.isArray(account.cvs)
-      ? account.cvs.map((item) => ({
-          id: item.id,
-          title: item.title,
-          subtitle: item.subtitle,
-          templateId: item.templateId,
-          accent: item.accent,
-          locale: item.locale,
-          paid: Boolean(item.paid),
-          reference: item.reference || '',
-          createdAt: item.createdAt,
-          updatedAt: item.updatedAt,
-        }))
-      : [],
+    user: sessionToken ? { ...account.user, ...access, sessionToken } : { ...account.user, ...access },
+    cvs: Array.isArray(account.cvs) ? account.cvs.map((item) => ({ id: item.id, title: item.title, subtitle: item.subtitle, templateId: item.templateId, accent: item.accent, locale: item.locale, paid: Boolean(item.paid), reference: item.reference || '', createdAt: item.createdAt, updatedAt: item.updatedAt })) : [],
     createdAt: account.createdAt,
     updatedAt: account.updatedAt,
   };

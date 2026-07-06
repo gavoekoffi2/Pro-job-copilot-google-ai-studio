@@ -1,8 +1,8 @@
 import { saveCheckoutRecord } from './_checkout-store.mjs';
+import { loadSettings } from './_settings-store.mjs';
 import { json, requireEnv, siteUrl } from './_utils.mjs';
 
 const GENIUSPAY_BASE_URL = 'https://geniuspay.ci/api/v1/merchant';
-const CV_DOWNLOAD_PRICE_XOF = 500;
 
 function cleanUser(user = {}) {
   const name = String(user.name || '').trim();
@@ -45,9 +45,11 @@ export async function handler(event) {
 
     const cvId = `cv_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
     const origin = siteUrl();
+    const settings = await loadSettings();
+    const cvDownloadPriceXof = settings.cvDownloadPriceXof;
 
     const createPaymentPayload = {
-      amount: CV_DOWNLOAD_PRICE_XOF,
+      amount: cvDownloadPriceXof,
       currency: 'XOF',
       description: 'Téléchargement CV JobTask AI',
       customer: user,
@@ -55,7 +57,7 @@ export async function handler(event) {
       error_url: `${origin}/?payment=error`,
       metadata: {
         product: 'cv_download',
-        price_xof: CV_DOWNLOAD_PRICE_XOF,
+        price_xof: cvDownloadPriceXof,
         cv_id: cvId,
         user_email: user.email,
       },
@@ -93,7 +95,7 @@ export async function handler(event) {
       cvId,
       checkoutUrl,
       status: payment.status || 'pending',
-      amount: CV_DOWNLOAD_PRICE_XOF,
+      amount: cvDownloadPriceXof,
       currency: 'XOF',
       createdAt: Date.now(),
     });
@@ -102,7 +104,7 @@ export async function handler(event) {
       reference,
       cvId,
       checkoutUrl,
-      amount: CV_DOWNLOAD_PRICE_XOF,
+      amount: cvDownloadPriceXof,
       currency: 'XOF',
       status: payment.status || 'pending',
     });
