@@ -53,9 +53,9 @@ jobs:
         run: npm run build
 
       - name: Sync runtime env to Netlify
+        continue-on-error: true
         run: |
-          npx netlify env:set NETLIFY_SITE_ID "$NETLIFY_SITE_ID" --context production --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
-          npx netlify env:set NETLIFY_AUTH_TOKEN "$NETLIFY_AUTH_TOKEN" --context production --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
+          echo "Netlify env sync is best-effort. Deployment must not be blocked if the token cannot edit project variables."
           if [ -n "$OPENROUTER_API_KEY" ]; then
             npx netlify env:set OPENROUTER_API_KEY "$OPENROUTER_API_KEY" --context production --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
             npx netlify env:set OPENROUTER_MODEL_ANALYZE "$OPENROUTER_MODEL_ANALYZE" --context production --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
