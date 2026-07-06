@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <title>JobTask AI mark</title>
+  <desc>Premium shield and document mark for JobTask AI.</desc>
+  <defs>
+    <linearGradient id="brand" x1="18" y1="12" x2="112" y2="119" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7C3AED"/>
+      <stop offset="0.48" stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#F59E0B"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="42" y1="31" x2="88" y2="98" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EAF1FF"/>
+    </linearGradient>
+    <filter id="shadow" x="0" y="0" width="128" height="128" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="9" flood-color="#111827" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="30" fill="#070B18"/>
+  <path opacity="0.32" d="M16 99C41 47 78 20 115 11v117H16V99Z" fill="url(#brand)"/>
+  <g filter="url(#shadow)">
+    <path d="M64 13 104 29v31c0 29-16.6 49.6-40 57-23.4-7.4-40-28-40-57V29l40-16Z" fill="url(#brand)"/>
+    <path d="M64 22.5 95 35v25.2c0 22.3-12.5 38.5-31 45.2-18.5-6.7-31-22.9-31-45.2V35l31-12.5Z" fill="#0B1224" fill-opacity="0.42"/>
+    <path d="M43 37.5h31.5L90 53v38.5A7.5 7.5 0 0 1 82.5 99h-39A7.5 7.5 0 0 1 36 91.5V45a7.5 7.5 0 0 1 7-7.5Z" fill="url(#paper)"/>
+    <path d="M74 38v12a5 5 0 0 0 5 5h11L74 38Z" fill="#C7D2FE"/>
+    <path d="M50 60h26M50 72h22M50 84h14" stroke="#1E3A8A" stroke-width="5.5" stroke-linecap="round"/>
+    <path d="M91.6 26.7 94.1 34l7.3 2.5-7.3 2.5-2.5 7.3-2.5-7.3-7.3-2.5 7.3-2.5 2.5-7.3Z" fill="#FBBF24"/>
+    <circle cx="90" cy="88" r="10" fill="#F59E0B"/>
+    <path d="M86 88.3 89 91.3 95 84.7" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

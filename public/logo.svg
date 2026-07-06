@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 112" fill="none">
+  <title>JobTask AI logo</title>
+  <desc>Full horizontal logo for JobTask AI.</desc>
+  <defs>
+    <linearGradient id="brand" x1="12" y1="8" x2="99" y2="104" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7C3AED"/>
+      <stop offset="0.5" stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#F59E0B"/>
+    </linearGradient>
+    <linearGradient id="text" x1="126" y1="25" x2="367" y2="82" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F172A"/>
+      <stop offset="0.72" stop-color="#1E3A8A"/>
+      <stop offset="1" stop-color="#7C3AED"/>
+    </linearGradient>
+    <filter id="shadow" x="0" y="0" width="112" height="112" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#111827" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+  <g filter="url(#shadow)">
+    <rect x="8" y="8" width="96" height="96" rx="24" fill="#070B18"/>
+    <path opacity="0.34" d="M20 82c18-36 46-57 81-66v88H20V82Z" fill="url(#brand)"/>
+    <path d="M56 17 88 29.8v24.8c0 23.2-13.3 39.8-32 45.9-18.7-6.1-32-22.7-32-45.9V29.8L56 17Z" fill="url(#brand)"/>
+    <path d="M41 37h26.5L80 49.5V79a6 6 0 0 1-6 6H41a6 6 0 0 1-6-6V43a6 6 0 0 1 6-6Z" fill="#F8FAFC"/>
+    <path d="M67 37v9.5a4 4 0 0 0 4 4H80L67 37Z" fill="#C7D2FE"/>
+    <path d="M46 56h20M46 66h18M46 76h11" stroke="#1E3A8A" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="77" cy="76" r="8" fill="#F59E0B"/>
+    <path d="M73.7 76.2 76 78.5l4.8-5.3" stroke="white" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="126" y="58" fill="url(#text)" font-family="Sora, Plus Jakarta Sans, Inter, Arial, sans-serif" font-size="38" font-weight="800" letter-spacing="-1.4">JobTask</text>
+  <text x="292" y="58" fill="#F59E0B" font-family="Sora, Plus Jakarta Sans, Inter, Arial, sans-serif" font-size="38" font-weight="800" letter-spacing="-1.4">AI</text>
+  <text x="128" y="83" fill="#64748B" font-family="Inter, Plus Jakarta Sans, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="2.7">CV • CARRIÈRE • INTELLIGENCE ARTIFICIELLE</text>
+</svg>
