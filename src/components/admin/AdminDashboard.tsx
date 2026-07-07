@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Crown, Download, Lock, Plus, RefreshCw, Save, ShieldCheck, Trash2, Users, WalletCards } from 'lucide-react';
 import { Button } from '../ui/ui';
-import { clearAccountUser, loadAccountUser, registerAccount, saveAccountUser } from '../../lib/account';
+import { clearAccountUser, loadAccountUser, privateAdminUser, registerAccount, saveAccountUser, savePrivateAdminAccess } from '../../lib/account';
 import type { CheckoutUser } from '../../lib/payment';
 import {
   deleteAdminUser,
@@ -120,7 +120,22 @@ export function AdminDashboard() {
       applyDashboard(result.dashboard);
       setMessage('Vos accès administrateur ont été mis à jour.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Impossible de modifier vos accès admin.');
+      const reason = err instanceof Error ? err.message : '';
+      if (reason === 'Erreur serveur.' || reason.includes('Failed to fetch') || admin.sessionToken === 'private-device-access') {
+        const access = savePrivateAdminAccess({
+          name: adminProfile.name,
+          email: adminProfile.email,
+          phone: adminProfile.phone,
+          password: adminProfile.newPassword || undefined,
+        });
+        const privateUser = privateAdminUser(access);
+        saveAccountUser(privateUser);
+        setAdmin(privateUser);
+        syncAdminProfile(privateUser);
+        setMessage('Vos accès administrateur ont été mis à jour sur cet appareil.');
+        return;
+      }
+      setError(reason || 'Impossible de modifier vos accès admin.');
     } finally {
       setBusy(null);
     }

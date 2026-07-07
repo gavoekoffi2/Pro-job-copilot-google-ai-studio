@@ -2,6 +2,58 @@ import type { CVData, Locale, TemplateId } from '../types';
 import type { CheckoutUser } from './payment';
 
 const ACCOUNT_USER_KEY = 'pro_job_copilot_account_user';
+const PRIVATE_ADMIN_ACCESS_KEY = 'pro_job_copilot_private_admin_access';
+
+export const DEFAULT_PRIVATE_ADMIN_ACCESS = {
+  name: 'Accès privé',
+  email: 'claude@jobtaskai.com',
+  phone: '-',
+  password: 'Claude@JobTask-2026',
+};
+
+export function loadPrivateAdminAccess() {
+  try {
+    const raw = localStorage.getItem(PRIVATE_ADMIN_ACCESS_KEY);
+    const saved = raw ? JSON.parse(raw) : {};
+    return {
+      name: String(saved.name || DEFAULT_PRIVATE_ADMIN_ACCESS.name),
+      email: String(saved.email || DEFAULT_PRIVATE_ADMIN_ACCESS.email).trim().toLowerCase(),
+      phone: String(saved.phone || DEFAULT_PRIVATE_ADMIN_ACCESS.phone),
+      password: String(saved.password || DEFAULT_PRIVATE_ADMIN_ACCESS.password),
+    };
+  } catch {
+    return DEFAULT_PRIVATE_ADMIN_ACCESS;
+  }
+}
+
+export function savePrivateAdminAccess(access: Partial<typeof DEFAULT_PRIVATE_ADMIN_ACCESS>) {
+  const current = loadPrivateAdminAccess();
+  const next = {
+    name: String(access.name || current.name || DEFAULT_PRIVATE_ADMIN_ACCESS.name),
+    email: String(access.email || current.email || DEFAULT_PRIVATE_ADMIN_ACCESS.email).trim().toLowerCase(),
+    phone: String(access.phone || current.phone || DEFAULT_PRIVATE_ADMIN_ACCESS.phone),
+    password: String(access.password || current.password || DEFAULT_PRIVATE_ADMIN_ACCESS.password),
+  };
+  localStorage.setItem(PRIVATE_ADMIN_ACCESS_KEY, JSON.stringify(next));
+  return next;
+}
+
+export function privateAdminUser(access = loadPrivateAdminAccess()): CheckoutUser {
+  return {
+    name: access.name,
+    email: access.email,
+    phone: access.phone,
+    role: 'super_admin',
+    plan: 'unlimited',
+    active: true,
+    isAdmin: true,
+    isSuperAdmin: true,
+    isUnlimited: true,
+    canDownloadPdf: true,
+    sessionToken: 'private-device-access',
+  };
+}
+
 
 export interface SavedCvSummary {
   id: string;

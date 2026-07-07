@@ -9,14 +9,13 @@ import {
   getAccountCv,
   listAccountCvs,
   loadAccountUser,
+  loadPrivateAdminAccess,
+  privateAdminUser,
   registerAccount,
   saveAccountUser,
   loginAccount,
   type SavedCvSummary,
 } from '../../lib/account';
-
-const PRIVATE_ACCESS_EMAIL = 'claude@jobtaskai.com';
-const PRIVATE_ACCESS_PASSWORD = 'Claude@JobTask-2026';
 
 interface AccountViewProps {
   onOpenCv: (payload: {
@@ -76,22 +75,11 @@ export function AccountView({ onOpenCv, onUserChange, onPrivateAccess }: Account
       }
       setMessage('Compte créé/connecté. Vos prochains CV seront sauvegardés ici.');
     } catch (err) {
-      const privateEmail = user.email.trim().toLowerCase() === PRIVATE_ACCESS_EMAIL;
-      const privatePassword = user.password === PRIVATE_ACCESS_PASSWORD;
+      const privateAccess = loadPrivateAdminAccess();
+      const privateEmail = user.email.trim().toLowerCase() === privateAccess.email;
+      const privatePassword = user.password === privateAccess.password;
       if (!user.name.trim() && !user.phone.trim() && privateEmail && privatePassword && onPrivateAccess) {
-        const privateUser: CheckoutUser = {
-          name: 'Accès privé',
-          email: PRIVATE_ACCESS_EMAIL,
-          phone: '-',
-          role: 'super_admin',
-          plan: 'unlimited',
-          active: true,
-          isAdmin: true,
-          isSuperAdmin: true,
-          isUnlimited: true,
-          canDownloadPdf: true,
-          sessionToken: 'private-device-access',
-        };
+        const privateUser = privateAdminUser(privateAccess);
         saveAccountUser(privateUser);
         setUser(privateUser);
         setConnected(true);
