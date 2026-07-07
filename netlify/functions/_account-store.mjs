@@ -201,9 +201,10 @@ export async function saveUserCv({ user, cv, templateId, accent, locale = 'fr', 
   await saveAccount(account);
   return record;
 }
-export function setAccountPassword(account, password) {
+export function setAccountPassword(account, password, { keepSessionToken = '' } = {}) {
   if (!String(password || '').trim()) return account;
-  account.auth = { ...(account.auth || {}), passwordHash: hashPassword(cleanPassword(password)), sessions: [] };
+  const sessions = keepSessionToken ? [{ hash: hashSessionToken(keepSessionToken), createdAt: Date.now() }] : [];
+  account.auth = { ...(account.auth || {}), passwordHash: hashPassword(cleanPassword(password)), sessions };
   account.audit = [{ type: 'password_reset', at: Date.now() }, ...(account.audit || []).slice(0, 49)];
   return account;
 }

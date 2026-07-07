@@ -50,6 +50,13 @@ export interface SaveUserInput {
   initialPassword?: string;
 }
 
+export interface AdminProfileInput {
+  name: string;
+  email: string;
+  phone: string;
+  newPassword?: string;
+}
+
 async function parseApiResponse(response: Response) {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data?.error || 'Erreur serveur.');
@@ -75,6 +82,10 @@ export async function updateCvPrice(admin: CheckoutUser, cvDownloadPriceXof: num
 
 export async function saveAdminUser(admin: CheckoutUser, target: SaveUserInput) {
   return adminRequest<AdminDashboardPayload>(admin, { action: 'saveUser', target });
+}
+
+export async function updateAdminProfile(admin: CheckoutUser, profile: AdminProfileInput) {
+  return adminRequest<{ user: CheckoutUser; dashboard: AdminDashboardPayload }>(admin, { action: 'updateAdminProfile', profile });
 }
 
 export async function deleteAdminUser(admin: CheckoutUser, email: string) {

@@ -5,6 +5,7 @@ import {
   effectiveAccess,
   listAccounts,
   loadAccount,
+  publicAccount,
   requireSuperAdmin,
   saveAccount,
   setAccountPassword,
@@ -34,6 +35,11 @@ function computeStats(accounts) {
   }
   return stats;
 }
+async function dashboardPayload(adminAccount) {
+  const accounts = await listAccounts();
+  const settings = await loadSettings();
+  return { admin: adminAccountSummary(adminAccount), settings, stats: computeStats(accounts), users: accounts.map(adminAccountSummary) };
+}
 
 export async function handler(event) {
   if (event.httpMethod !== 'POST') return json(405, { error: 'Method not allowed' });
@@ -43,9 +49,38 @@ export async function handler(event) {
     const action = payload.action || 'dashboard';
 
     if (action === 'dashboard') {
-      const accounts = await listAccounts();
-      const settings = await loadSettings();
-      return json(200, { admin: adminAccountSummary(adminAccount), settings, stats: computeStats(accounts), users: accounts.map(adminAccountSummary) });
+      return json(200, await dashboardPayload(adminAccount));
+    }
+
+    if (action === 'updateAdminProfile') {
+      const profile = payload.profile || {};
+      const currentEmail = String(adminAccount.user.email || '').trim().toLowerCase();
+      const nextEmail = String(profile.email || '').trim().toLowerCase();
+      const nextName = String(profile.name || '').trim();
+      const nextPhone = String(profile.phone || '').trim();
+      const nextPassword = String(profile.newPassword || '');
+      if (!nextEmail || !/^\S+@\S+\.\S+$/.test(nextEmail)) return json(400, { error: 'Email admin invalide.' });
+      if (!nextName) return json(400, { error: 'Nom admin obligatoire.' });
+      if (!nextPhone) return json(400, { error: 'Téléphone admin obligatoire.' });
+      if (nextPassword && nextPassword.length < 6) return json(400, { error: 'Le nouveau mot de passe doit contenir au moins 6 caractères.' });
+      if (nextEmail !== currentEmail && await loadAccount(nextEmail)) return json(409, { error: 'Cet email est déjà utilisé par un autre compte.' });
+
+      const account = adminAccount;
+      account.user = {
+        ...account.user,
+        name: nextName,
+        email: nextEmail,
+        phone: nextPhone,
+        role: 'super_admin',
+        plan: 'unlimited',
+        subscriptionExpiresAt: null,
+        active: true,
+      };
+      if (nextPassword) setAccountPassword(account, nextPassword, { keepSessionToken: payload.admin?.sessionToken || '' });
+      account.audit = [{ type: 'super_admin_profile_update', at: Date.now(), by: currentEmail, emailChanged: nextEmail !== currentEmail, passwordChanged: Boolean(nextPassword) }, ...(account.audit || []).slice(0, 49)];
+      await saveAccount(account);
+      if (nextEmail !== currentEmail) await deleteAccount(currentEmail);
+      return json(200, { user: publicAccount(account, payload.admin?.sessionToken || '').user, dashboard: await dashboardPayload(account) });
     }
 
     if (action === 'settings') {

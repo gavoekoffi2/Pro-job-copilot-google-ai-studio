@@ -7,8 +7,10 @@ import {
   deleteAdminUser,
   loadAdminDashboard,
   saveAdminUser,
+  updateAdminProfile,
   updateCvPrice,
   type AdminDashboardPayload,
+  type AdminProfileInput,
   type AdminUserSummary,
   type SaveUserInput,
 } from '../../lib/admin';
@@ -32,7 +34,11 @@ const emptyDashboard: AdminDashboardPayload = {
 };
 
 export function AdminDashboard() {
-  const [admin, setAdmin] = useState<CheckoutUser>(() => loadAccountUser() || { name: 'Claude GAVOE Koffi', email: 'admin@jobtaskai.com', phone: '+22800000000' });
+  const [admin, setAdmin] = useState<CheckoutUser>(() => loadAccountUser() || { name: 'Claude GAVOE Koffi', email: 'admin@jobtaskai.com', phone: '+228****0000' });
+  const [adminProfile, setAdminProfile] = useState<AdminProfileInput>(() => {
+    const saved = loadAccountUser();
+    return { name: saved?.name || 'Claude GAVOE Koffi', email: saved?.email || '', phone: saved?.phone || '', newPassword: '' };
+  });
   const [connected, setConnected] = useState(() => Boolean(loadAccountUser()?.isSuperAdmin));
   const [dashboard, setDashboard] = useState<AdminDashboardPayload | null>(null);
   const [form, setForm] = useState<SaveUserInput>(emptyUser);
@@ -51,6 +57,10 @@ export function AdminDashboard() {
     setPrice(payload.settings?.cvDownloadPriceXof || 500);
   };
 
+  const syncAdminProfile = (user: CheckoutUser) => {
+    setAdminProfile({ name: user.name || '', email: user.email || '', phone: user.phone || '', newPassword: '' });
+  };
+
   const connect = async () => {
     setBusy('login');
     setError(null);
@@ -61,6 +71,7 @@ export function AdminDashboard() {
       if (!user.isSuperAdmin) throw new Error('Ce compte n’est pas super administrateur.');
       saveAccountUser(user);
       setAdmin(user);
+      syncAdminProfile(user);
       setConnected(true);
       applyDashboard(await loadAdminDashboard(user));
       setMessage('Super administrateur connecté.');
@@ -92,6 +103,24 @@ export function AdminDashboard() {
       setMessage(`Prix du téléchargement CV mis à jour : ${price.toLocaleString('fr-FR')} FCFA.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Impossible de modifier le prix.');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const saveAdminProfile = async () => {
+    setBusy('adminProfile');
+    setError(null);
+    setMessage('');
+    try {
+      const result = await updateAdminProfile(admin, adminProfile);
+      saveAccountUser(result.user);
+      setAdmin(result.user);
+      syncAdminProfile(result.user);
+      applyDashboard(result.dashboard);
+      setMessage('Vos accès administrateur ont été mis à jour.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Impossible de modifier vos accès admin.');
     } finally {
       setBusy(null);
     }
@@ -151,6 +180,7 @@ export function AdminDashboard() {
     const saved = loadAccountUser();
     if (saved?.isSuperAdmin) {
       setAdmin(saved);
+      syncAdminProfile(saved);
       setConnected(true);
       void refresh(saved);
     }
@@ -210,6 +240,20 @@ export function AdminDashboard() {
 
           <div className="mt-6 grid gap-6 lg:grid-cols-[390px_1fr]">
             <div className="space-y-6">
+              <div className="rounded-3xl border border-gold-200 bg-gold-50 p-5 shadow-soft">
+                <h2 className="font-display text-xl font-extrabold text-ink-950">Mes accès admin</h2>
+                <p className="mt-1 text-sm text-ink-600">Modifiez votre nom, email, téléphone ou mot de passe administrateur à tout moment.</p>
+                <div className="mt-4 space-y-3">
+                  <Field label="Nom admin" value={adminProfile.name} onChange={(value) => setAdminProfile({ ...adminProfile, name: value })} />
+                  <Field label="Email admin" type="email" value={adminProfile.email} onChange={(value) => setAdminProfile({ ...adminProfile, email: value })} />
+                  <Field label="Téléphone admin" value={adminProfile.phone} onChange={(value) => setAdminProfile({ ...adminProfile, phone: value })} />
+                  <Field label="Nouveau mot de passe" type="password" value={adminProfile.newPassword || ''} onChange={(value) => setAdminProfile({ ...adminProfile, newPassword: value })} placeholder="Laisser vide pour garder l’actuel" />
+                </div>
+                <Button className="mt-5 w-full" icon={<ShieldCheck className="h-4 w-4" />} loading={busy === 'adminProfile'} disabled={!adminProfile.name || !adminProfile.email || !adminProfile.phone || Boolean(adminProfile.newPassword && adminProfile.newPassword.length < 6)} onClick={saveAdminProfile}>
+                  Sauvegarder mes accès admin
+                </Button>
+              </div>
+
               <div className="rounded-3xl border border-ink-100 bg-white p-5 shadow-soft">
                 <h2 className="font-display text-xl font-extrabold text-ink-950">Prix du téléchargement CV</h2>
                 <p className="mt-1 text-sm text-ink-500">Ce montant est utilisé sur GeniusPay et dans le paywall client.</p>
