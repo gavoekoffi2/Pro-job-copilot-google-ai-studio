@@ -96,7 +96,8 @@ function normalizeUserForStorage(user = {}) {
   const email = String(user.email || '').trim().toLowerCase();
   const role = normalizeRole(user.role, email);
   const plan = normalizePlan(user.plan, role);
-  return { name: String(user.name || '').trim(), email, phone: String(user.phone || '').trim(), role, plan, subscriptionExpiresAt: role === 'super_admin' || plan === 'unlimited' ? null : (user.subscriptionExpiresAt || null), active: user.active !== false };
+  const fallbackName = email ? email.split('@')[0] : 'Utilisateur JobTask';
+  return { name: String(user.name || fallbackName).trim(), email, phone: String(user.phone || '-').trim(), role, plan, subscriptionExpiresAt: role === 'super_admin' || plan === 'unlimited' ? null : (user.subscriptionExpiresAt || null), active: user.active !== false };
 }
 function createEmptyAccount(user, password) {
   const now = Date.now();
@@ -132,16 +133,17 @@ async function maybeBootstrapSuperAdmin(cleanUser, password) {
   return account;
 }
 export async function registerOrLoginAccount(user = {}) {
-  const cleanUser = cleanAccountUser(user);
+  const cleanUser = cleanAccountUser(user, { requireName: false, requirePhone: false });
   const password = cleanPassword(user.password);
-  const bootstrapped = await maybeBootstrapSuperAdmin(cleanUser, password);
-  const existing = bootstrapped || await loadAccount(cleanUser.email);
-  const account = existing || createEmptyAccount(cleanUser, password);
+  const safeUser = { ...cleanUser, name: cleanUser.name || cleanUser.email.split('@')[0], phone: cleanUser.phone || '-' };
+  const bootstrapped = await maybeBootstrapSuperAdmin(safeUser, password);
+  const existing = bootstrapped || await loadAccount(safeUser.email);
+  const account = existing || createEmptyAccount(safeUser, password);
   if (existing?.auth?.passwordHash && !verifyPassword(password, existing.auth.passwordHash)) { const error = new Error('Mot de passe incorrect pour ce compte.'); error.statusCode = 401; throw error; }
   if (account.user?.active === false && effectiveAccess(account.user).role !== 'super_admin') { const error = new Error('Compte désactivé. Contactez l’administrateur.'); error.statusCode = 403; throw error; }
   if (!account.auth?.passwordHash) account.auth = { passwordHash: hashPassword(password), sessions: [] };
   const existingAccess = effectiveAccess(account.user || {});
-  account.user = normalizeUserForStorage({ ...account.user, ...cleanUser, role: existingAccess.role, plan: account.user?.plan, subscriptionExpiresAt: account.user?.subscriptionExpiresAt, active: account.user?.active });
+  account.user = normalizeUserForStorage({ ...account.user, ...safeUser, role: existingAccess.role, plan: account.user?.plan, subscriptionExpiresAt: account.user?.subscriptionExpiresAt, active: account.user?.active });
   const sessionToken = newSessionToken();
   account.auth.sessions = [{ hash: hashSessionToken(sessionToken), createdAt: Date.now() }, ...(account.auth.sessions || []).slice(0, 4)];
   account.lastLoginAt = Date.now();

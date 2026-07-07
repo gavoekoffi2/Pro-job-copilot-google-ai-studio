@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CheckCircle2, CreditCard, ExternalLink, LockKeyhole, LogIn, UserPlus, X } from 'lucide-react';
+import { CheckCircle2, ExternalLink, LockKeyhole, LogIn, UserPlus, X } from 'lucide-react';
 import type { CVData, Locale, TemplateId } from '../../types';
 import { Button } from '../ui/ui';
 import {
@@ -69,10 +69,8 @@ export function PaymentGateModal({
   }, [open, cv.personalInfo]);
 
   const authReady = useMemo(() => {
-    const hasEmailPassword = user.email.trim() && (user.password?.length || 0) >= 6;
-    if (mode === 'login') return Boolean(hasEmailPassword);
-    return Boolean(user.name.trim() && user.phone.trim() && hasEmailPassword);
-  }, [mode, user.email, user.name, user.password, user.phone]);
+    return Boolean(user.email.trim() && (user.password?.length || 0) >= 6);
+  }, [user.email, user.password]);
 
   if (!open) return null;
 
@@ -199,15 +197,21 @@ export function PaymentGateModal({
               <p className="mt-1 text-sm text-ink-600">
                 {mode === 'login'
                   ? 'Entrez votre email et mot de passe pour reprendre le paiement du PDF.'
-                  : 'Créez votre compte pour sauvegarder le CV avant de passer au paiement.'}
+                  : 'Entrez votre email et choisissez un mot de passe. Le nom et le téléphone peuvent être complétés ensuite.'}
               </p>
             </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <form
+              className="mt-4 grid gap-3 sm:grid-cols-2"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (authReady && !busy && !reference) void authenticatedPayment();
+              }}
+            >
               {mode === 'register' && (
                 <>
-                  <Field label="Nom complet" value={user.name} onChange={(v) => updateUser({ name: v })} />
-                  <Field label="Téléphone" value={user.phone} onChange={(v) => updateUser({ phone: v })} placeholder="+228..." />
+                  <Field label="Nom complet (facultatif)" value={user.name} onChange={(v) => updateUser({ name: v })} />
+                  <Field label="Téléphone (facultatif)" value={user.phone} onChange={(v) => updateUser({ phone: v })} placeholder="+228..." />
                 </>
               )}
               <div className={mode === 'login' ? 'sm:col-span-2' : ''}>
@@ -216,7 +220,23 @@ export function PaymentGateModal({
               <div className={mode === 'login' ? 'sm:col-span-2' : ''}>
                 <Field label="Mot de passe" type="password" value={user.password || ''} onChange={(v) => updateUser({ password: v })} placeholder="Minimum 6 caractères" />
               </div>
-            </div>
+              {!reference && (
+                <div className="sm:col-span-2">
+                  <Button
+                    type="submit"
+                    className="w-full text-base"
+                    icon={mode === 'login' ? <LogIn className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
+                    loading={busy === 'auth' || busy === 'create' || busy === 'download'}
+                    disabled={!authReady}
+                  >
+                    {mode === 'login' ? 'Se connecter' : 'S’inscrire'}
+                  </Button>
+                  <p className="mt-2 text-center text-xs font-semibold text-ink-500">
+                    Après ce bouton, vous passez au paiement sécurisé du PDF.
+                  </p>
+                </div>
+              )}
+            </form>
           </div>
 
           <div className="rounded-2xl border border-gold-200 bg-gold-50 p-4">
@@ -244,17 +264,7 @@ export function PaymentGateModal({
           {error && <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">{error}</p>}
 
           <div className="flex flex-col gap-2 sm:flex-row">
-            {!reference ? (
-              <Button
-                className="w-full"
-                icon={<CreditCard className="h-4 w-4" />}
-                loading={busy === 'auth' || busy === 'create' || busy === 'download'}
-                disabled={!authReady}
-                onClick={authenticatedPayment}
-              >
-                {mode === 'login' ? 'Se connecter et passer au paiement' : 'S’inscrire et passer au paiement'}
-              </Button>
-            ) : (
+            {reference && (
               <Button
                 className="w-full"
                 icon={<CheckCircle2 className="h-4 w-4" />}
