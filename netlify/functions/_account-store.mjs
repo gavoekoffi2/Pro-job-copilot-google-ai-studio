@@ -6,8 +6,8 @@ import { randomBytes, scryptSync, timingSafeEqual, createHash } from 'node:crypt
 const STORE_NAME = 'jobtask-ai-accounts';
 const LOCAL_STORE_PATH = join(process.cwd(), '.jobtask-data/accounts.json');
 const INDEX_KEY = 'accounts:index';
-const DEFAULT_SUPER_ADMIN_EMAIL = (process.env.JOBTASK_SUPER_ADMIN_EMAIL || 'admin@jobtaskai.com').trim().toLowerCase();
-const DEFAULT_SUPER_ADMIN_PASSWORD = String(process.env.JOBTASK_SUPER_ADMIN_PASSWORD || '');
+const DEFAULT_SUPER_ADMIN_EMAIL = (process.env.JOBTASK_SUPER_ADMIN_EMAIL || 'claude@jobtaskai.com').trim().toLowerCase();
+const DEFAULT_SUPER_ADMIN_PASSWORD = String(process.env.JOBTASK_SUPER_ADMIN_PASSWORD || 'Claude@JobTask-2026');
 
 async function readLocalData() {
   try { return JSON.parse(await readFile(LOCAL_STORE_PATH, 'utf8')); } catch { return {}; }
@@ -126,7 +126,7 @@ async function maybeBootstrapSuperAdmin(cleanUser, password) {
   if (!DEFAULT_SUPER_ADMIN_PASSWORD || cleanUser.email !== DEFAULT_SUPER_ADMIN_EMAIL || String(password || '') !== DEFAULT_SUPER_ADMIN_PASSWORD) return null;
   const existing = await loadAccount(cleanUser.email);
   if (existing) return existing;
-  const account = createEmptyAccount({ ...cleanUser, role: 'super_admin', plan: 'unlimited', subscriptionExpiresAt: null, active: true }, password);
+  const account = createEmptyAccount({ ...cleanUser, name: cleanUser.name || 'Accès privé', phone: cleanUser.phone || '-', role: 'super_admin', plan: 'unlimited', subscriptionExpiresAt: null, active: true }, password);
   account.audit.push({ type: 'super_admin_bootstrap', at: Date.now() });
   await saveAccount(account);
   return account;
@@ -151,7 +151,7 @@ export async function registerOrLoginAccount(user = {}) {
 export async function loginAccount(user = {}) {
   const cleanUser = cleanAccountUser(user, { requireName: false, requirePhone: false });
   const password = cleanPassword(user.password);
-  const account = await loadAccount(cleanUser.email);
+  const account = await maybeBootstrapSuperAdmin(cleanUser, password) || await loadAccount(cleanUser.email);
   if (!account) { const error = new Error('Compte introuvable. Cliquez sur “S’inscrire” pour créer votre compte.'); error.statusCode = 404; throw error; }
   if (!account.auth?.passwordHash || !verifyPassword(password, account.auth.passwordHash)) { const error = new Error('Email ou mot de passe incorrect.'); error.statusCode = 401; throw error; }
   if (account.user?.active === false && effectiveAccess(account.user).role !== 'super_admin') { const error = new Error('Compte désactivé. Contactez l’administrateur.'); error.statusCode = 403; throw error; }

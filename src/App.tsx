@@ -50,6 +50,10 @@ function AppShell() {
   const [accent, setAccent] = useState('#10b981');
   const [accountUser, setAccountUser] = useState<CheckoutUser | null>(() => loadAccountUser());
   const [currentCvId, setCurrentCvId] = useState<string | undefined>(undefined);
+  const [adminUser, setAdminUser] = useState<CheckoutUser | null>(() => {
+    const saved = loadAccountUser();
+    return saved?.isSuperAdmin ? saved : null;
+  });
 
   // Remonter en haut à chaque changement de vue.
   useEffect(() => {
@@ -80,6 +84,12 @@ function AppShell() {
 
   const onSavedToAccount = useCallback((record: SavedCvRecord) => {
     setCurrentCvId(record.id);
+  }, []);
+
+  const openPrivateAccess = useCallback((user: CheckoutUser) => {
+    setAccountUser(user);
+    setAdminUser(user);
+    setView(AppView.ADMIN);
   }, []);
 
   const pickTemplate = useCallback((id: TemplateId) => {
@@ -152,9 +162,9 @@ function AppShell() {
               />
             )}
             {view === AppView.ACCOUNT && (
-              <AccountView onOpenCv={openSavedCv} onUserChange={setAccountUser} />
+              <AccountView onOpenCv={openSavedCv} onUserChange={setAccountUser} onPrivateAccess={openPrivateAccess} />
             )}
-            {view === AppView.ADMIN && <AdminDashboard />}
+            {view === AppView.ADMIN && (adminUser?.isSuperAdmin ? <AdminDashboard /> : <AccountView onOpenCv={openSavedCv} onUserChange={setAccountUser} onPrivateAccess={openPrivateAccess} />)}
           </Suspense>
         )}
       </main>

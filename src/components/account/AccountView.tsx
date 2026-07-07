@@ -11,6 +11,7 @@ import {
   loadAccountUser,
   registerAccount,
   saveAccountUser,
+  loginAccount,
   type SavedCvSummary,
 } from '../../lib/account';
 
@@ -24,9 +25,10 @@ interface AccountViewProps {
     user: CheckoutUser;
   }) => void;
   onUserChange: (user: CheckoutUser | null) => void;
+  onPrivateAccess?: (user: CheckoutUser) => void;
 }
 
-export function AccountView({ onOpenCv, onUserChange }: AccountViewProps) {
+export function AccountView({ onOpenCv, onUserChange, onPrivateAccess }: AccountViewProps) {
   const [user, setUser] = useState<CheckoutUser>(() => loadAccountUser() || { name: '', email: '', phone: '' });
   const [connected, setConnected] = useState(() => Boolean(loadAccountUser()));
   const [cvs, setCvs] = useState<SavedCvSummary[]>([]);
@@ -55,13 +57,18 @@ export function AccountView({ onOpenCv, onUserChange }: AccountViewProps) {
     setMessage('');
     setBusy('account');
     try {
-      const account = await registerAccount(user);
+      const canUseDirectLogin = !user.name.trim() && !user.phone.trim();
+      const account = canUseDirectLogin ? await loginAccount({ email: user.email, password: user.password }) : await registerAccount(user);
       const connectedUser = account.user || user;
       saveAccountUser(connectedUser);
       setUser(connectedUser);
       setConnected(true);
       onUserChange(connectedUser);
       setCvs(account.cvs || []);
+      if (connectedUser.isSuperAdmin && onPrivateAccess) {
+        onPrivateAccess(connectedUser);
+        return;
+      }
       setMessage('Compte créé/connecté. Vos prochains CV seront sauvegardés ici.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Impossible de créer le compte.');
@@ -150,10 +157,10 @@ export function AccountView({ onOpenCv, onUserChange }: AccountViewProps) {
             <Button
               icon={<Save className="h-4 w-4" />}
               loading={busy === 'account'}
-              disabled={!user.name.trim() || !user.email.trim() || !user.phone.trim() || (!user.sessionToken && (user.password?.length || 0) < 6)}
+              disabled={!user.email.trim() || (!user.sessionToken && (user.password?.length || 0) < 6) || (Boolean(user.name.trim()) !== Boolean(user.phone.trim()))}
               onClick={connect}
             >
-              Créer / connecter le compte
+              Continuer
             </Button>
             {connected && (
               <Button variant="outline" icon={<RefreshCw className="h-4 w-4" />} loading={busy === 'list'} onClick={() => loadCvs()}>

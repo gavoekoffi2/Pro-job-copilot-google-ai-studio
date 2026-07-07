@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FileText, Languages, Menu, RefreshCw, ScanSearch, ShieldCheck, Target, UserRound, X } from 'lucide-react';
+import { FileText, Languages, Menu, RefreshCw, ScanSearch, Target, UserRound, X } from 'lucide-react';
 import { AppView } from '../types';
 import { useT } from '../i18n/LanguageContext';
 import { cn } from '../lib/utils';
@@ -31,7 +31,6 @@ export function Navbar({ view, setView }: NavbarProps) {
     { view: AppView.TRANSLATE, label: t.nav.translate, icon: Languages },
     { view: AppView.TAILOR, label: t.nav.tailor, icon: Target },
     { view: AppView.ACCOUNT, label: 'Mes CV', icon: UserRound },
-    { view: AppView.ADMIN, label: 'Admin', icon: ShieldCheck },
   ];
 
   const go = (v: AppView) => {
