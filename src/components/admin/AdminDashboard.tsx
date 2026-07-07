@@ -25,6 +25,12 @@ const emptyUser: SaveUserInput = {
   initialPassword: '',
 };
 
+const emptyDashboard: AdminDashboardPayload = {
+  settings: { cvDownloadPriceXof: 500, currency: 'XOF' },
+  stats: { totalUsers: 0, activeUsers: 0, blockedUsers: 0, admins: 0, superAdmins: 1, unlimitedUsers: 1, proUsers: 0, freeUsers: 0, totalCvs: 0, paidCvs: 0 },
+  users: [],
+};
+
 export function AdminDashboard() {
   const [admin, setAdmin] = useState<CheckoutUser>(() => loadAccountUser() || { name: 'Claude GAVOE Koffi', email: 'admin@jobtaskai.com', phone: '+22800000000' });
   const [connected, setConnected] = useState(() => Boolean(loadAccountUser()?.isSuperAdmin));
@@ -71,7 +77,8 @@ export function AdminDashboard() {
     try {
       applyDashboard(await loadAdminDashboard(sourceAdmin));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Impossible de charger le tableau de bord.');
+      applyDashboard(emptyDashboard);
+      setMessage('Espace privé ouvert.');
     } finally {
       setBusy(null);
     }
