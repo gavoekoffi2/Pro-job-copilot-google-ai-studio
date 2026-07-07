@@ -40,6 +40,8 @@ export function AccountView({ onOpenCv, onUserChange, onPrivateAccess }: Account
   const [error, setError] = useState<string | null>(null);
 
   const updateUser = (patch: Partial<CheckoutUser>) => setUser((current) => ({ ...current, ...patch }));
+  const accountMode = user.name.trim() || user.phone.trim() ? 'register' : 'login';
+  const canSubmitAccount = Boolean(user.email.trim()) && (user.password?.length || 0) >= 6 && (accountMode === 'login' || Boolean(user.name.trim()));
 
   const loadCvs = async (accountUser = user) => {
     setError(null);
@@ -169,25 +171,36 @@ export function AccountView({ onOpenCv, onUserChange, onPrivateAccess }: Account
           <h2 className="font-display text-xl font-extrabold text-ink-950">Créer / retrouver un compte</h2>
           <p className="mt-1 text-sm text-ink-500">Email + mot de passe = vos CV récupérés sur n’importe quel appareil.</p>
 
-          <div className="mt-5 space-y-3">
+          <form
+            className="mt-5 space-y-3"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (canSubmitAccount && busy !== 'account') void connect();
+            }}
+          >
             <Field label="Nom complet" value={user.name} onChange={(value) => updateUser({ name: value })} />
             <Field label="Email" type="email" value={user.email} onChange={(value) => updateUser({ email: value })} placeholder="client@email.com" />
             <Field label="Mot de passe" type="password" value={user.password || ''} onChange={(value) => updateUser({ password: value })} placeholder="Minimum 6 caractères" />
             <Field label="Téléphone" value={user.phone} onChange={(value) => updateUser({ phone: value })} placeholder="+228..." />
-          </div>
 
-          {error && <p className="mt-4 rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">{error}</p>}
-          {message && <p className="mt-4 rounded-xl bg-brand-50 px-3 py-2 text-sm font-semibold text-brand-800">{message}</p>}
+            {error && <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">{error}</p>}
+            {message && <p className="rounded-xl bg-brand-50 px-3 py-2 text-sm font-semibold text-brand-800">{message}</p>}
 
-          <div className="mt-5 flex flex-col gap-2">
             <Button
+              type="submit"
+              className="mt-2 w-full text-base"
               icon={<Save className="h-4 w-4" />}
               loading={busy === 'account'}
-              disabled={!user.email.trim() || (!user.sessionToken && (user.password?.length || 0) < 6) || (Boolean(user.name.trim()) !== Boolean(user.phone.trim()))}
-              onClick={connect}
+              disabled={!canSubmitAccount}
             >
-              Continuer
+              {accountMode === 'register' ? 'S’inscrire / créer mon compte' : 'Se connecter à mon compte'}
             </Button>
+            <p className="text-xs font-medium text-ink-500">
+              Pour se connecter : email + mot de passe. Pour s’inscrire : ajoutez votre nom complet.
+            </p>
+          </form>
+
+          <div className="mt-3 flex flex-col gap-2">
             {connected && (
               <Button variant="outline" icon={<RefreshCw className="h-4 w-4" />} loading={busy === 'list'} onClick={() => loadCvs()}>
                 Actualiser mes CV
