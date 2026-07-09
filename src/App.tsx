@@ -100,7 +100,7 @@ function AppShell() {
 
   return (
     <div className="min-h-screen bg-ink-50">
-      <Navbar view={view} setView={setView} />
+      <Navbar view={view} setView={setView} accountUser={accountUser} />
       <PaymentReturnHandler />
 
       <main>

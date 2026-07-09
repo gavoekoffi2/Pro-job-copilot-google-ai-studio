@@ -6,16 +6,19 @@ import { cn } from '../lib/utils';
 import { Logo } from './ui/Logo';
 import { Button } from './ui/ui';
 import { LanguageToggle } from './ui/LanguageToggle';
+import type { CheckoutUser } from '../lib/payment';
 
 interface NavbarProps {
   view: AppView;
   setView: (v: AppView) => void;
+  accountUser?: CheckoutUser | null;
 }
 
-export function Navbar({ view, setView }: NavbarProps) {
+export function Navbar({ view, setView, accountUser }: NavbarProps) {
   const t = useT();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const isConnected = Boolean(accountUser?.email && accountUser?.sessionToken);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -30,7 +33,7 @@ export function Navbar({ view, setView }: NavbarProps) {
     { view: AppView.ANALYZE, label: t.nav.analyze, icon: ScanSearch },
     { view: AppView.TRANSLATE, label: t.nav.translate, icon: Languages },
     { view: AppView.TAILOR, label: t.nav.tailor, icon: Target },
-    { view: AppView.ACCOUNT, label: 'Mes CV', icon: UserRound },
+    { view: AppView.ACCOUNT, label: isConnected ? 'Mes CV' : 'Connexion', icon: UserRound },
   ];
 
   const go = (v: AppView) => {

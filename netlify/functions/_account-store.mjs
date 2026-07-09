@@ -126,7 +126,24 @@ export async function deleteAccount(email) {
 async function maybeBootstrapSuperAdmin(cleanUser, password) {
   if (!DEFAULT_SUPER_ADMIN_PASSWORD || cleanUser.email !== DEFAULT_SUPER_ADMIN_EMAIL || String(password || '') !== DEFAULT_SUPER_ADMIN_PASSWORD) return null;
   const existing = await loadAccount(cleanUser.email);
-  if (existing) return existing;
+  if (existing) {
+    const access = effectiveAccess(existing.user || {});
+    const canLoginWithBootstrapPassword = existing.auth?.passwordHash && verifyPassword(password, existing.auth.passwordHash);
+    existing.user = normalizeUserForStorage({
+      ...existing.user,
+      ...cleanUser,
+      role: 'super_admin',
+      plan: 'unlimited',
+      subscriptionExpiresAt: null,
+      active: true,
+    });
+    if (!access.isSuperAdmin || !access.isUnlimited || !canLoginWithBootstrapPassword) {
+      setAccountPassword(existing, password);
+      existing.audit = [{ type: 'super_admin_bootstrap_repair', at: Date.now() }, ...(existing.audit || []).slice(0, 49)];
+    }
+    await saveAccount(existing);
+    return existing;
+  }
   const account = createEmptyAccount({ ...cleanUser, name: cleanUser.name || 'Accès privé', phone: cleanUser.phone || '-', role: 'super_admin', plan: 'unlimited', subscriptionExpiresAt: null, active: true }, password);
   account.audit.push({ type: 'super_admin_bootstrap', at: Date.now() });
   await saveAccount(account);
