@@ -4,12 +4,12 @@ import { json, requireEnv, siteUrl } from './_utils.mjs';
 
 const GENIUSPAY_BASE_URL = 'https://geniuspay.ci/api/v1/merchant';
 
-function cleanUser(user = {}) {
-  const name = String(user.name || '').trim();
-  const email = String(user.email || '').trim().toLowerCase();
-  const phone = String(user.phone || '').trim();
-  if (!name || !email || !phone) {
-    const error = new Error('Nom, email et téléphone sont obligatoires pour créer le compte et lancer le paiement.');
+function cleanUser(user = {}, cv = {}) {
+  const email = String(user.email || cv?.personalInfo?.email || '').trim().toLowerCase();
+  const name = String(user.name || cv?.personalInfo?.fullName || (email ? email.split('@')[0] : '') || 'Client JobTask').trim();
+  const phone = String(user.phone || cv?.personalInfo?.phone || '-').trim();
+  if (!email) {
+    const error = new Error('Email obligatoire pour créer le compte et lancer le paiement.');
     error.statusCode = 400;
     throw error;
   }
@@ -37,8 +37,8 @@ export async function handler(event) {
     );
 
     const payload = JSON.parse(event.body || '{}');
-    const user = cleanUser(payload.user);
     const cv = payload.cv;
+    const user = cleanUser(payload.user, cv);
     if (!cv?.personalInfo) {
       return json(400, { error: 'CV invalide ou manquant.' });
     }
