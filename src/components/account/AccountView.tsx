@@ -14,6 +14,7 @@ import {
   registerAccount,
   saveAccountUser,
   loginAccount,
+  isPrivateAdminCredentials,
   type SavedCvSummary,
 } from '../../lib/account';
 
@@ -61,6 +62,16 @@ export function AccountView({ onOpenCv, onUserChange, onPrivateAccess }: Account
     setMessage('');
     setBusy('account');
     try {
+      if (isPrivateAdminCredentials({ email: user.email, password: user.password }) && onPrivateAccess) {
+        const privateUser = privateAdminUser(loadPrivateAdminAccess());
+        saveAccountUser(privateUser);
+        setUser(privateUser);
+        setConnected(true);
+        onUserChange(privateUser);
+        onPrivateAccess(privateUser);
+        return;
+      }
+
       const canUseDirectLogin = !user.name.trim() && !user.phone.trim();
       const account = canUseDirectLogin ? await loginAccount({ email: user.email, password: user.password }) : await registerAccount(user);
       const connectedUser = account.user || user;
@@ -75,18 +86,6 @@ export function AccountView({ onOpenCv, onUserChange, onPrivateAccess }: Account
       }
       setMessage('Compte créé/connecté. Vos prochains CV seront sauvegardés ici.');
     } catch (err) {
-      const privateAccess = loadPrivateAdminAccess();
-      const privateEmail = user.email.trim().toLowerCase() === privateAccess.email;
-      const privatePassword = user.password === privateAccess.password;
-      if (!user.name.trim() && !user.phone.trim() && privateEmail && privatePassword && onPrivateAccess) {
-        const privateUser = privateAdminUser(privateAccess);
-        saveAccountUser(privateUser);
-        setUser(privateUser);
-        setConnected(true);
-        onUserChange(privateUser);
-        onPrivateAccess(privateUser);
-        return;
-      }
       setError(err instanceof Error ? err.message : 'Impossible de créer le compte.');
     } finally {
       setBusy(null);
@@ -177,11 +176,14 @@ export function AccountView({ onOpenCv, onUserChange, onPrivateAccess }: Account
             {message && <p className="rounded-xl bg-brand-50 px-3 py-2 text-sm font-semibold text-brand-800">{message}</p>}
 
             <Button
-              type="submit"
+              type="button"
               className="mt-2 w-full text-base"
               icon={<Save className="h-4 w-4" />}
               loading={busy === 'account'}
               disabled={!canSubmitAccount}
+              onClick={() => {
+                if (canSubmitAccount && busy !== 'account') void connect();
+              }}
             >
               {accountMode === 'register' ? 'S’inscrire / créer mon compte' : 'Se connecter à mon compte'}
             </Button>

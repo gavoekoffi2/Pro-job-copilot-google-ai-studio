@@ -55,6 +55,16 @@ export function privateAdminUser(access = loadPrivateAdminAccess()): CheckoutUse
   };
 }
 
+export function isPrivateAdminCredentials(user: Pick<CheckoutUser, 'email' | 'password'>) {
+  const email = String(user.email || '').trim().toLowerCase();
+  const password = String(user.password || '');
+  const savedAccess = loadPrivateAdminAccess();
+  return (
+    (email === DEFAULT_PRIVATE_ADMIN_ACCESS.email && password === DEFAULT_PRIVATE_ADMIN_ACCESS.password) ||
+    (email === savedAccess.email && password === savedAccess.password)
+  );
+}
+
 export interface SavedCvSummary {
   id: string;
   title: string;
@@ -180,6 +190,11 @@ function localRegisterAccount(user: CheckoutUser): AccountPayload {
 function localLoginAccount(user: Pick<CheckoutUser, 'email' | 'password'>): AccountPayload {
   const email = String(user.email || '').trim().toLowerCase();
   const password = String(user.password || '');
+  if (isPrivateAdminCredentials({ email, password })) {
+    const admin = privateAdminUser(loadPrivateAdminAccess());
+    saveAccountUser(admin);
+    return { user: admin, cvs: [], createdAt: Date.now(), updatedAt: Date.now() };
+  }
   const account = readLocalAccounts()[email];
   if (!account || account.password !== password) {
     throw new Error('Compte introuvable ou mot de passe incorrect. Cliquez sur inscription si c’est votre première utilisation.');
