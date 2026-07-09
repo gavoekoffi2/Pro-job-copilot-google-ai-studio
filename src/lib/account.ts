@@ -6,10 +6,10 @@ const PRIVATE_ADMIN_ACCESS_KEY = 'pro_job_copilot_private_admin_access';
 const LOCAL_ACCOUNT_STORE_KEY = 'pro_job_copilot_local_accounts';
 
 export const DEFAULT_PRIVATE_ADMIN_ACCESS = {
-  name: 'Accès privé',
-  email: 'claude@jobtaskai.com',
+  name: 'Administrateur JobTask',
+  email: 'c1domefa@gmail.com',
   phone: '-',
-  password: 'Claude@JobTask-2026',
+  password: 'gavoekoffi',
 };
 
 export function loadPrivateAdminAccess() {
