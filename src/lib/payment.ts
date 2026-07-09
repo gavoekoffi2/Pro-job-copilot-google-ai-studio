@@ -61,6 +61,9 @@ function safeTemplateId(templateId: unknown): TemplateId {
 async function parseApiResponse(response: Response) {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error('Service de paiement indisponible pour le moment. Activez le backend JobTask AI avant de relancer le téléchargement PDF.');
+    }
     throw new Error(data?.error || 'Erreur serveur.');
   }
   return data;
