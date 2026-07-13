@@ -231,7 +231,7 @@ export const fr = {
       'Décrivez les modifications souhaitées : l’IA met à jour le contenu et la mise en page.',
     refinePlaceholder:
       'Ex : « Ajoute mes 2 ans d’expérience en vente », « Mets en avant le leadership »…',
-    openInBuilder: 'Ouvrir dans le créateur',
+    openInBuilder: 'Créer / modifier le CV',
     reanalyze: 'Relancer l’analyse',
   },
 
@@ -264,7 +264,7 @@ export const fr = {
     translateBtn: 'Traduire le CV',
     resultLabel: 'CV traduit',
     keepLayout: 'La mise en page et la structure sont conservées.',
-    openInBuilder: 'Ouvrir dans le créateur',
+    openInBuilder: 'Créer / modifier le CV',
   },
 
   tailor: {
@@ -275,7 +275,7 @@ export const fr = {
     jobLabel: 'Description de l’offre',
     jobPlaceholder: 'Collez ici l’intitulé et la description du poste…',
     tailorBtn: 'Adapter mon CV',
-    openInBuilder: 'Ouvrir dans le créateur',
+    openInBuilder: 'Créer / modifier le CV',
   },
 
   levels: {
@@ -510,7 +510,7 @@ export const en: typeof fr = {
       'Describe the changes you want: AI updates the content and the layout.',
     refinePlaceholder:
       'E.g. “Add my 2 years of sales experience”, “Highlight leadership”…',
-    openInBuilder: 'Open in builder',
+    openInBuilder: 'Create / edit CV',
     reanalyze: 'Re-run analysis',
   },
 
@@ -543,7 +543,7 @@ export const en: typeof fr = {
     translateBtn: 'Translate CV',
     resultLabel: 'Translated CV',
     keepLayout: 'Layout and structure are preserved.',
-    openInBuilder: 'Open in builder',
+    openInBuilder: 'Create / edit CV',
   },
 
   tailor: {
@@ -554,7 +554,7 @@ export const en: typeof fr = {
     jobLabel: 'Job description',
     jobPlaceholder: 'Paste the job title and description here…',
     tailorBtn: 'Tailor my CV',
-    openInBuilder: 'Open in builder',
+    openInBuilder: 'Create / edit CV',
   },
 
   levels: {

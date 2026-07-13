@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
+  FileCheck2,
   Lightbulb,
   ScanSearch,
   Tags,
@@ -95,7 +96,27 @@ export function AnalyzeView({
       {!cv ? (
         <CVImporter onReady={onReady} currentData={data} />
       ) : (
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-6">
+          <div className="rounded-3xl border border-brand-200 bg-gradient-to-br from-brand-50 via-white to-white p-5 shadow-sm">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex gap-3">
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-brand-100 text-brand-700">
+                  <FileCheck2 className="h-6 w-6" />
+                </span>
+                <div>
+                  <h3 className="font-display text-lg font-extrabold text-ink-950">CV extrait avec succès</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-ink-600">
+                    Les informations du fichier ont été récupérées. Vous pouvez maintenant créer, corriger et télécharger le CV final.
+                  </p>
+                </div>
+              </div>
+              <Button className="shrink-0" icon={<Wand2 className="h-4 w-4" />} onClick={() => onOpenInBuilder(cv)}>
+                Créer / modifier le CV maintenant
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
           {/* Diagnostic + affinage */}
           <div className="space-y-5">
             {busy === 'analyze' && !analysis ? (
@@ -146,6 +167,7 @@ export function AnalyzeView({
             locale={locale}
             onOpenInBuilder={() => onOpenInBuilder(cv)}
           />
+        </div>
         </div>
       )}
     </ToolShell>
