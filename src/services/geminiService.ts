@@ -300,7 +300,7 @@ async function postAi(body: Record<string, unknown>): Promise<any> {
   }
 
   if (lastResponseError) {
-    throw new Error("Service IA introuvable sur ce déploiement. L'import CV doit être publié avec la route /api/ai ou les fonctions Netlify.");
+    throw new Error("Service IA introuvable sur ce déploiement. L'import CV doit être publié avec le serveur Node.js Hostinger et la route /.netlify/functions/ai.");
   }
   if (lastNetworkError) {
     throw new Error('Connexion au service IA impossible. Vérifiez votre connexion et réessayez.');

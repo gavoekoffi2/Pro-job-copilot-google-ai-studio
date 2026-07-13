@@ -26,7 +26,7 @@ function requireEnv(name) {
   if (!value) {
     const messages = {
       OPENROUTER_API_KEY:
-        "Configuration IA serveur manquante : ajoutez OPENROUTER_API_KEY dans Netlify/GitHub pour activer l'analyse, la traduction et l'optimisation de CV.",
+        "Configuration IA serveur manquante : ajoutez OPENROUTER_API_KEY dans l'environnement Hostinger pour activer l'analyse, la traduction et l'optimisation de CV.",
     };
     const error = new Error(messages[name] || `${name} is not configured`);
     error.statusCode = 503;
@@ -230,7 +230,8 @@ async function callOpenRouter({
   const siteUrl =
     process.env.URL ||
     process.env.DEPLOY_PRIME_URL ||
-    'https://pro-job-copilot-google-ai-studio.netlify.app';
+    process.env.SITE_URL ||
+    'https://pro-job-copilot.com';
 
   const requestBody = {
     model,
