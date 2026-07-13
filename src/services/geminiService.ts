@@ -232,40 +232,80 @@ function stripPhoto(data: CVData): CVData {
   };
 }
 
-async function postAi(body: Record<string, unknown>): Promise<any> {
-  let response: Response;
+function aiEndpointCandidates(): string[] {
+  const configured = import.meta.env.VITE_AI_ENDPOINT?.trim();
+  if (configured) return [configured];
+
+  const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+  const endpoints = isVercel
+    ? ['/api/ai', '/.netlify/functions/ai']
+    : ['/.netlify/functions/ai', '/api/ai'];
+
+  return Array.from(new Set(endpoints));
+}
+
+function parseAiPayload(raw: string): any {
+  if (!raw) return {};
   try {
-    response = await fetch('/.netlify/functions/ai', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
+    return JSON.parse(raw);
   } catch {
-    throw new Error('Connexion au service IA impossible. Vérifiez votre connexion et réessayez.');
+    return {};
   }
+}
 
-  const raw = await response.text().catch(() => '');
-  let data: any = {};
-  if (raw) {
+function shouldTryNextAiEndpoint(response: Response, raw: string) {
+  const contentType = response.headers.get('content-type') || '';
+  return response.status === 404 || (contentType.includes('text/html') && raw.trim().startsWith('<!DOCTYPE'));
+}
+
+async function postAi(body: Record<string, unknown>): Promise<any> {
+  const endpoints = aiEndpointCandidates();
+  let lastNetworkError: unknown = null;
+  let lastResponseError: Error | null = null;
+
+  for (const endpoint of endpoints) {
+    let response: Response;
     try {
-      data = JSON.parse(raw);
-    } catch {
-      data = {};
+      response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+    } catch (error) {
+      lastNetworkError = error;
+      continue;
     }
-  }
 
-  if (!response.ok) {
+    const raw = await response.text().catch(() => '');
+    const data = parseAiPayload(raw);
+
+    if (response.ok) {
+      if (data?.result == null) {
+        throw new Error("Réponse IA incomplète. Réessayez dans un instant.");
+      }
+      return data.result;
+    }
+
+    if (shouldTryNextAiEndpoint(response, raw)) {
+      lastResponseError = new Error(`Endpoint IA introuvable (${response.status}) : ${endpoint}`);
+      continue;
+    }
+
     const requestId = response.headers.get('x-nf-request-id');
-    const rawMessage = raw && raw.length < 300 ? raw.trim() : '';
+    const rawMessage = raw && raw.length < 300 && !raw.trim().startsWith('<') ? raw.trim() : '';
     const fallback = rawMessage
       ? `Service IA indisponible (${response.status}) : ${rawMessage}${requestId ? ` — ID ${requestId}` : ''}`
       : `Erreur serveur IA (${response.status}). Réessayez dans un instant${requestId ? ` — ID ${requestId}` : ''}.`;
     throw new Error(data?.error || fallback);
   }
-  if (data?.result == null) {
-    throw new Error("Réponse IA incomplète. Réessayez dans un instant.");
+
+  if (lastResponseError) {
+    throw new Error("Service IA introuvable sur ce déploiement. L'import CV doit être publié avec la route /api/ai ou les fonctions Netlify.");
   }
-  return data.result;
+  if (lastNetworkError) {
+    throw new Error('Connexion au service IA impossible. Vérifiez votre connexion et réessayez.');
+  }
+  throw new Error('Service IA indisponible. Réessayez dans un instant.');
 }
 
 // 'analyze' -> analyse/scoring ; 'generate' -> rédaction/extraction/import CV.
