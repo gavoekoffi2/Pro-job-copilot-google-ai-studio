@@ -2,7 +2,7 @@
    Modèle de données — JobTask AI
    ========================================================================= */
 
-export type SkillLevel = 'Débutant' | 'Intermédiaire' | 'Avancé' | 'Expert';
+export type SkillLevel = '' | 'Débutant' | 'Intermédiaire' | 'Avancé' | 'Expert';
 
 export interface Experience {
   id: string;

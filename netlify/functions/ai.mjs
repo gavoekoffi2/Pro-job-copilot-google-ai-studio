@@ -1,3 +1,6 @@
+import { groundExtractedCV } from './_ground-cv.mjs';
+import { extractEmbeddedPdfText } from './_pdf-text.mjs';
+
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 // Netlify coupe cette fonction synchrone à 30 s. On garde donc une marge côté
@@ -339,6 +342,120 @@ ${String(badText || '').slice(0, 60000)}
   });
 }
 
+const transcriptionSchema = {
+  type: 'object',
+  properties: {
+    transcription: { type: 'string' },
+  },
+  required: ['transcription'],
+};
+
+async function transcribeSourceFile(file, task) {
+  // Pour un PDF numérique, la couche texte est la source de vérité : aucune IA
+  // n'intervient dans la lecture des noms, sociétés, dates ou diplômes.
+  const embeddedText = await extractEmbeddedPdfText(file);
+  if (embeddedText.length >= 30) {
+    return { text: embeddedText, source: 'pdf-text-local' };
+  }
+
+  const prompt = `
+Transcris mot pour mot tout le texte visible dans ce CV.
+RÈGLES ABSOLUES :
+- Ne traduis rien, ne reformule rien, ne corrige rien.
+- N'ajoute aucun nom, aucune société, aucun poste, aucune date, aucun diplôme ni aucune compétence.
+- Respecte l'orthographe et la langue du document, même si elles semblent imparfaites.
+- Parcours toutes les pages, colonnes, encadrés, en-têtes et pieds de page.
+- Si un passage est illisible, écris [illisible] au lieu de le deviner.
+Renvoie uniquement un JSON avec la clé "transcription".
+`;
+  const engines = isPdf(file?.mimeType) ? ['mistral-ocr', 'pdf-text'] : [undefined];
+  let lastError = null;
+
+  for (const pdfEngine of engines) {
+    const result = await callWithFallback({
+      prompt,
+      schema: transcriptionSchema,
+      file,
+      task,
+      pdfEngine,
+      temperature: 0,
+      enableReasoning: false,
+      responseFormat: { type: 'json_object' },
+    });
+    if (!result.ok) {
+      lastError = Object.assign(new Error(result.error), { statusCode: result.status || 502 });
+      continue;
+    }
+    try {
+      const out = await parseWithRepair(result, transcriptionSchema, task);
+      const transcription = String(out.parsed?.transcription || '').trim();
+      if (transcription.length >= 20) {
+        return {
+          text: transcription,
+          source: isPdf(file?.mimeType) ? `ocr-${pdfEngine}` : 'vision-ocr',
+        };
+      }
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  if (lastError) throw lastError;
+  const error = new Error(
+    "Le texte du CV n'a pas pu être lu fidèlement. Essayez un PDF plus net ou une image mieux cadrée.",
+  );
+  error.statusCode = 422;
+  throw error;
+}
+
+async function extractFaithfulCV({ file, schema, task }) {
+  const source = await transcribeSourceFile(file, task);
+  const prompt = `
+Structure la transcription ci-dessous selon le schéma CV fourni.
+
+RÈGLES ABSOLUES DE FIDÉLITÉ :
+- Copie uniquement les informations explicitement présentes dans la transcription.
+- Ne traduis, ne reformule, ne corrige et ne complète aucune information.
+- Ne crée jamais de société, poste, mission, date, lieu, diplôme, école, compétence, langue, certification ou niveau.
+- Reprends les libellés et dates exactement tels qu'ils sont écrits.
+- Si une valeur n'est pas écrite, renvoie une chaîne vide ou un tableau vide.
+- Une compétence sans niveau écrit doit avoir level="".
+- N'utilise jamais des exemples ou des données plausibles pour remplir un champ.
+
+TRANSCRIPTION SOURCE :
+---
+${source.text.slice(0, 100000)}
+---
+`;
+  const result = await callWithFallback({
+    prompt,
+    schema,
+    file: null,
+    task,
+    temperature: 0,
+    enableReasoning: false,
+    responseFormat: {
+      type: 'json_schema',
+      json_schema: {
+        name: 'faithful_cv_extraction',
+        strict: true,
+        schema: buildStrictSchema(schema),
+      },
+    },
+  });
+  if (!result.ok) {
+    const error = new Error(result.error);
+    error.statusCode = result.status || 502;
+    throw error;
+  }
+  const out = await parseWithRepair(result, schema, task);
+  return {
+    ...out,
+    parsed: groundExtractedCV(out.parsed, source.text),
+    extractionSource: source.source,
+  };
+}
+
 /**
  * Détecte un résultat d'extraction « vide » : toutes les chaînes vides, tous les
  * tableaux vides, etc. C'est le cas typique d'un PDF scanné passé en `pdf-text`
@@ -424,6 +541,18 @@ export async function handler(event) {
           temperature: 0,
         }
       : {};
+
+    if (isExtraction) {
+      const out = await extractFaithfulCV({ file, schema, task: task || 'generate' });
+      return json(200, {
+        result: out.parsed,
+        model: out.model,
+        provider: out.provider,
+        extractionSource: out.extractionSource,
+        grounded: true,
+        ...(out.repaired ? { repaired: true } : {}),
+      });
+    }
 
     // Chaîne de moteurs pour les PDF : on tente d'abord l'extraction du texte
     // (gratuite, parfaite pour un PDF numérique), puis l'OCR (mistral-ocr) si le PDF

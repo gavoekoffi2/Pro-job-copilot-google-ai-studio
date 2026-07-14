@@ -44,7 +44,7 @@ import { PaymentGateModal } from '../payment/PaymentGateModal';
 import { loadAccountUser, saveAccountCv, type SavedCvRecord } from '../../lib/account';
 import type { CheckoutUser } from '../../lib/payment';
 
-const LEVELS: SkillLevel[] = ['Débutant', 'Intermédiaire', 'Avancé', 'Expert'];
+const LEVELS: Exclude<SkillLevel, ''>[] = ['Débutant', 'Intermédiaire', 'Avancé', 'Expert'];
 
 type BrowserSpeechRecognition = {
   lang: string;
@@ -514,6 +514,7 @@ export function CVBuilder({
                         onChange={(e) => updateList('skills', data.skills.map((x) => (x.id === sk.id ? { ...x, level: e.target.value as SkillLevel } : x)))}
                         className="shrink-0 rounded-lg border border-ink-200 bg-white px-2 py-2 text-sm focus:border-brand-500 focus:outline-none"
                       >
+                        <option value="">Non précisé / Not specified</option>
                         {LEVELS.map((l) => (
                           <option key={l} value={l}>
                             {t.levels[l]}

@@ -28,7 +28,7 @@ export function levelToPercent(level: SkillLevel): number {
     case 'Expert':
       return 100;
     default:
-      return 60;
+      return 0;
   }
 }
 
@@ -43,7 +43,7 @@ export function levelToDots(level: SkillLevel): number {
     case 'Expert':
       return 5;
     default:
-      return 3;
+      return 0;
   }
 }
 

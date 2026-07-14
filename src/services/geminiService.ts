@@ -186,7 +186,9 @@ export function normalizeCV(partial: any, previous?: CVData): CVData {
       return {
         id: uid('sk'),
         name: cleanText(s.name),
-        level: VALID_LEVELS.includes(level) ? level : 'Intermédiaire',
+        // Ne jamais inventer un niveau lors d'un import. L'utilisateur peut le
+        // préciser ensuite dans l'éditeur si le CV source ne l'indique pas.
+        level: VALID_LEVELS.includes(level) ? level : '',
       };
     }),
     languages: (partial?.languages ?? []).map((l: any) => ({
@@ -498,8 +500,7 @@ RÈGLES STRICTES ANTI-HALLUCINATION :
 - Si une zone est illisible ou si une donnée n'est pas clairement présente, laisse le champ vide ou le tableau vide.
 - Ne génère jamais de diplôme, école, entreprise, poste, date, lieu, chiffre, langue, niveau,
   certification ou compétence plausible pour remplacer une donnée absente.
-- Pour les niveaux de compétences/langues, utilise uniquement un niveau écrit dans le CV ; sinon laisse vide
-  ou utilise "Intermédiaire" seulement si le schéma l'impose pour une compétence explicitement visible.
+- Pour les niveaux de compétences/langues, utilise uniquement un niveau écrit dans le CV ; sinon laisse vide.
 - Conserve la langue d'origine du document.
 - Ne laisse un champ vide QUE si l'information est réellement absente ou illisible dans le document.
 
