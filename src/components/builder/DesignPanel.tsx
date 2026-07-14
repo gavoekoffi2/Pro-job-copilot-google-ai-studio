@@ -5,6 +5,8 @@ import { TemplateThumb } from '../cv/TemplateThumb';
 import { useT } from '../../i18n/LanguageContext';
 import { cn } from '../../lib/utils';
 
+const NEW_PREMIUM_TEMPLATE_IDS = new Set<TemplateId>(['atlas', 'volta', 'aurora', 'heritage']);
+
 export function DesignPanel({
   templateId,
   setTemplateId,
@@ -21,6 +23,12 @@ export function DesignPanel({
   locale: Locale;
 }) {
   const t = useT();
+  const orderedTemplates = [...TEMPLATES].sort((a, b) => {
+    const aIsNew = NEW_PREMIUM_TEMPLATE_IDS.has(a.id);
+    const bIsNew = NEW_PREMIUM_TEMPLATE_IDS.has(b.id);
+    return Number(bIsNew) - Number(aIsNew);
+  });
+
   return (
     <div className="space-y-6">
       <div>
@@ -60,12 +68,20 @@ export function DesignPanel({
       </div>
 
       <div>
-        <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-ink-500">
-          {t.builder.design.template}
-        </h3>
+        <div className="mb-3 flex items-end justify-between gap-3">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-ink-500">
+            {t.builder.design.template}
+          </h3>
+          <span className="rounded-full bg-brand-50 px-2.5 py-1 text-[10px] font-bold text-brand-700">
+            {locale === 'fr'
+              ? `${TEMPLATES.length} modèles · 4 nouveaux`
+              : `${TEMPLATES.length} templates · 4 new`}
+          </span>
+        </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {TEMPLATES.map((tpl) => {
+          {orderedTemplates.map((tpl) => {
             const active = tpl.id === templateId;
+            const isNew = NEW_PREMIUM_TEMPLATE_IDS.has(tpl.id);
             return (
               <button
                 key={tpl.id}
@@ -91,6 +107,11 @@ export function DesignPanel({
                   <p className="text-xs font-bold text-ink-900">{tpl.name}</p>
                   <p className="text-[10px] text-ink-400">{tpl.category}</p>
                 </div>
+                {isNew && (
+                  <span className="absolute left-2 top-2 rounded-full bg-amber-400 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-ink-950 shadow-sm">
+                    {locale === 'fr' ? 'Nouveau' : 'New'}
+                  </span>
+                )}
                 {active && (
                   <span className="absolute right-2 top-2 grid h-5 w-5 place-items-center rounded-full bg-brand-500 text-white">
                     <Check className="h-3 w-3" />
