@@ -34,12 +34,12 @@ interface LandingProps {
 }
 
 const SHOWCASE: TemplateId[] = [
+  'atlas',
+  'volta',
+  'aurora',
+  'heritage',
   'lome',
   'kpalime',
-  'maritime',
-  'sahel',
-  'dakar',
-  'eclat',
 ];
 
 export function LandingPage({ setView, onPickTemplate }: LandingProps) {
@@ -115,7 +115,7 @@ function Hero({ t, setView }: { t: any; setView: (v: AppView) => void }) {
           <div className="mt-12 flex flex-wrap gap-8">
             <Stat value="12K+" label={t.hero.stat1} />
             <Stat value="3×" label={t.hero.stat2} />
-            <Stat value="15" label={t.hero.stat3} />
+            <Stat value={String(TEMPLATES.length)} label={t.hero.stat3} />
           </div>
         </motion.div>
 

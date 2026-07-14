@@ -97,7 +97,11 @@ export type TemplateId =
   | 'savane'
   | 'lome'
   | 'kpalime'
-  | 'maritime';
+  | 'maritime'
+  | 'atlas'
+  | 'volta'
+  | 'aurora'
+  | 'heritage';
 
 export type TemplateCategory =
   | 'Moderne'

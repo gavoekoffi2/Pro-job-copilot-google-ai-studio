@@ -40,7 +40,7 @@ export function EclatTemplate({ data, accent, locale }: TemplateProps) {
         </div>
       </header>
 
-      <div className="grid grid-cols-3 gap-8 px-12 py-9">
+      <div className="grid grid-cols-3 gap-8 px-12 py-8">
         <main className="col-span-2 space-y-6">
           {p.summary && (
             <ESection title={L.profile} accent={accent}>

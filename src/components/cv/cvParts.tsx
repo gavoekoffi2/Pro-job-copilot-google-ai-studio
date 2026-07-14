@@ -161,32 +161,57 @@ export function ProfilePhoto({
   );
 }
 
-/** Barre de progression d'une compétence. */
+/** Barre de progression premium d'une compétence. Sans niveau renseigné,
+ * la piste reste visible mais aucun niveau n'est inventé. */
 export function SkillBar({
   percent,
   accent,
-  track = 'rgba(0,0,0,0.08)',
+  track = 'rgba(15,23,42,0.10)',
 }: {
   percent: number;
   accent: string;
   track?: string;
 }) {
+  const safePercent = Math.max(0, Math.min(100, percent));
   return (
-    <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: track }}>
-      <div
-        className="h-full rounded-full"
-        style={{ width: `${percent}%`, background: accent }}
-      />
+    <div
+      className="relative h-[7px] w-full overflow-hidden rounded-full ring-1 ring-black/[0.04]"
+      style={{ background: track }}
+    >
+      {safePercent > 0 ? (
+        <div
+          className="relative h-full rounded-full"
+          style={{
+            width: `${safePercent}%`,
+            background: `linear-gradient(90deg, ${accent}cc, ${accent})`,
+            boxShadow: `0 0 10px ${accent}42`,
+          }}
+        >
+          <span className="absolute inset-x-1 top-[1px] h-px rounded-full bg-white/35" />
+        </div>
+      ) : (
+        <div
+          className="h-full w-full opacity-45"
+          style={{
+            background: `repeating-linear-gradient(90deg, ${accent}55 0 16px, transparent 16px 21px)`,
+          }}
+        />
+      )}
+      <div className="pointer-events-none absolute inset-0 flex justify-evenly opacity-25">
+        {[1, 2, 3].map((tick) => (
+          <span key={tick} className="h-full w-px bg-white" />
+        ))}
+      </div>
     </div>
   );
 }
 
-/** Points de niveau (●●●○○). */
+/** Segments de niveau premium. Les segments vides restent visibles. */
 export function LevelDots({
   count,
   accent,
   total = 5,
-  empty = 'rgba(0,0,0,0.12)',
+  empty = 'rgba(15,23,42,0.12)',
 }: {
   count: number;
   accent: string;
@@ -194,12 +219,15 @@ export function LevelDots({
   empty?: string;
 }) {
   return (
-    <span className="inline-flex gap-1">
+    <span className="inline-flex items-center gap-[3px]" aria-label={`${count}/${total}`}>
       {Array.from({ length: total }).map((_, i) => (
         <span
           key={i}
-          className="h-2 w-2 rounded-full"
-          style={{ background: i < count ? accent : empty }}
+          className="h-[5px] w-[13px] rounded-full ring-1 ring-black/[0.03]"
+          style={{
+            background: i < count ? `linear-gradient(90deg, ${accent}bb, ${accent})` : empty,
+            boxShadow: i < count ? `0 1px 4px ${accent}30` : undefined,
+          }}
         />
       ))}
     </span>

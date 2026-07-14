@@ -17,8 +17,8 @@ export function LomeTemplate({ data, accent, locale }: TemplateProps) {
   const { personalInfo: p } = data;
   const serif = 'Georgia, "Times New Roman", serif';
   return (
-    <div className="min-h-[1123px] w-[794px] bg-[#fbfaf6] px-10 py-10 font-sans text-[13px] leading-relaxed text-stone-700">
-      <header className="relative overflow-hidden rounded-[30px] bg-stone-950 px-9 py-8 text-white">
+    <div className="min-h-[1123px] w-[794px] bg-[#fbfaf6] px-10 py-7 font-sans text-[12.5px] leading-relaxed text-stone-700">
+      <header className="relative overflow-hidden rounded-[30px] bg-stone-950 px-9 py-6 text-white">
         <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full opacity-30" style={{ background: accent }} />
         <div className="absolute bottom-0 right-0 h-24 w-64 opacity-20" style={{ background: `linear-gradient(90deg, transparent, ${accent})` }} />
         <div className="relative flex items-center gap-7">
@@ -37,10 +37,10 @@ export function LomeTemplate({ data, accent, locale }: TemplateProps) {
           </div>
         </div>
       </header>
-      <div className="mt-8 grid grid-cols-[1.55fr_0.85fr] gap-8">
-        <main className="space-y-6">
+      <div className="mt-6 grid grid-cols-[1.55fr_0.85fr] gap-7">
+        <main className="space-y-5">
           {p.summary && <LmBlock title={L.profile} accent={accent}><p className="text-[14px] text-stone-700">{p.summary}</p></LmBlock>}
-          {data.experiences.length > 0 && <LmBlock title={L.experience} accent={accent}><div className="space-y-5">{data.experiences.map((e) => <div key={e.id} className="rounded-2xl bg-white p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)]"><div className="flex items-baseline justify-between gap-3"><h3 className="text-[15.5px] font-extrabold text-stone-950">{e.title}</h3><span className="shrink-0 text-xs font-bold" style={{ color: accent }}>{dateRange(e, locale)}</span></div><p className="text-[13px] font-bold text-stone-500">{e.company}{e.location ? ` · ${e.location}` : ''}</p><Bullets text={e.description} className="mt-2 text-[12.5px]" markerColor={accent} /></div>)}</div></LmBlock>}
+          {data.experiences.length > 0 && <LmBlock title={L.experience} accent={accent}><div className="space-y-3">{data.experiences.map((e) => <div key={e.id} className="rounded-2xl bg-white p-3.5 shadow-[0_14px_34px_rgba(15,23,42,0.07)]"><div className="flex items-baseline justify-between gap-3"><h3 className="text-[15.5px] font-extrabold text-stone-950">{e.title}</h3><span className="shrink-0 text-xs font-bold" style={{ color: accent }}>{dateRange(e, locale)}</span></div><p className="text-[13px] font-bold text-stone-500">{e.company}{e.location ? ` · ${e.location}` : ''}</p><Bullets text={e.description} className="mt-2 text-[12.5px]" markerColor={accent} /></div>)}</div></LmBlock>}
           {data.education.length > 0 && <LmBlock title={L.education} accent={accent}><div className="space-y-3">{data.education.map((ed) => <div key={ed.id} className="flex justify-between gap-3 rounded-xl border border-stone-200 bg-white px-4 py-3"><div><h3 className="font-bold text-stone-900">{ed.degree}</h3><p className="text-[12.5px] text-stone-500">{ed.school}{ed.location ? ` · ${ed.location}` : ''}</p></div><span className="text-xs font-bold" style={{ color: accent }}>{ed.year}</span></div>)}</div></LmBlock>}
         </main>
         <aside className="space-y-5 rounded-[26px] bg-white p-5 shadow-[0_18px_44px_rgba(15,23,42,0.08)]">
@@ -63,28 +63,28 @@ export function KpalimeTemplate({ data, accent, locale }: TemplateProps) {
   const L = sectionLabels(locale);
   const { personalInfo: p } = data;
   return (
-    <div className="min-h-[1123px] w-[794px] bg-white font-sans text-[13px] leading-relaxed text-slate-700">
+    <div className="min-h-[1123px] w-[794px] bg-white font-sans text-[12px] leading-[1.45] text-slate-700">
       <header className="grid grid-cols-[230px_1fr]">
-        <div className="px-8 py-9 text-white" style={{ background: `linear-gradient(150deg, ${accent}, #0f172a)` }}>
+        <div className="px-8 py-7 text-white" style={{ background: `linear-gradient(150deg, ${accent}, #0f172a)` }}>
           <ProfilePhoto src={p.photo} name={p.fullName} size={132} rounded="rounded-full" accent="rgba(255,255,255,0.18)" className="ring-8 ring-white/10" />
-          <div className="mt-7 space-y-2 text-[11.5px] text-white/82"><ContactItem type="email" value={p.email} /><ContactItem type="phone" value={p.phone} /><ContactItem type="address" value={p.address} /><ContactItem type="linkedin" value={p.linkedin} /></div>
+          <div className="mt-5 space-y-1.5 text-[11px] text-white/82"><ContactItem type="email" value={p.email} /><ContactItem type="phone" value={p.phone} /><ContactItem type="address" value={p.address} /><ContactItem type="linkedin" value={p.linkedin} /></div>
         </div>
-        <div className="relative overflow-hidden bg-slate-50 px-9 py-9">
+        <div className="relative overflow-hidden bg-slate-50 px-9 py-7">
           <div className="absolute right-8 top-8 h-24 w-24 rounded-[28px] opacity-10" style={{ background: accent }} />
           <p className="text-[11px] font-black uppercase tracking-[0.32em]" style={{ color: accent }}>Portfolio carrière</p>
           <h1 className="mt-3 max-w-[420px] font-display text-[46px] font-black leading-[0.95] tracking-[-0.04em] text-slate-950">{p.fullName || 'Votre Nom'}</h1>
           <p className="mt-4 text-xl font-bold text-slate-600">{p.title}</p>
-          {p.summary && <p className="mt-5 max-w-[440px] rounded-2xl bg-white p-4 text-[13.5px] text-slate-600 shadow-sm">{p.summary}</p>}
+          {p.summary && <p className="mt-4 max-w-[440px] rounded-2xl bg-white p-3.5 text-[12.5px] text-slate-600 shadow-sm">{p.summary}</p>}
         </div>
       </header>
       <div className="grid grid-cols-[230px_1fr]">
-        <aside className="space-y-6 bg-slate-950 px-8 py-8 text-white">
+        <aside className="space-y-4 bg-slate-950 px-8 py-6 text-white">
           {data.skills.length > 0 && <KpSide title={L.skills}>{data.skills.map((s) => <div key={s.id} className="mb-2.5"><p className="mb-1 text-[12px] font-semibold">{s.name}</p><SkillBar percent={levelToPercent(s.level)} accent="#fff" track="rgba(255,255,255,0.16)" /></div>)}</KpSide>}
           {data.languages.length > 0 && <KpSide title={L.languages}><ul className="space-y-1.5 text-[12px]">{data.languages.map((l) => <li key={l.id} className="flex justify-between text-white/85"><span>{l.name}</span><span className="text-white/50">{l.level}</span></li>)}</ul></KpSide>}
           {data.interests.length > 0 && <KpSide title={L.interests}><p className="text-[12px] text-white/70">{data.interests.join(' · ')}</p></KpSide>}
         </aside>
-        <main className="space-y-7 px-9 py-8">
-          {data.experiences.length > 0 && <KpMain title={L.experience} accent={accent}>{data.experiences.map((e) => <div key={e.id} className="mb-4 grid grid-cols-[105px_1fr] gap-4"><div className="text-xs font-black uppercase" style={{ color: accent }}>{dateRange(e, locale)}</div><div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.06)]"><h3 className="text-[15px] font-black text-slate-950">{e.title}</h3><p className="font-bold text-slate-500">{e.company}{e.location ? ` · ${e.location}` : ''}</p><Bullets text={e.description} className="mt-2 text-[12.5px]" markerColor={accent} /></div></div>)}</KpMain>}
+        <main className="space-y-4 px-9 py-6">
+          {data.experiences.length > 0 && <KpMain title={L.experience} accent={accent}>{data.experiences.map((e) => <div key={e.id} className="mb-3 grid grid-cols-[92px_1fr] gap-3"><div className="text-[10px] font-black uppercase" style={{ color: accent }}>{dateRange(e, locale)}</div><div className="rounded-2xl border border-slate-100 bg-white p-3 shadow-[0_10px_28px_rgba(15,23,42,0.06)]"><h3 className="text-[15px] font-black text-slate-950">{e.title}</h3><p className="font-bold text-slate-500">{e.company}{e.location ? ` · ${e.location}` : ''}</p><Bullets text={e.description} className="mt-2 text-[12.5px]" markerColor={accent} /></div></div>)}</KpMain>}
           {data.education.length > 0 && <KpMain title={L.education} accent={accent}>{data.education.map((ed) => <div key={ed.id} className="mb-3 flex justify-between rounded-xl bg-slate-50 px-4 py-3"><div><h3 className="font-bold text-slate-900">{ed.degree}</h3><p className="text-[12.5px] text-slate-500">{ed.school}{ed.location ? ` · ${ed.location}` : ''}</p></div><span className="text-xs font-bold text-slate-400">{ed.year}</span></div>)}</KpMain>}
           {data.certifications.length > 0 && <KpMain title={L.certifications} accent={accent}><div className="grid grid-cols-2 gap-3">{data.certifications.map((c) => <div key={c.id} className="rounded-xl border border-slate-100 p-3"><p className="font-bold text-slate-800">{c.name}</p><p className="text-[12px] text-slate-500">{c.issuer} · {c.year}</p></div>)}</div></KpMain>}
         </main>

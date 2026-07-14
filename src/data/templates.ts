@@ -191,6 +191,40 @@ export const TEMPLATES: TemplateMeta[] = [
     accent: '#d97706',
     hasPhoto: true,
   },
+  {
+    id: 'atlas',
+    name: 'Atlas Éditorial',
+    category: 'Élégant',
+    description: 'Composition éditoriale de luxe, frise chronologique et détails de magazine international.',
+    accent: '#9f1239',
+    hasPhoto: true,
+  },
+  {
+    id: 'volta',
+    name: 'Volta Studio',
+    category: 'Créatif',
+    description: 'Direction artistique contemporaine, géométrie audacieuse et cartes professionnelles.',
+    accent: '#06b6d4',
+    dark: true,
+    hasPhoto: true,
+  },
+  {
+    id: 'aurora',
+    name: 'Aurora Premium',
+    category: 'Moderne',
+    description: 'En-tête nocturne lumineux, panneaux raffinés et finition produit haut de gamme.',
+    accent: '#8b5cf6',
+    dark: true,
+    hasPhoto: true,
+  },
+  {
+    id: 'heritage',
+    name: 'Héritage Executive',
+    category: 'Professionnel',
+    description: 'Élégance intemporelle de cabinet international, sérif prestige et structure ATS claire.',
+    accent: '#a16207',
+    hasPhoto: false,
+  },
 ];
 
 export const TEMPLATE_MAP: Record<TemplateId, TemplateMeta> = TEMPLATES.reduce(

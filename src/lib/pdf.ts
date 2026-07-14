@@ -124,6 +124,18 @@ function copyPdfSafeStyles(source: Element, target: Element) {
   const computed = window.getComputedStyle(source);
   const targetStyle = (target as HTMLElement | SVGElement).style;
 
+  // Tailwind v4 exposes its palette as inherited CSS custom properties using
+  // oklch(). html2canvas parses those declarations even when the final color
+  // property was already normalized, so override every unsupported custom
+  // property on the capture-only clone with an RGB-safe equivalent.
+  for (const property of computed) {
+    if (!property.startsWith('--')) continue;
+    const value = computed.getPropertyValue(property);
+    if (UNSUPPORTED_COLOR_FUNCTIONS.test(value)) {
+      targetStyle.setProperty(property, replaceUnsupportedColorFunctions(value), 'important');
+    }
+  }
+
   const colorProperties = [
     'color',
     'backgroundColor',
@@ -218,12 +230,29 @@ export async function exportElementToPdf(
       logging: false,
       windowWidth: clone.scrollWidth,
       onclone: (documentClone) => {
+        const cloneView = documentClone.defaultView;
         documentClone.querySelectorAll('[data-pdf-safe-export], [data-pdf-safe-export] *').forEach((node) => {
           const htmlNode = node as HTMLElement;
           const styleAttribute = htmlNode.getAttribute('style');
           if (styleAttribute && UNSUPPORTED_COLOR_FUNCTIONS.test(styleAttribute)) {
             htmlNode.setAttribute('style', replaceUnsupportedColorFunctions(styleAttribute));
           }
+
+          // html2canvas applies the document stylesheets again in its own clone.
+          // Normalize the resulting computed declarations too (rings, alpha
+          // utilities and Tailwind color-mix values otherwise reintroduce oklab).
+          if (cloneView) {
+            const computed = cloneView.getComputedStyle(htmlNode);
+            for (const property of computed) {
+              const value = computed.getPropertyValue(property);
+              if (!UNSUPPORTED_COLOR_FUNCTIONS.test(value)) continue;
+              const safeValue = property === 'background-image'
+                ? 'none'
+                : replaceUnsupportedColorFunctions(value);
+              htmlNode.style.setProperty(property, safeValue || 'initial', 'important');
+            }
+          }
+
           htmlNode.style.setProperty('animation', 'none', 'important');
           htmlNode.style.setProperty('transition', 'none', 'important');
           htmlNode.style.setProperty('box-shadow', replaceUnsupportedColorFunctions(htmlNode.style.boxShadow), 'important');
