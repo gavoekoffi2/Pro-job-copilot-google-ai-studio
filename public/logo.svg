@@ -1,32 +1,47 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 112" fill="none">
-  <title>JobTask AI logo</title>
-  <desc>Full horizontal logo for JobTask AI.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 128" fill="none">
+  <title>JobTask AI</title>
+  <desc>Logo de la plateforme de CV et carrière propulsée par l’intelligence artificielle.</desc>
   <defs>
-    <linearGradient id="brand" x1="12" y1="8" x2="99" y2="104" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#7C3AED"/>
-      <stop offset="0.5" stop-color="#2563EB"/>
-      <stop offset="1" stop-color="#F59E0B"/>
+    <linearGradient id="tile" x1="12" y1="8" x2="118" y2="124" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#111A35"/>
+      <stop offset="1" stop-color="#050A18"/>
     </linearGradient>
-    <linearGradient id="text" x1="126" y1="25" x2="367" y2="82" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#0F172A"/>
-      <stop offset="0.72" stop-color="#1E3A8A"/>
-      <stop offset="1" stop-color="#7C3AED"/>
+    <linearGradient id="career" x1="40" y1="95" x2="101" y2="26" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2563EB"/>
+      <stop offset="0.58" stop-color="#7C3AED"/>
+      <stop offset="1" stop-color="#A855F7"/>
     </linearGradient>
-    <filter id="shadow" x="0" y="0" width="112" height="112" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#111827" flood-opacity="0.2"/>
+    <linearGradient id="paper" x1="35" y1="26" x2="88" y2="101" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EEF2FF"/>
+    </linearGradient>
+    <linearGradient id="aiText" x1="389" y1="35" x2="450" y2="80" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+    <filter id="shadow" x="16" y="12" width="102" height="110" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="#020617" flood-opacity="0.34"/>
     </filter>
   </defs>
+
+  <rect x="3" y="3" width="122" height="122" rx="31" fill="url(#tile)"/>
+  <rect x="3.75" y="3.75" width="120.5" height="120.5" rx="30.25" stroke="white" stroke-opacity="0.11" stroke-width="1.5"/>
+  <circle cx="101" cy="24" r="25" fill="#7C3AED" fill-opacity="0.16"/>
+  <circle cx="20" cy="108" r="31" fill="#2563EB" fill-opacity="0.13"/>
   <g filter="url(#shadow)">
-    <rect x="8" y="8" width="96" height="96" rx="24" fill="#070B18"/>
-    <path opacity="0.34" d="M20 82c18-36 46-57 81-66v88H20V82Z" fill="url(#brand)"/>
-    <path d="M56 17 88 29.8v24.8c0 23.2-13.3 39.8-32 45.9-18.7-6.1-32-22.7-32-45.9V29.8L56 17Z" fill="url(#brand)"/>
-    <path d="M41 37h26.5L80 49.5V79a6 6 0 0 1-6 6H41a6 6 0 0 1-6-6V43a6 6 0 0 1 6-6Z" fill="#F8FAFC"/>
-    <path d="M67 37v9.5a4 4 0 0 0 4 4H80L67 37Z" fill="#C7D2FE"/>
-    <path d="M46 56h20M46 66h18M46 76h11" stroke="#1E3A8A" stroke-width="4" stroke-linecap="round"/>
-    <circle cx="77" cy="76" r="8" fill="#F59E0B"/>
-    <path d="M73.7 76.2 76 78.5l4.8-5.3" stroke="white" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M35 24h38l20 20v57a8 8 0 0 1-8 8H35a8 8 0 0 1-8-8V32a8 8 0 0 1 8-8Z" fill="url(#paper)"/>
+    <path d="M73 24v14a6 6 0 0 0 6 6h14L73 24Z" fill="#D8DEFF"/>
+    <circle cx="45" cy="48" r="8" fill="#DDD6FE"/>
+    <path d="M35.5 66c2.8-7.6 16.2-7.6 19 0" stroke="#6D5CE7" stroke-width="4" stroke-linecap="round"/>
+    <path d="M63 57h16M63 66h12M38 79h29M38 89h21" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
   </g>
-  <text x="126" y="58" fill="url(#text)" font-family="Sora, Plus Jakarta Sans, Inter, Arial, sans-serif" font-size="38" font-weight="800" letter-spacing="-1.4">JobTask</text>
-  <text x="292" y="58" fill="#F59E0B" font-family="Sora, Plus Jakarta Sans, Inter, Arial, sans-serif" font-size="38" font-weight="800" letter-spacing="-1.4">AI</text>
-  <text x="128" y="83" fill="#64748B" font-family="Inter, Plus Jakarta Sans, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="2.7">CV • CARRIÈRE • INTELLIGENCE ARTIFICIELLE</text>
+  <path d="M43 98c12-5 18-14 25-23 6-7.7 12-13 22-18" stroke="url(#career)" stroke-width="8" stroke-linecap="round"/>
+  <path d="m80 51 14 3-3 14" stroke="#A855F7" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="43" cy="98" r="5" fill="#2563EB" stroke="#DBEAFE" stroke-width="3"/>
+  <path d="m103 17 2.8 8.2 8.2 2.8-8.2 2.8L103 39l-2.8-8.2L92 28l8.2-2.8L103 17Z" fill="#FBBF24"/>
+
+  <text x="151" y="70" fill="#0A0F1E" font-family="Sora, Plus Jakarta Sans, Inter, Arial, sans-serif" font-size="49" font-weight="800" letter-spacing="-2">JobTask</text>
+  <text x="360" y="70" fill="url(#aiText)" font-family="Sora, Plus Jakarta Sans, Inter, Arial, sans-serif" font-size="49" font-weight="800" letter-spacing="-2">AI</text>
+  <rect x="152" y="88" width="48" height="3" rx="1.5" fill="#7C3AED"/>
+  <text x="211" y="94" fill="#64748B" font-family="Inter, Plus Jakarta Sans, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="2.7">CV • CARRIÈRE • IA</text>
 </svg>

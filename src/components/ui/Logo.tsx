@@ -11,26 +11,29 @@ export function Logo({
 }) {
   const content = (
     <>
-      <span className="relative grid h-11 w-11 place-items-center rounded-2xl bg-ink-950 shadow-lg shadow-brand-500/25 ring-1 ring-white/15 transition-transform group-hover:scale-105">
-        <img src="/logo-mark.svg" alt="" className="h-11 w-11 rounded-2xl" aria-hidden="true" />
-        <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-gold-400 shadow-sm shadow-gold-400/60 ring-2 ring-white" />
+      <span className="relative grid h-11 w-11 shrink-0 place-items-center rounded-[14px] shadow-lg shadow-violet-500/20 ring-1 ring-white/10 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:scale-[1.03]">
+        <img src="/logo-mark.svg" alt="" className="h-11 w-11 rounded-[14px]" aria-hidden="true" />
       </span>
       <span className="flex flex-col leading-none">
         <span
           className={cn(
-            'font-display text-xl font-extrabold tracking-tight',
+            'font-display text-xl font-extrabold tracking-[-0.045em]',
             light ? 'text-white' : 'text-ink-950',
           )}
         >
-          JobTask<span className="text-gold-500"> AI</span>
+          JobTask{' '}
+          <span className={light ? 'text-violet-300' : 'bg-gradient-to-r from-violet-600 to-blue-600 bg-clip-text text-transparent'}>
+            AI
+          </span>
         </span>
         <span
           className={cn(
-            'mt-1 text-[9px] font-bold uppercase tracking-[0.22em]',
+            'mt-1 flex items-center gap-1.5 text-[8px] font-extrabold uppercase tracking-[0.2em]',
             light ? 'text-white/65' : 'text-ink-500',
           )}
         >
-          CV intelligent
+          <span className="h-[2px] w-4 rounded-full bg-violet-500" />
+          CV • Carrière • IA
         </span>
       </span>
     </>

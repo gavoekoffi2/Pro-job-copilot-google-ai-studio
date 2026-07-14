@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" fill="none">
+  <defs>
+    <radialGradient id="glowA" cx="0" cy="0" r="1" gradientTransform="translate(930 110) rotate(135) scale(520 430)" gradientUnits="userSpaceOnUse"><stop stop-color="#7C3AED" stop-opacity=".42"/><stop offset="1" stop-color="#7C3AED" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowB" cx="0" cy="0" r="1" gradientTransform="translate(180 560) rotate(-36) scale(540 330)" gradientUnits="userSpaceOnUse"><stop stop-color="#2563EB" stop-opacity=".32"/><stop offset="1" stop-color="#2563EB" stop-opacity="0"/></radialGradient>
+    <linearGradient id="tile" x1="84" y1="117" x2="430" y2="500" gradientUnits="userSpaceOnUse"><stop stop-color="#172245"/><stop offset="1" stop-color="#050A18"/></linearGradient>
+    <linearGradient id="career" x1="172" y1="425" x2="370" y2="191" gradientUnits="userSpaceOnUse"><stop stop-color="#2563EB"/><stop offset=".58" stop-color="#7C3AED"/><stop offset="1" stop-color="#A855F7"/></linearGradient>
+    <linearGradient id="ai" x1="840" y1="242" x2="1010" y2="376" gradientUnits="userSpaceOnUse"><stop stop-color="#A78BFA"/><stop offset="1" stop-color="#60A5FA"/></linearGradient>
+    <filter id="shadow" x="44" y="77" width="430" height="470" color-interpolation-filters="sRGB"><feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#020617" flood-opacity=".48"/></filter>
+  </defs>
+  <rect width="1200" height="630" fill="#080D1B"/>
+  <rect width="1200" height="630" fill="url(#glowA)"/>
+  <rect width="1200" height="630" fill="url(#glowB)"/>
+  <g opacity=".13" stroke="#A78BFA"><path d="M730 80h390M730 120h390M730 160h390M760 50v145M820 50v145M880 50v145M940 50v145M1000 50v145M1060 50v145"/></g>
+
+  <g filter="url(#shadow)">
+    <rect x="76" y="108" width="360" height="360" rx="88" fill="url(#tile)"/>
+    <rect x="78" y="110" width="356" height="356" rx="86" stroke="white" stroke-opacity=".12" stroke-width="4"/>
+    <circle cx="369" cy="165" r="72" fill="#7C3AED" fill-opacity=".17"/>
+    <path d="M172 162h112l58 58v168a22 22 0 0 1-22 22H172a22 22 0 0 1-22-22V184a22 22 0 0 1 22-22Z" fill="#F8FAFC"/>
+    <path d="M284 162v40a18 18 0 0 0 18 18h40l-58-58Z" fill="#D8DEFF"/>
+    <circle cx="199" cy="231" r="24" fill="#DDD6FE"/>
+    <path d="M170 281c8-23 51-23 59 0" stroke="#6D5CE7" stroke-width="12" stroke-linecap="round"/>
+    <path d="M251 254h49M251 281h37M177 322h91M177 351h65" stroke="#94A3B8" stroke-width="12" stroke-linecap="round"/>
+    <path d="M193 385c34-14 49-41 70-67 18-22 34-38 66-55" stroke="url(#career)" stroke-width="24" stroke-linecap="round"/>
+    <path d="m299 247 43 8-9 42" stroke="#A855F7" stroke-width="21" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="193" cy="385" r="15" fill="#2563EB" stroke="#DBEAFE" stroke-width="8"/>
+    <path d="m370 137 8 24 24 8-24 8-8 24-8-24-24-8 24-8 8-24Z" fill="#FBBF24"/>
+  </g>
+
+  <text x="502" y="293" fill="white" font-family="Sora, Plus Jakarta Sans, Inter, Arial, sans-serif" font-size="92" font-weight="800" letter-spacing="-5">JobTask</text>
+  <text x="902" y="293" fill="url(#ai)" font-family="Sora, Plus Jakarta Sans, Inter, Arial, sans-serif" font-size="92" font-weight="800" letter-spacing="-5">AI</text>
+  <rect x="506" y="329" width="102" height="7" rx="3.5" fill="#8B5CF6"/>
+  <text x="627" y="343" fill="#CBD5E1" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700" letter-spacing="5">CV • CARRIÈRE • IA</text>
+  <text x="504" y="405" fill="#F8FAFC" font-family="Plus Jakarta Sans, Inter, Arial, sans-serif" font-size="33" font-weight="600">Votre carrière, propulsée par l’IA.</text>
+  <text x="504" y="454" fill="#94A3B8" font-family="Inter, Arial, sans-serif" font-size="23">Créez, analysez et adaptez un CV qui ouvre des portes.</text>
+</svg>
