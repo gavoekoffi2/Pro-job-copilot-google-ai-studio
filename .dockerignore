@@ -1,0 +1,13 @@
+.git
+.gitignore
+node_modules
+src
+public
+api
+*.zip
+.env
+.env.*
+.jobtask-data
+dist-old
+.netlify-local
+README.md

@@ -1,0 +1,33 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    image: jobtask-ai:latest
+    container_name: jobtask-ai
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+    volumes:
+      - jobtask-data:/app/.jobtask-data
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      - "traefik.http.routers.jobtask-ai.rule=Host(`jobtaskai.76.13.129.252.sslip.io`)"
+      - "traefik.http.routers.jobtask-ai.entrypoints=websecure"
+      - "traefik.http.routers.jobtask-ai.tls=true"
+      - "traefik.http.routers.jobtask-ai.tls.certresolver=letsencrypt"
+      - "traefik.http.services.jobtask-ai.loadbalancer.server.port=3000"
+
+volumes:
+  jobtask-data:
+    name: jobtask-ai-data
+
+networks:
+  web:
+    external: true
