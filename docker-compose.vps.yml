@@ -22,6 +22,11 @@ services:
       - "traefik.http.routers.jobtask-ai.entrypoints=websecure"
       - "traefik.http.routers.jobtask-ai.tls=true"
       - "traefik.http.routers.jobtask-ai.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.jobtask-ai-final.rule=Host(`jobtaskai.com`) || Host(`www.jobtaskai.com`)"
+      - "traefik.http.routers.jobtask-ai-final.entrypoints=websecure"
+      - "traefik.http.routers.jobtask-ai-final.tls=true"
+      - "traefik.http.routers.jobtask-ai-final.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.jobtask-ai-final.service=jobtask-ai"
       - "traefik.http.services.jobtask-ai.loadbalancer.server.port=3000"
 
 volumes:
