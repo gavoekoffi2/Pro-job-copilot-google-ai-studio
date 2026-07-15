@@ -1,129 +1,358 @@
 import type { ReactNode } from 'react';
 import {
-  Bullets,
-  ContactItem,
-  dateRange,
-  levelToPercent,
-  ProfilePhoto,
-  sectionLabels,
-  SkillBar,
-  type TemplateProps,
-} from '../cvParts';
+  Globe,
+  Linkedin,
+  Mail,
+  MapPin,
+  Phone,
+} from 'lucide-react';
+import { dateRange, levelToPercent, sectionLabels, type TemplateProps } from '../cvParts';
 
-const serif = 'Georgia, "Times New Roman", serif';
+/**
+ * Reproduction du modèle Harry Nelson fourni par l'utilisateur.
+ * Les dix exports conservent la même composition et déclinent seulement sa direction chromatique.
+ */
+type Variant =
+  | 'original'
+  | 'teal'
+  | 'royal'
+  | 'gold'
+  | 'forest'
+  | 'sky'
+  | 'burgundy'
+  | 'slate'
+  | 'violet'
+  | 'graphite';
 
-function ContactStack({ p, light = false }: { p: TemplateProps['data']['personalInfo']; light?: boolean }) {
-  return <div className={`space-y-1.5 text-[10.5px] ${light ? 'text-white/75' : 'text-slate-600'}`}>
-    <ContactItem type="email" value={p.email} /><ContactItem type="phone" value={p.phone} />
-    <ContactItem type="address" value={p.address} /><ContactItem type="linkedin" value={p.linkedin} />
-    <ContactItem type="website" value={p.website} />
-  </div>;
+interface Palette {
+  primary: string;
+  secondary: string;
+  sidebar: string;
+  paper: string;
 }
 
-function Title({ children, accent, light = false, ribbon = false }: { children: ReactNode; accent: string; light?: boolean; ribbon?: boolean }) {
-  if (ribbon) return <h2 className="mb-3 inline-flex min-w-[176px] items-center px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-950" style={{ background: accent, clipPath: 'polygon(0 0, 94% 0, 100% 50%, 94% 100%, 0 100%, 6% 50%)' }}>{children}</h2>;
-  return <h2 className={`mb-3 flex items-center gap-2 text-[10.5px] font-black uppercase tracking-[0.2em] ${light ? 'text-white' : 'text-slate-950'}`}><span className="h-2.5 w-2.5 rounded-full" style={{ background: accent }} />{children}<span className={`h-px flex-1 ${light ? 'bg-white/20' : 'bg-slate-200'}`} /></h2>;
+const PALETTES: Record<Variant, Palette> = {
+  original: { primary: '#032a5f', secondary: '#84b9ce', sidebar: '#ebebeb', paper: '#ffffff' },
+  teal: { primary: '#083f46', secondary: '#68b8b0', sidebar: '#eaf2f1', paper: '#ffffff' },
+  royal: { primary: '#123c73', secondary: '#78a8dc', sidebar: '#edf1f7', paper: '#ffffff' },
+  gold: { primary: '#24201b', secondary: '#c7a052', sidebar: '#f1eee8', paper: '#ffffff' },
+  forest: { primary: '#173d34', secondary: '#83ad98', sidebar: '#ebf0ed', paper: '#ffffff' },
+  sky: { primary: '#17476f', secondary: '#7cb9d5', sidebar: '#edf4f7', paper: '#ffffff' },
+  burgundy: { primary: '#4b2031', secondary: '#c18a9e', sidebar: '#f3ecef', paper: '#ffffff' },
+  slate: { primary: '#263543', secondary: '#91a9b8', sidebar: '#edf0f2', paper: '#ffffff' },
+  violet: { primary: '#342457', secondary: '#9b8ac4', sidebar: '#f0edf5', paper: '#ffffff' },
+  graphite: { primary: '#23282f', secondary: '#99a3ad', sidebar: '#eceeef', paper: '#ffffff' },
+};
+
+const contactRows = [
+  ['email', Mail],
+  ['phone', Phone],
+  ['address', MapPin],
+  ['website', Globe],
+  ['linkedin', Linkedin],
+] as const;
+
+function SectionBand({ children, palette }: { children: string; palette: Palette }) {
+  return (
+    <div className="relative h-[51px] w-[253px]" style={{ background: palette.primary }}>
+      <h2 className="flex h-full items-center justify-center px-4 text-center text-[20px] font-black uppercase tracking-[0.015em] text-white">
+        {children}
+      </h2>
+      <span className="absolute -bottom-px left-[23px] h-px w-[209px]" style={{ background: palette.secondary }} />
+    </div>
+  );
 }
 
-function ExperienceList({ data, locale, accent, cards = false }: { data: TemplateProps['data']; locale: TemplateProps['locale']; accent: string; cards?: boolean }) {
-  return <div className="space-y-3">{data.experiences.map((e, i) => <article key={e.id} className={cards ? 'relative rounded-2xl border border-slate-100 bg-white p-3.5 shadow-[0_10px_28px_rgba(15,23,42,.07)]' : 'relative pl-4'}>
-    {!cards && <span className="absolute left-0 top-1 h-full w-px bg-slate-200" />}
-    {!cards && <span className="absolute -left-[3px] top-1.5 h-[7px] w-[7px] rounded-full" style={{ background: accent }} />}
-    {cards && <span className="absolute -left-2 top-3 grid h-7 w-7 place-items-center rounded-lg text-[9px] font-black text-white" style={{ background: accent }}>{String(i + 1).padStart(2, '0')}</span>}
-    <div className={cards ? 'ml-2' : ''}><div className="flex items-baseline justify-between gap-3"><h3 className="text-[14px] font-black text-slate-950">{e.title}</h3><span className="shrink-0 text-[9.5px] font-black uppercase" style={{ color: accent }}>{dateRange(e, locale)}</span></div>
-      <p className="text-[11.5px] font-bold text-slate-500">{e.company}{e.location ? ` · ${e.location}` : ''}</p><Bullets text={e.description} className="mt-1.5 text-[11.5px] leading-[1.55]" markerColor={accent} /></div>
-  </article>)}</div>;
+function PortraitCutout({ src, name, palette }: { src?: string; name: string; palette: Palette }) {
+  const hidden = src === '__HIDE_PHOTO__';
+  return (
+    <div
+      data-design-motif="portrait-cutout"
+      className="absolute left-[54px] top-[45px] z-30 h-[282px] w-[246px] overflow-hidden"
+      style={{ clipPath: 'ellipse(46% 49% at 50% 48%)' }}
+    >
+      {!hidden && src ? (
+        <img
+          src={src}
+          alt={name}
+          crossOrigin="anonymous"
+          className="h-full w-full object-cover object-top"
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center text-[54px] font-black text-white" style={{ background: palette.secondary }}>
+          {name
+            .split(/\s+/)
+            .filter(Boolean)
+            .slice(0, 2)
+            .map((part) => part[0])
+            .join('') || 'CV'}
+        </div>
+      )}
+    </div>
+  );
 }
 
-function EducationList({ data, accent, cards = false }: { data: TemplateProps['data']; accent: string; cards?: boolean }) {
-  return <div className={cards ? 'grid grid-cols-2 gap-2.5' : 'space-y-2.5'}>{data.education.map((ed) => <article key={ed.id} className={cards ? 'rounded-xl bg-slate-50 p-3' : 'grid grid-cols-[64px_1fr] gap-3 border-b border-slate-100 pb-2'}>
-    <span className="text-[9.5px] font-black" style={{ color: accent }}>{ed.year}</span><div><h3 className="text-[12px] font-black text-slate-900">{ed.degree}</h3><p className="text-[10.5px] text-slate-500">{ed.school}{ed.location ? ` · ${ed.location}` : ''}</p></div>
-  </article>)}</div>;
+function ContactSection({ data, palette, locale }: { data: TemplateProps['data']; palette: Palette; locale: TemplateProps['locale'] }) {
+  const labels = sectionLabels(locale);
+  const personal = data.personalInfo;
+  const values: Record<(typeof contactRows)[number][0], string> = {
+    email: personal.email,
+    phone: personal.phone,
+    address: personal.address,
+    website: personal.website,
+    linkedin: personal.linkedin,
+  };
+  return (
+    <section className="absolute left-[50px] top-[365px] z-20 w-[245px]">
+      <h2 className="mb-[25px] text-center text-[21px] font-black uppercase" style={{ color: palette.primary }}>
+        {labels.contact}
+      </h2>
+      <div className="space-y-[7px]">
+        {contactRows.map(([key, Icon]) => {
+          const value = values[key];
+          if (!value) return null;
+          return (
+            <div key={key} className="grid min-h-[31px] grid-cols-[38px_1fr] items-center gap-[18px]">
+              <span className="grid h-[31px] w-[31px] place-items-center rounded-full" style={{ background: palette.secondary }}>
+                <Icon className="h-[15px] w-[15px]" style={{ color: palette.primary }} strokeWidth={2.25} />
+              </span>
+              <span className="break-words text-[11px] font-medium leading-[1.22] text-[#555b64]">{value}</span>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
 }
 
-function SideContent({ data, accent, locale, light = false, dots = false }: { data: TemplateProps['data']; accent: string; locale: TemplateProps['locale']; light?: boolean; dots?: boolean }) {
-  const L = sectionLabels(locale);
-  const text = light ? 'text-white/80' : 'text-slate-700';
-  return <div className={`space-y-5 ${text}`}>
-    {data.skills.length > 0 && <section><h2 className={`mb-3 text-[9.5px] font-black uppercase tracking-[.22em] ${light ? 'text-white/45' : 'text-slate-950'}`}>{L.skills}</h2><div className="space-y-2.5">{data.skills.map((s) => <div key={s.id}><div className="mb-1 flex justify-between text-[10.5px] font-semibold"><span>{s.name}</span><span className={light ? 'text-white/35' : 'text-slate-400'}>{s.level}</span></div>{dots ? <div className="flex gap-1">{[1,2,3,4,5].map(n => <span key={n} className="h-1.5 flex-1 rounded-full" style={{ background: n <= Math.ceil(levelToPercent(s.level) / 20) ? accent : (light ? 'rgba(255,255,255,.12)' : '#e2e8f0') }} />)}</div> : <SkillBar percent={levelToPercent(s.level)} accent={accent} track={light ? 'rgba(255,255,255,.12)' : '#e2e8f0'} />}</div>)}</div></section>}
-    {data.languages.length > 0 && <section><h2 className={`mb-2.5 text-[9.5px] font-black uppercase tracking-[.22em] ${light ? 'text-white/45' : 'text-slate-950'}`}>{L.languages}</h2><div className="space-y-1.5">{data.languages.map(l => <div key={l.id} className="flex justify-between text-[10.5px]"><b>{l.name}</b><span className={light ? 'text-white/40' : 'text-slate-400'}>{l.level}</span></div>)}</div></section>}
-    {data.certifications.length > 0 && <section><h2 className={`mb-2.5 text-[9.5px] font-black uppercase tracking-[.22em] ${light ? 'text-white/45' : 'text-slate-950'}`}>{L.certifications}</h2>{data.certifications.map(c => <div key={c.id} className="mb-2 text-[10.5px]"><b>{c.name}</b><p className={light ? 'text-white/40' : 'text-slate-400'}>{c.issuer} · {c.year}</p></div>)}</section>}
-    {data.interests.length > 0 && <section><h2 className={`mb-2 text-[9.5px] font-black uppercase tracking-[.22em] ${light ? 'text-white/45' : 'text-slate-950'}`}>{L.interests}</h2><div className="flex flex-wrap gap-1.5">{data.interests.map(i => <span key={i} className={`rounded-full px-2 py-1 text-[9.5px] ${light ? 'bg-white/10' : 'bg-slate-100'}`}>{i}</span>)}</div></section>}
-  </div>;
+function SkillDots({ percent, palette }: { percent: number; palette: Palette }) {
+  const count = Math.max(0, Math.min(6, Math.ceil(percent / (100 / 6))));
+  return (
+    <span className="flex items-center gap-[9px]" aria-label={`${count}/6`}>
+      {Array.from({ length: 6 }).map((_, index) => (
+        <span
+          key={index}
+          className="h-[8px] w-[8px] rounded-full"
+          style={{ background: index < count ? palette.primary : '#c8cbd0' }}
+        />
+      ))}
+    </span>
+  );
 }
 
-function MainContent({ data, locale, accent, style = 'timeline' }: { data: TemplateProps['data']; locale: TemplateProps['locale']; accent: string; style?: 'timeline' | 'cards' | 'ribbon' }) {
-  const L = sectionLabels(locale);
-  return <div className="space-y-5">
-    {data.personalInfo.summary && <section><Title accent={accent} ribbon={style === 'ribbon'}>{L.profile}</Title><p className="text-[12px] leading-[1.65] text-slate-600">{data.personalInfo.summary}</p></section>}
-    {data.experiences.length > 0 && <section><Title accent={accent} ribbon={style === 'ribbon'}>{L.experience}</Title><ExperienceList data={data} locale={locale} accent={accent} cards={style === 'cards'} /></section>}
-    {data.education.length > 0 && <section><Title accent={accent} ribbon={style === 'ribbon'}>{L.education}</Title><EducationList data={data} accent={accent} cards={style === 'cards'} /></section>}
-  </div>;
+function SkillsAndExtras({ data, palette, locale }: { data: TemplateProps['data']; palette: Palette; locale: TemplateProps['locale'] }) {
+  const labels = sectionLabels(locale);
+  const visibleSkills = data.skills.slice(0, 6);
+  return (
+    <>
+      {visibleSkills.length > 0 && (
+        <section className="absolute left-[50px] top-[616px] z-20 w-[245px]" data-design-motif="segmented-skills">
+          <h2 className="mb-[25px] text-center text-[21px] font-black uppercase" style={{ color: palette.primary }}>
+            {labels.skills}
+          </h2>
+          <div className="space-y-[10px]">
+            {visibleSkills.map((skill) => (
+              <div key={skill.id} className="grid grid-cols-[135px_1fr] items-center text-[11px] font-semibold text-[#555b64]">
+                <span className="truncate pr-2">{skill.name}</span>
+                <SkillDots percent={levelToPercent(skill.level)} palette={palette} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="absolute left-[50px] top-[850px] z-20 w-[245px]">
+        <h2 className="mb-[25px] text-center text-[21px] font-black uppercase" style={{ color: palette.primary }}>
+          {data.interests.length > 0 ? labels.interests : labels.languages}
+        </h2>
+        {data.interests.length > 0 ? (
+          <div className="text-center text-[10.5px] font-semibold leading-[1.55] text-[#555b64]">
+            <p>{data.interests.join(' · ')}</p>
+            {data.languages.length > 0 && (
+              <p className="mt-2 text-[9.5px] font-medium">
+                {data.languages.slice(0, 4).map((language) => `${language.name} (${language.level})`).join(' · ')}
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-1.5 text-[10.5px] text-[#555b64]">
+            {data.languages.slice(0, 4).map((language) => (
+              <div key={language.id} className="flex justify-between gap-2"><b>{language.name}</b><span>{language.level}</span></div>
+            ))}
+          </div>
+        )}
+      </section>
+    </>
+  );
 }
 
-/* 01 — Ondes turquoise, inspiré du premier modèle */
-export function RefWaveTemplate({ data, accent, locale }: TemplateProps) {
-  const p = data.personalInfo; const aqua = accent || '#55d6c2';
-  return <div data-design-reference="harry-nelson-wave" className="relative grid min-h-[1123px] w-[794px] grid-cols-[252px_1fr] overflow-hidden bg-[#f7f9fa] font-sans text-slate-700">
-    <div data-design-motif="wave-top" className="absolute -right-28 -top-28 z-0 h-[270px] w-[650px] rotate-[-5deg] rounded-[0_0_42%_58%] bg-[#062e66]" />
-    <div className="absolute right-[-90px] top-[-92px] z-0 h-[220px] w-[560px] rotate-[7deg] rounded-[0_0_58%_42%]" style={{ background: aqua }} />
-    <div data-design-motif="wave-bottom" className="absolute -bottom-28 -right-20 z-0 h-[210px] w-[610px] rotate-[-4deg] rounded-[58%_42%_0_0] bg-[#062e66]" />
-    <div className="absolute -bottom-20 right-[-130px] z-0 h-[150px] w-[520px] rotate-[8deg] rounded-[45%_55%_0_0]" style={{ background: aqua }} />
-    <aside className="relative z-10 bg-[#102f43] px-7 pb-24 pt-8 text-white"><ProfilePhoto src={p.photo} name={p.fullName} size={142} rounded="rounded-full" accent={aqua} className="mx-auto ring-[9px] ring-white/10" /><div className="mt-6"><Title accent={aqua} light>Contact</Title><ContactStack p={p} light /></div><div className="mt-6" data-design-motif="skill-dots"><SideContent locale={locale} data={data} accent={aqua} light dots /></div></aside>
-    <main className="relative z-10 px-9 pb-28 pt-36"><header className="relative border-b-4 pb-5" style={{ borderColor: aqua }}><h1 className="text-[46px] font-black leading-[.9] tracking-[-.045em] text-[#102f43]">{p.fullName || 'Votre Nom'}</h1><p className="mt-4 text-[16px] font-bold uppercase tracking-[.16em] text-[#1476a0]">{p.title}</p></header><div className="mt-6" data-design-motif="vertical-timeline"><MainContent data={data} locale={locale} accent="#09b0e3" /></div></main>
-  </div>;
+function Timeline({ children, palette }: { children: ReactNode; palette: Palette }) {
+  return (
+    <div className="relative space-y-[17px]" data-design-motif="dated-timeline">
+      <span className="absolute bottom-[9px] left-[56px] top-[10px] w-px" style={{ background: palette.primary }} />
+      {children}
+    </div>
+  );
 }
 
-/* 02 — Canard géométrique avec photo angulaire */
-export function RefTealGeometryTemplate({ data, accent, locale }: TemplateProps) {
-  const p = data.personalInfo; const teal = accent || '#145c60';
-  return <div data-design-reference="mohammed-azab-geometry" className="relative min-h-[1123px] w-[794px] overflow-hidden bg-[#f1f2f2] font-sans text-slate-700"><header className="relative grid h-[236px] grid-cols-[500px_294px] overflow-hidden bg-[#223436] text-white"><div className="relative z-10 px-10 py-10"><p className="text-[10px] font-bold uppercase tracking-[.32em] text-[#9ab0b5]">Curriculum vitae</p><h1 className="mt-3 text-[46px] font-black leading-none">{p.fullName || 'Votre Nom'}</h1><p className="mt-3 text-[16px] font-semibold text-[#9ab0b5]">{p.title}</p></div><div data-design-motif="diagonal-panel" className="relative min-h-[236px] bg-[#467987]" style={{ clipPath: 'polygon(25% 0,100% 0,100% 100%,0 100%)' }}><div className="absolute right-8 top-10"><ProfilePhoto src={p.photo} name={p.fullName} size={154} rounded="rounded-full" accent="#f1f2f2" className="ring-[10px] ring-white/15 shadow-2xl" /></div></div><span className="absolute -bottom-20 left-[205px] h-36 w-72 rotate-[-12deg] bg-[#65919e]/45" /></header><div className="grid grid-cols-[250px_1fr]"><aside className="min-h-[887px] bg-[#445759] px-7 py-8 text-white"><ContactStack p={p} light /><div className="mt-7"><SideContent locale={locale} data={data} accent="#9ab0b5" light dots /></div></aside><main className="relative px-9 py-8"><div className="absolute right-[-90px] top-20 h-44 w-44 rotate-45 border-[28px] border-[#65919e]/10" /><div className="relative"><MainContent data={data} locale={locale} accent={teal} /></div></main></div></div>;
+function DatedItem({ date, children, palette }: { date: string; children: ReactNode; palette: Palette }) {
+  const normalized = dateRangeParts(date);
+  return (
+    <article className="relative grid grid-cols-[75px_1fr] gap-[18px]">
+      <div className="relative pr-[17px] text-right text-[10px] font-bold leading-[1.35]" style={{ color: palette.primary }}>
+        {normalized.map((part) => <div key={part}>{part}</div>)}
+        <span className="absolute right-[10px] top-[5px] h-[8px] w-[8px] rounded-full" style={{ background: palette.primary }} />
+      </div>
+      <div className="min-w-0">{children}</div>
+    </article>
+  );
 }
 
-/* 03 — Navy orbital, jauges et élégance technique */
-export function RefNavyOrbitTemplate({ data, accent, locale }: TemplateProps) {
-  const p = data.personalInfo; const blue = accent || '#1686d9';
-  return <div data-design-reference="john-smith-blue-geometry" className="relative grid min-h-[1123px] w-[794px] grid-cols-[286px_1fr] overflow-hidden bg-white font-sans text-slate-700"><aside className="relative z-10 bg-[#073d5c] px-8 py-8 text-white"><div className="absolute left-0 top-0 h-44 w-full bg-[#288cbe]" style={{ clipPath: 'polygon(0 0,100% 0,100% 64%,0 100%)' }} /><ProfilePhoto src={p.photo} name={p.fullName} size={144} rounded="rounded-full" accent="#fff" className="relative mx-auto ring-[9px] ring-white/20" /><h1 className="relative mt-7 text-center text-[27px] font-black uppercase leading-tight">{p.fullName || 'Votre Nom'}</h1><p className="relative mt-2 text-center text-[11px] font-bold uppercase tracking-[.2em] text-[#7fd4ff]">{p.title}</p><div className="relative mt-6"><ContactStack p={p} light /></div><div className="relative mt-7"><SideContent locale={locale} data={data} accent="#52b9ef" light dots /></div></aside><main className="relative px-9 py-10"><div data-design-motif="diagonal-panel" className="absolute right-0 top-0 h-24 w-64 bg-[#288cbe]" style={{ clipPath: 'polygon(38% 0,100% 0,100% 100%,0 0)' }} /><div className="relative mb-8 flex items-center gap-3"><span className="h-12 w-2 bg-[#288cbe]" /><div><p className="text-[10px] font-black uppercase tracking-[.3em] text-[#288cbe]">Profil professionnel</p><p className="text-[22px] font-bold text-[#073d5c]">Expertise & parcours</p></div></div><div className="relative" data-design-motif="vertical-timeline"><MainContent data={data} locale={locale} accent={blue} /></div></main></div>;
+function dateRangeParts(value: string): string[] {
+  const parts = value.split(/\s+[—–-]\s+/).map((part) => part.trim()).filter(Boolean);
+  return parts.length > 1 ? parts.slice(0, 2) : [value];
 }
 
-/* 04 — Noir, blanc et or, photo organique */
-export function RefGoldWaveTemplate({ data, accent, locale }: TemplateProps) {
-  const p = data.personalInfo; const gold = accent || '#f2bd23';
-  return <div data-design-reference="editorial-gold-curve" className="relative min-h-[1123px] w-[794px] overflow-hidden bg-white font-sans text-slate-700"><header className="relative grid h-[236px] grid-cols-[300px_1fr] bg-[#101114] text-white"><div className="relative overflow-hidden"><div className="absolute -left-14 -top-20 h-80 w-80 rounded-full" style={{ background: gold }} /><div className="absolute left-9 top-24"><ProfilePhoto src={p.photo} name={p.fullName} size={155} rounded="rounded-[48%_52%_46%_54%]" accent="#fff" className="ring-8 ring-white/20" /></div></div><div className="px-8 py-12"><p className="text-[10px] font-black uppercase tracking-[.35em]" style={{ color: gold }}>Creative professional</p><h1 className="mt-4 text-[46px] font-black leading-[.92]">{p.fullName || 'Votre Nom'}</h1><p className="mt-4 text-[16px] font-semibold text-white/65">{p.title}</p></div></header><div className="grid grid-cols-[272px_1fr]"><aside className="min-h-[887px] bg-[#f6f6f4] px-7 py-8"><ContactStack p={p} /><div className="mt-7"><SideContent locale={locale} data={data} accent={gold} /></div></aside><main className="px-9 py-8"><MainContent data={data} locale={locale} accent={gold} style="ribbon" /></main></div></div>;
+function AboutSection({ data, palette, locale }: { data: TemplateProps['data']; palette: Palette; locale: TemplateProps['locale'] }) {
+  const labels = sectionLabels(locale);
+  if (!data.personalInfo.summary) return null;
+  return (
+    <section className="absolute left-[379px] top-[220px] z-20 w-[355px]">
+      <SectionBand palette={palette}>{labels.profile}</SectionBand>
+      <p className="ml-[19px] mt-[18px] max-w-[337px] text-[10.5px] leading-[1.9] text-[#555b64]">
+        {data.personalInfo.summary}
+      </p>
+    </section>
+  );
 }
 
-/* 05 — Vert bouteille et citron, titres découpés */
-export function RefCitrusTemplate({ data, accent, locale }: TemplateProps) {
-  const p = data.personalInfo; const lime = accent || '#d9ee3f'; const green = '#234d43';
-  return <div data-design-reference="creative-citrus-cut" className="relative min-h-[1123px] w-[794px] overflow-hidden bg-[#fbfcf7] font-sans text-slate-700"><header className="relative flex h-[214px] items-center gap-8 overflow-hidden px-10"><div className="absolute inset-y-0 left-0 w-[270px]" style={{ background: green, clipPath: 'polygon(0 0,82% 0,100% 50%,82% 100%,0 100%)' }} /><ProfilePhoto src={p.photo} name={p.fullName} size={148} rounded="rounded-full" accent={lime} className="relative ring-[9px] ring-white/20" /><div className="relative ml-6"><p className="text-[10px] font-black uppercase tracking-[.32em]" style={{ color: green }}>Curriculum vitae</p><h1 className="mt-2 text-[47px] font-black leading-none text-slate-950">{p.fullName || 'Votre Nom'}</h1><p className="mt-3 text-[16px] font-bold" style={{ color: green }}>{p.title}</p></div></header><div className="grid grid-cols-[244px_1fr] gap-8 px-9 pb-9"><aside className="rounded-t-[30px] bg-[#234d43] px-6 py-7 text-white"><ContactStack p={p} light /><div className="mt-7"><SideContent locale={locale} data={data} accent={lime} light dots /></div></aside><main className="py-3"><MainContent data={data} locale={locale} accent={lime} style="ribbon" /></main></div></div>;
+function EducationSection({ data, palette, locale }: { data: TemplateProps['data']; palette: Palette; locale: TemplateProps['locale'] }) {
+  const labels = sectionLabels(locale);
+  if (data.education.length === 0 && data.certifications.length === 0) return null;
+  return (
+    <section className="absolute left-[379px] top-[415px] z-20 w-[355px]">
+      <SectionBand palette={palette}>{labels.education}</SectionBand>
+      <div className="ml-[2px] mt-[18px]">
+        <Timeline palette={palette}>
+          {data.education.slice(0, 3).map((item) => (
+            <DatedItem key={item.id} date={item.year} palette={palette}>
+              <h3 className="text-[11px] font-black uppercase tracking-[0.025em]" style={{ color: palette.primary }}>{item.degree}</h3>
+              <p className="mt-[3px] text-[10px] font-semibold text-[#555b64]">{item.school}{item.location ? ` · ${item.location}` : ''}</p>
+              {item.description && <p className="mt-[4px] text-[9.7px] leading-[1.45] text-[#686d75]">{item.description}</p>}
+            </DatedItem>
+          ))}
+          {data.certifications.slice(0, Math.max(0, 4 - data.education.length)).map((item) => (
+            <DatedItem key={item.id} date={item.year} palette={palette}>
+              <h3 className="text-[11px] font-black uppercase" style={{ color: palette.primary }}>{item.name}</h3>
+              <p className="mt-[3px] text-[10px] text-[#555b64]">{item.issuer}</p>
+            </DatedItem>
+          ))}
+        </Timeline>
+      </div>
+    </section>
+  );
 }
 
-/* 06 — Bleu corporate, photo à anneaux */
-export function RefBlueRingsTemplate({ data, accent, locale }: TemplateProps) {
-  const p = data.personalInfo; const blue = accent || '#2476c7';
-  return <div data-design-reference="dicky-layered-blue" className="relative min-h-[1123px] w-[794px] overflow-hidden bg-[#f1f2f3] font-sans text-slate-700"><header className="relative flex h-[250px] items-center overflow-hidden bg-[#95969a] px-10 text-white"><div className="absolute -left-24 -top-28 h-[360px] w-[390px] rotate-[18deg] bg-[#3968b0]" /><div className="absolute left-40 top-[-150px] h-[330px] w-[380px] rotate-[-18deg] bg-[#a3b8d1]/80" /><div data-design-motif="layered-photo" className="relative mr-12"><span className="absolute -inset-5 rounded-full border-[10px] border-white/8" /><span className="absolute -inset-2 rounded-full border-4" style={{ borderColor: blue }} /><ProfilePhoto src={p.photo} name={p.fullName} size={144} rounded="rounded-full" accent={blue} /></div><div><h1 className="text-[46px] font-black leading-none">{p.fullName || 'Votre Nom'}</h1><p className="mt-3 text-[16px] font-bold uppercase tracking-[.14em]" style={{ color: '#7fc4ff' }}>{p.title}</p><div className="mt-4 flex gap-x-4 text-[10.5px] text-white/60"><ContactItem type="email" value={p.email} /><ContactItem type="phone" value={p.phone} /></div></div></header><div className="grid grid-cols-[226px_1fr]"><aside className="min-h-[873px] bg-[#edf4fa] px-7 py-8"><ContactStack p={p} /><div className="mt-7"><SideContent locale={locale} data={data} accent={blue} dots /></div></aside><main className="px-9 py-8"><MainContent data={data} locale={locale} accent={blue} /></main></div></div>;
+function ExperienceSection({ data, palette, locale }: { data: TemplateProps['data']; palette: Palette; locale: TemplateProps['locale'] }) {
+  const labels = sectionLabels(locale);
+  if (data.experiences.length === 0) return null;
+  return (
+    <section className="absolute left-[379px] top-[736px] z-20 w-[355px]">
+      <SectionBand palette={palette}>{labels.experience}</SectionBand>
+      <div className="ml-[2px] mt-[18px]">
+        <Timeline palette={palette}>
+          {data.experiences.slice(0, 3).map((item) => (
+            <DatedItem key={item.id} date={dateRange(item, locale)} palette={palette}>
+              <h3 className="text-[10px] font-black uppercase tracking-[0.02em]" style={{ color: palette.primary }}>{item.title}</h3>
+              <p className="mt-[2px] text-[9px] font-semibold text-[#555b64]">{item.company}{item.location ? ` · ${item.location}` : ''}</p>
+              {item.description && (
+                <p className="mt-[4px] text-[8.8px] leading-[1.35] text-[#686d75]">
+                  {item.description.split('\n').map((line) => line.trim()).filter(Boolean).join(' ')}
+                </p>
+              )}
+            </DatedItem>
+          ))}
+        </Timeline>
+      </div>
+    </section>
+  );
 }
 
-/* 07 — Rubans dorés, structure symétrique */
-export function RefGoldenRibbonTemplate({ data, accent, locale }: TemplateProps) {
-  const p = data.personalInfo; const gold = accent || '#e5ad28';
-  return <div data-design-reference="graphic-golden-ribbon" className="relative min-h-[1123px] w-[794px] overflow-hidden bg-white font-sans text-slate-700"><header className="relative flex h-[236px] items-center gap-8 overflow-hidden bg-[#efb426] px-10"><span className="absolute -right-16 -top-24 h-72 w-72 rotate-45 border-[34px] border-white/25" /><ProfilePhoto src={p.photo} name={p.fullName} size={154} rounded="rounded-full" accent="#1f2937" className="ring-[8px] ring-white/40" /><div><h1 className="text-[50px] font-black uppercase leading-[.9] tracking-[-.04em] text-slate-950">{p.fullName || 'Votre Nom'}</h1><p className="mt-4 text-[17px] font-bold uppercase tracking-[.18em] text-slate-700">{p.title}</p><div className="mt-4 flex flex-wrap gap-x-4 text-[10.5px] text-slate-700"><ContactItem type="email" value={p.email} /><ContactItem type="phone" value={p.phone} /><ContactItem type="address" value={p.address} /></div></div></header><div className="grid grid-cols-2 gap-8 px-9 py-8"><aside><SideContent locale={locale} data={data} accent={gold} dots /></aside><main><MainContent data={data} locale={locale} accent={gold} style="ribbon" /></main></div></div>;
+function HarryNelsonTemplate({ data, locale, variant }: TemplateProps & { variant: Variant }) {
+  const palette = PALETTES[variant];
+  const personal = data.personalInfo;
+  return (
+    <div
+      data-design-reference={`harry-nelson-${variant}`}
+      className="relative h-[1123px] w-[794px] overflow-hidden font-sans text-[#555b64]"
+      style={{ background: palette.paper }}
+    >
+      <div className="absolute bottom-0 left-0 top-0 w-[350px]" style={{ background: palette.sidebar }} />
+
+      <svg className="absolute left-0 top-0 z-10 h-[216px] w-[794px]" viewBox="0 0 794 216" preserveAspectRatio="none" aria-hidden="true">
+        <path data-design-motif="top-wave-cyan" fill={palette.secondary} d="M0 0H794V215C720 201 659 181 600 187C505 196 433 173 352 153C279 135 225 131 160 150C97 169 50 204 0 194Z" />
+        <path data-design-motif="top-wave-navy" fill={palette.primary} d="M0 0H794V183C718 171 658 153 600 164C509 180 432 158 352 141C279 125 222 120 158 137C96 153 48 179 0 163Z" />
+      </svg>
+
+      <svg className="absolute bottom-0 left-0 z-10 h-[146px] w-[794px]" viewBox="0 0 794 146" preserveAspectRatio="none" aria-hidden="true">
+        <path data-design-motif="bottom-wave-cyan" fill={palette.secondary} d="M0 0C87 10 170 31 257 38C356 46 443 21 531 30C624 39 699 60 794 47V146H0Z" />
+        <path data-design-motif="bottom-wave-navy" fill={palette.primary} d="M0 31C92 40 171 62 258 68C358 75 444 49 530 59C622 69 704 91 794 75V146H0Z" />
+      </svg>
+
+      <PortraitCutout src={personal.photo} name={personal.fullName} palette={palette} />
+
+      <header className="absolute left-[440px] top-[49px] z-30 w-[305px] text-white">
+        <h1
+          className="whitespace-nowrap font-black uppercase leading-[0.95] tracking-[-0.025em]"
+          style={{ fontSize: personal.fullName.length > 17 ? 31 : 38 }}
+        >
+          {personal.fullName || (locale === 'fr' ? 'VOTRE NOM' : 'YOUR NAME')}
+        </h1>
+        <p className="mt-[13px] whitespace-nowrap pl-[34px] font-semibold uppercase tracking-[0.06em] text-white/95" style={{ fontSize: personal.title.length > 27 ? 11.5 : 14 }}>{personal.title}</p>
+      </header>
+
+      <div data-design-motif="two-column-grid">
+        <ContactSection data={data} palette={palette} locale={locale} />
+        <SkillsAndExtras data={data} palette={palette} locale={locale} />
+        <AboutSection data={data} palette={palette} locale={locale} />
+        <EducationSection data={data} palette={palette} locale={locale} />
+        <ExperienceSection data={data} palette={palette} locale={locale} />
+      </div>
+
+      <div data-design-motif="footer-url" className="absolute bottom-[35px] left-[51px] z-30 max-w-[250px] truncate text-[10px] font-black uppercase tracking-[0.03em] text-white">
+        {personal.website || personal.linkedin || personal.email}
+      </div>
+    </div>
+  );
 }
 
-/* 08 — Colonne navy sobre, contenu recruteur */
-export function RefRecruiterTemplate({ data, accent, locale }: TemplateProps) {
-  const p = data.personalInfo; const blue = accent || '#3d82bf';
-  return <div data-design-reference="french-corporate-recruiter" className="relative grid min-h-[1123px] w-[794px] grid-cols-[246px_1fr] overflow-hidden bg-[#f2f3f4] font-sans text-slate-700"><aside className="relative bg-[#1a202c] px-7 py-8 text-white"><span className="absolute bottom-0 left-0 h-32 w-full bg-[#2372ab]" style={{ clipPath: 'polygon(0 62%,100% 0,100% 100%,0 100%)' }} /><ProfilePhoto src={p.photo} name={p.fullName} size={138} rounded="rounded-full" accent={blue} className="mx-auto ring-4 ring-white/10" /><div className="mt-6"><ContactStack p={p} light /></div><div className="mt-7"><SideContent locale={locale} data={data} accent={blue} light /></div></aside><main className="px-10 py-10"><header className="mb-7 border-b-2 border-slate-200 pb-6"><h1 className="text-[47px] font-light leading-none tracking-[-.04em] text-slate-950">{p.fullName || 'Votre Nom'}</h1><p className="mt-3 text-[15px] font-black uppercase tracking-[.18em]" style={{ color: blue }}>{p.title}</p></header><MainContent data={data} locale={locale} accent={blue} /></main></div>;
+export function RefWaveTemplate(props: TemplateProps) {
+  return <HarryNelsonTemplate {...props} variant="original" />;
 }
-
-/* 09 — Angle bleu, photo intégrée et points de compétence */
-export function RefAngularTemplate({ data, accent, locale }: TemplateProps) {
-  const p = data.personalInfo; const blue = accent || '#2782c4';
-  return <div data-design-reference="adrian-tech-angular" className="relative min-h-[1123px] w-[794px] overflow-hidden bg-[#f5f6f6] font-sans text-slate-700"><header className="grid h-[225px] grid-cols-[272px_1fr]"><div data-design-motif="diagonal-panel" className="relative bg-[#29465b]" style={{ clipPath: 'polygon(0 0,100% 0,84% 100%,0 82%)' }}><div className="absolute left-8 top-7"><ProfilePhoto src={p.photo} name={p.fullName} size={145} rounded="rounded-[8px]" accent={blue} className="ring-4 ring-white/15" /></div></div><div className="px-7 py-10"><p className="text-[10px] font-black uppercase tracking-[.34em]" style={{ color: blue }}>Professional resume</p><h1 className="mt-3 text-[48px] font-black leading-[.9] text-slate-950">{p.fullName || 'Votre Nom'}</h1><p className="mt-4 text-[16px] font-semibold text-slate-500">{p.title}</p></div></header><div className="grid grid-cols-[246px_1fr]"><aside className="min-h-[898px] bg-[#243545] px-7 py-7 text-white"><ContactStack p={p} light /><div className="mt-7"><SideContent locale={locale} data={data} accent={blue} light dots /></div></aside><main className="px-9 py-7"><MainContent data={data} locale={locale} accent={blue} /></main></div></div>;
+export function RefTealGeometryTemplate(props: TemplateProps) {
+  return <HarryNelsonTemplate {...props} variant="teal" />;
 }
-
-/* 10 — Canard premium, barres en points et certifications */
-export function RefTealDotsTemplate({ data, accent, locale }: TemplateProps) {
-  const p = data.personalInfo; const teal = accent || '#167b78';
-  return <div data-design-reference="teal-cyan-timeline" className="relative grid min-h-[1123px] w-[794px] grid-cols-[258px_1fr] overflow-hidden bg-white font-sans text-slate-700"><aside className="relative overflow-hidden bg-[#16484c] px-7 py-8 text-white"><div className="absolute -right-24 -top-20 h-64 w-64 rounded-full bg-white/[.04]" /><ProfilePhoto src={p.photo} name={p.fullName} size={142} rounded="rounded-full" accent="#58c8c2" className="relative mx-auto ring-[8px] ring-white/10" /><div className="relative mt-6"><ContactStack p={p} light /></div><div className="relative mt-7"><SideContent locale={locale} data={data} accent="#58c8c2" light dots /></div></aside><main className="px-10 py-10"><header className="relative mb-7 pb-6"><span className="absolute -left-10 top-0 h-full w-2" style={{ background: teal }} /><p className="text-[10px] font-black uppercase tracking-[.35em]" style={{ color: teal }}>Career profile</p><h1 className="mt-3 text-[48px] font-black leading-[.9] tracking-[-.04em] text-slate-950">{p.fullName || 'Votre Nom'}</h1><p className="mt-4 text-[16px] font-bold text-slate-500">{p.title}</p></header><MainContent data={data} locale={locale} accent={teal} /></main></div>;
+export function RefNavyOrbitTemplate(props: TemplateProps) {
+  return <HarryNelsonTemplate {...props} variant="royal" />;
+}
+export function RefGoldWaveTemplate(props: TemplateProps) {
+  return <HarryNelsonTemplate {...props} variant="gold" />;
+}
+export function RefCitrusTemplate(props: TemplateProps) {
+  return <HarryNelsonTemplate {...props} variant="forest" />;
+}
+export function RefBlueRingsTemplate(props: TemplateProps) {
+  return <HarryNelsonTemplate {...props} variant="sky" />;
+}
+export function RefGoldenRibbonTemplate(props: TemplateProps) {
+  return <HarryNelsonTemplate {...props} variant="burgundy" />;
+}
+export function RefRecruiterTemplate(props: TemplateProps) {
+  return <HarryNelsonTemplate {...props} variant="slate" />;
+}
+export function RefAngularTemplate(props: TemplateProps) {
+  return <HarryNelsonTemplate {...props} variant="violet" />;
+}
+export function RefTealDotsTemplate(props: TemplateProps) {
+  return <HarryNelsonTemplate {...props} variant="graphite" />;
 }
