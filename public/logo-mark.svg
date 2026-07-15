@@ -7,13 +7,13 @@
       <stop offset="1" stop-color="#050A18"/>
     </linearGradient>
     <linearGradient id="career" x1="40" y1="95" x2="101" y2="26" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#2563EB"/>
-      <stop offset="0.58" stop-color="#7C3AED"/>
-      <stop offset="1" stop-color="#A855F7"/>
+      <stop stop-color="#047857"/>
+      <stop offset="0.58" stop-color="#10B981"/>
+      <stop offset="1" stop-color="#34D399"/>
     </linearGradient>
     <linearGradient id="paper" x1="35" y1="26" x2="88" y2="101" gradientUnits="userSpaceOnUse">
       <stop stop-color="#FFFFFF"/>
-      <stop offset="1" stop-color="#EEF2FF"/>
+      <stop offset="1" stop-color="#ECFDF5"/>
     </linearGradient>
     <filter id="shadow" x="18" y="14" width="98" height="108" color-interpolation-filters="sRGB">
       <feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#020617" flood-opacity="0.42"/>
@@ -26,20 +26,20 @@
 
   <rect x="3" y="3" width="122" height="122" rx="31" fill="url(#tile)"/>
   <rect x="3.75" y="3.75" width="120.5" height="120.5" rx="30.25" stroke="white" stroke-opacity="0.11" stroke-width="1.5"/>
-  <circle cx="101" cy="24" r="25" fill="#7C3AED" fill-opacity="0.16"/>
-  <circle cx="20" cy="108" r="31" fill="#2563EB" fill-opacity="0.13"/>
+  <circle cx="101" cy="24" r="25" fill="#10B981" fill-opacity="0.18"/>
+  <circle cx="20" cy="108" r="31" fill="#059669" fill-opacity="0.15"/>
 
   <g filter="url(#shadow)">
     <path d="M35 24h38l20 20v57a8 8 0 0 1-8 8H35a8 8 0 0 1-8-8V32a8 8 0 0 1 8-8Z" fill="url(#paper)"/>
-    <path d="M73 24v14a6 6 0 0 0 6 6h14L73 24Z" fill="#D8DEFF"/>
-    <circle cx="45" cy="48" r="8" fill="#DDD6FE"/>
-    <path d="M35.5 66c2.8-7.6 16.2-7.6 19 0" stroke="#6D5CE7" stroke-width="4" stroke-linecap="round"/>
+    <path d="M73 24v14a6 6 0 0 0 6 6h14L73 24Z" fill="#D1FAE5"/>
+    <circle cx="45" cy="48" r="8" fill="#A7F3D0"/>
+    <path d="M35.5 66c2.8-7.6 16.2-7.6 19 0" stroke="#059669" stroke-width="4" stroke-linecap="round"/>
     <path d="M63 57h16M63 66h12M38 79h29M38 89h21" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
   </g>
 
   <path d="M43 98c12-5 18-14 25-23 6-7.7 12-13 22-18" stroke="url(#career)" stroke-width="8" stroke-linecap="round"/>
-  <path d="m80 51 14 3-3 14" stroke="#A855F7" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="43" cy="98" r="5" fill="#2563EB" stroke="#DBEAFE" stroke-width="3"/>
+  <path d="m80 51 14 3-3 14" stroke="#34D399" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="43" cy="98" r="5" fill="#059669" stroke="#A7F3D0" stroke-width="3"/>
 
   <g filter="url(#glow)" fill="#FBBF24">
     <path d="m103 17 2.8 8.2 8.2 2.8-8.2 2.8L103 39l-2.8-8.2L92 28l8.2-2.8L103 17Z"/>

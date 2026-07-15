@@ -11,7 +11,7 @@ export function Logo({
 }) {
   const content = (
     <>
-      <span className="relative grid h-11 w-11 shrink-0 place-items-center rounded-[14px] shadow-lg shadow-violet-500/20 ring-1 ring-white/10 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:scale-[1.03]">
+      <span className="relative grid h-11 w-11 shrink-0 place-items-center rounded-[14px] shadow-lg shadow-brand-500/20 ring-1 ring-white/10 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:scale-[1.03]">
         <img src="/logo-mark.svg" alt="" className="h-11 w-11 rounded-[14px]" aria-hidden="true" />
       </span>
       <span className="flex flex-col leading-none">
@@ -22,7 +22,7 @@ export function Logo({
           )}
         >
           JobTask{' '}
-          <span className={light ? 'text-violet-300' : 'bg-gradient-to-r from-violet-600 to-blue-600 bg-clip-text text-transparent'}>
+          <span className={light ? 'text-brand-300' : 'bg-gradient-to-r from-brand-400 to-brand-600 bg-clip-text text-transparent'}>
             AI
           </span>
         </span>
@@ -32,7 +32,7 @@ export function Logo({
             light ? 'text-white/65' : 'text-ink-500',
           )}
         >
-          <span className="h-[2px] w-4 rounded-full bg-violet-500" />
+          <span className="h-[2px] w-4 rounded-full bg-brand-500" />
           CV • Carrière • IA
         </span>
       </span>
