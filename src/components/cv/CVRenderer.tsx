@@ -55,6 +55,7 @@ interface CVRendererProps {
   data: CVData;
   accent: string;
   locale: Locale;
+  fontScale?: number;
 }
 
 /**
@@ -62,14 +63,15 @@ interface CVRendererProps {
  * pleine taille, utilisé tel quel pour l'export PDF (rendu net).
  */
 export const CVRenderer = forwardRef<HTMLDivElement, CVRendererProps>(
-  ({ templateId, data, accent, locale }, ref) => {
+  ({ templateId, data, accent, locale, fontScale }, ref) => {
     const Template = REGISTRY[templateId] ?? RefWaveTemplate;
+    const effectiveFontScale = fontScale ?? data.formatting?.fontScale ?? 1;
     const renderData = data.personalInfo.showPhoto === false
       ? { ...data, personalInfo: { ...data.personalInfo, photo: '__HIDE_PHOTO__' } }
       : data;
     return (
       <div ref={ref} className="origin-top bg-white">
-        <Template data={renderData} accent={accent} locale={locale} />
+        <Template data={renderData} accent={accent} locale={locale} fontScale={effectiveFontScale} />
       </div>
     );
   },

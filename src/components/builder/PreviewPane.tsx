@@ -10,6 +10,7 @@ interface PreviewPaneProps {
   templateId: TemplateId;
   accent: string;
   locale: Locale;
+  fontScale?: number;
 }
 
 /**
@@ -17,7 +18,7 @@ interface PreviewPaneProps {
  * La `ref` est transmise au nœud CVRenderer pleine taille (export PDF net).
  */
 export const PreviewPane = forwardRef<HTMLDivElement, PreviewPaneProps>(
-  ({ data, templateId, accent, locale }, ref) => {
+  ({ data, templateId, accent, locale, fontScale }, ref) => {
     const wrapRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
     const [scale, setScale] = useState(0.5);
@@ -39,7 +40,7 @@ export const PreviewPane = forwardRef<HTMLDivElement, PreviewPaneProps>(
       ro.observe(wrapper);
       ro.observe(content);
       return () => ro.disconnect();
-    }, [data, templateId, accent, locale]);
+    }, [data, templateId, accent, locale, fontScale]);
 
     return (
       <div ref={wrapRef} className="w-full pb-4">
@@ -55,7 +56,7 @@ export const PreviewPane = forwardRef<HTMLDivElement, PreviewPaneProps>(
               width: A4_W,
             }}
           >
-            <CVRenderer ref={ref} templateId={templateId} data={data} accent={accent} locale={locale} />
+            <CVRenderer ref={ref} templateId={templateId} data={data} accent={accent} locale={locale} fontScale={fontScale} />
           </div>
         </div>
       </div>

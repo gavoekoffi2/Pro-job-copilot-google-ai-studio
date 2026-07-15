@@ -54,8 +54,11 @@ const contactRows = [
 
 function SectionBand({ children, palette }: { children: string; palette: Palette }) {
   return (
-    <div className="relative h-[51px] w-[253px]" style={{ background: palette.primary }}>
-      <h2 className="flex h-full items-center justify-center px-4 text-center text-[20px] font-black uppercase tracking-[0.015em] text-white">
+    <div
+      className="relative h-[51px] w-[253px] rounded-[14px] border-2"
+      style={{ background: palette.primary, borderColor: palette.secondary }}
+    >
+      <h2 className="flex h-full items-center justify-center px-4 text-center text-[1.25em] font-black uppercase tracking-[0.015em] text-white">
         {children}
       </h2>
       <span className="absolute -bottom-px left-[23px] h-px w-[209px]" style={{ background: palette.secondary }} />
@@ -79,7 +82,7 @@ function PortraitCutout({ src, name, palette }: { src?: string; name: string; pa
           className="h-full w-full object-cover object-top"
         />
       ) : (
-        <div className="flex h-full w-full items-center justify-center text-[54px] font-black text-white" style={{ background: palette.secondary }}>
+        <div className="flex h-full w-full items-center justify-center text-[3.375em] font-black text-white" style={{ background: palette.secondary }}>
           {name
             .split(/\s+/)
             .filter(Boolean)
@@ -104,7 +107,7 @@ function ContactSection({ data, palette, locale }: { data: TemplateProps['data']
   };
   return (
     <section className="absolute left-[50px] top-[365px] z-20 w-[245px]">
-      <h2 className="mb-[25px] text-center text-[21px] font-black uppercase" style={{ color: palette.primary }}>
+      <h2 className="mb-[25px] text-center text-[1.3125em] font-black uppercase" style={{ color: palette.primary }}>
         {labels.contact}
       </h2>
       <div className="space-y-[7px]">
@@ -116,7 +119,7 @@ function ContactSection({ data, palette, locale }: { data: TemplateProps['data']
               <span className="grid h-[31px] w-[31px] place-items-center rounded-full" style={{ background: palette.secondary }}>
                 <Icon className="h-[15px] w-[15px]" style={{ color: palette.primary }} strokeWidth={2.25} />
               </span>
-              <span className="break-words text-[11px] font-medium leading-[1.22] text-[#555b64]">{value}</span>
+              <span className="break-words text-[0.6875em] font-medium leading-[1.22] text-[#555b64]">{value}</span>
             </div>
           );
         })}
@@ -147,12 +150,12 @@ function SkillsAndExtras({ data, palette, locale }: { data: TemplateProps['data'
     <>
       {visibleSkills.length > 0 && (
         <section className="absolute left-[50px] top-[616px] z-20 w-[245px]" data-design-motif="segmented-skills">
-          <h2 className="mb-[25px] text-center text-[21px] font-black uppercase" style={{ color: palette.primary }}>
+          <h2 className="mb-[25px] text-center text-[1.3125em] font-black uppercase" style={{ color: palette.primary }}>
             {labels.skills}
           </h2>
           <div className="space-y-[10px]">
             {visibleSkills.map((skill) => (
-              <div key={skill.id} className="grid grid-cols-[135px_1fr] items-center text-[11px] font-semibold text-[#555b64]">
+              <div key={skill.id} className="grid grid-cols-[135px_1fr] items-center text-[0.6875em] font-semibold text-[#555b64]">
                 <span className="truncate pr-2">{skill.name}</span>
                 <SkillDots percent={levelToPercent(skill.level)} palette={palette} />
               </div>
@@ -162,20 +165,20 @@ function SkillsAndExtras({ data, palette, locale }: { data: TemplateProps['data'
       )}
 
       <section className="absolute left-[50px] top-[850px] z-20 w-[245px]">
-        <h2 className="mb-[25px] text-center text-[21px] font-black uppercase" style={{ color: palette.primary }}>
+        <h2 className="mb-[25px] text-center text-[1.3125em] font-black uppercase" style={{ color: palette.primary }}>
           {data.interests.length > 0 ? labels.interests : labels.languages}
         </h2>
         {data.interests.length > 0 ? (
-          <div className="text-center text-[10.5px] font-semibold leading-[1.55] text-[#555b64]">
+          <div className="text-center text-[0.65625em] font-semibold leading-[1.55] text-[#555b64]">
             <p>{data.interests.join(' · ')}</p>
             {data.languages.length > 0 && (
-              <p className="mt-2 text-[9.5px] font-medium">
+              <p className="mt-2 text-[0.9048em] font-medium">
                 {data.languages.slice(0, 4).map((language) => `${language.name} (${language.level})`).join(' · ')}
               </p>
             )}
           </div>
         ) : (
-          <div className="space-y-1.5 text-[10.5px] text-[#555b64]">
+          <div className="space-y-1.5 text-[0.65625em] text-[#555b64]">
             {data.languages.slice(0, 4).map((language) => (
               <div key={language.id} className="flex justify-between gap-2"><b>{language.name}</b><span>{language.level}</span></div>
             ))}
@@ -189,7 +192,7 @@ function SkillsAndExtras({ data, palette, locale }: { data: TemplateProps['data'
 function Timeline({ children, palette }: { children: ReactNode; palette: Palette }) {
   return (
     <div className="relative space-y-[17px]" data-design-motif="dated-timeline">
-      <span className="absolute bottom-[9px] left-[56px] top-[10px] w-px" style={{ background: palette.primary }} />
+      <span className="absolute bottom-[9px] left-[63px] top-[10px] w-px" style={{ background: palette.primary }} />
       {children}
     </div>
   );
@@ -198,10 +201,10 @@ function Timeline({ children, palette }: { children: ReactNode; palette: Palette
 function DatedItem({ date, children, palette }: { date: string; children: ReactNode; palette: Palette }) {
   const normalized = dateRangeParts(date);
   return (
-    <article className="relative grid grid-cols-[75px_1fr] gap-[18px]">
-      <div className="relative pr-[17px] text-right text-[10px] font-bold leading-[1.35]" style={{ color: palette.primary }}>
+    <article className="relative grid grid-cols-[82px_1fr] gap-[21px]">
+      <div className="relative pr-[28px] text-right text-[0.625em] font-bold leading-[1.35]" style={{ color: palette.primary }}>
         {normalized.map((part) => <div key={part}>{part}</div>)}
-        <span className="absolute right-[10px] top-[5px] h-[8px] w-[8px] rounded-full" style={{ background: palette.primary }} />
+        <span className="absolute right-[11px] top-[5px] h-[8px] w-[8px] rounded-full ring-[3px] ring-white" style={{ background: palette.primary }} />
       </div>
       <div className="min-w-0">{children}</div>
     </article>
@@ -219,7 +222,7 @@ function AboutSection({ data, palette, locale }: { data: TemplateProps['data']; 
   return (
     <section className="absolute left-[379px] top-[220px] z-20 w-[355px]">
       <SectionBand palette={palette}>{labels.profile}</SectionBand>
-      <p className="ml-[19px] mt-[18px] max-w-[337px] text-[10.5px] leading-[1.9] text-[#555b64]">
+      <p className="ml-[19px] mt-[18px] max-w-[337px] text-[0.65625em] leading-[1.9] text-[#555b64]">
         {data.personalInfo.summary}
       </p>
     </section>
@@ -236,15 +239,15 @@ function EducationSection({ data, palette, locale }: { data: TemplateProps['data
         <Timeline palette={palette}>
           {data.education.slice(0, 3).map((item) => (
             <DatedItem key={item.id} date={item.year} palette={palette}>
-              <h3 className="text-[11px] font-black uppercase tracking-[0.025em]" style={{ color: palette.primary }}>{item.degree}</h3>
-              <p className="mt-[3px] text-[10px] font-semibold text-[#555b64]">{item.school}{item.location ? ` · ${item.location}` : ''}</p>
-              {item.description && <p className="mt-[4px] text-[9.7px] leading-[1.45] text-[#686d75]">{item.description}</p>}
+              <h3 className="text-[0.6875em] font-black uppercase tracking-[0.025em]" style={{ color: palette.primary }}>{item.degree}</h3>
+              <p className="mt-[3px] text-[0.625em] font-semibold text-[#555b64]">{item.school}{item.location ? ` · ${item.location}` : ''}</p>
+              {item.description && <p className="mt-[4px] text-[0.60625em] leading-[1.45] text-[#686d75]">{item.description}</p>}
             </DatedItem>
           ))}
           {data.certifications.slice(0, Math.max(0, 4 - data.education.length)).map((item) => (
             <DatedItem key={item.id} date={item.year} palette={palette}>
-              <h3 className="text-[11px] font-black uppercase" style={{ color: palette.primary }}>{item.name}</h3>
-              <p className="mt-[3px] text-[10px] text-[#555b64]">{item.issuer}</p>
+              <h3 className="text-[0.6875em] font-black uppercase" style={{ color: palette.primary }}>{item.name}</h3>
+              <p className="mt-[3px] text-[0.625em] text-[#555b64]">{item.issuer}</p>
             </DatedItem>
           ))}
         </Timeline>
@@ -263,10 +266,10 @@ function ExperienceSection({ data, palette, locale }: { data: TemplateProps['dat
         <Timeline palette={palette}>
           {data.experiences.slice(0, 3).map((item) => (
             <DatedItem key={item.id} date={dateRange(item, locale)} palette={palette}>
-              <h3 className="text-[10px] font-black uppercase tracking-[0.02em]" style={{ color: palette.primary }}>{item.title}</h3>
-              <p className="mt-[2px] text-[9px] font-semibold text-[#555b64]">{item.company}{item.location ? ` · ${item.location}` : ''}</p>
+              <h3 className="text-[0.625em] font-black uppercase tracking-[0.02em]" style={{ color: palette.primary }}>{item.title}</h3>
+              <p className="mt-[2px] text-[0.5625em] font-semibold text-[#555b64]">{item.company}{item.location ? ` · ${item.location}` : ''}</p>
               {item.description && (
-                <p className="mt-[4px] text-[8.8px] leading-[1.35] text-[#686d75]">
+                <p className="mt-[4px] text-[0.55em] leading-[1.35] text-[#686d75]">
                   {item.description.split('\n').map((line) => line.trim()).filter(Boolean).join(' ')}
                 </p>
               )}
@@ -278,14 +281,14 @@ function ExperienceSection({ data, palette, locale }: { data: TemplateProps['dat
   );
 }
 
-function HarryNelsonTemplate({ data, locale, variant }: TemplateProps & { variant: Variant }) {
+function HarryNelsonTemplate({ data, locale, variant, fontScale = 1 }: TemplateProps & { variant: Variant }) {
   const palette = PALETTES[variant];
   const personal = data.personalInfo;
   return (
     <div
       data-design-reference={`harry-nelson-${variant}`}
       className="relative h-[1123px] w-[794px] overflow-hidden font-sans text-[#555b64]"
-      style={{ background: palette.paper }}
+      style={{ background: palette.paper, fontSize: `${16 * Math.max(0.9, Math.min(1.15, fontScale))}px` }}
     >
       <div className="absolute bottom-0 left-0 top-0 w-[350px]" style={{ background: palette.sidebar }} />
 
@@ -304,11 +307,11 @@ function HarryNelsonTemplate({ data, locale, variant }: TemplateProps & { varian
       <header className="absolute left-[440px] top-[49px] z-30 w-[305px] text-white">
         <h1
           className="whitespace-nowrap font-black uppercase leading-[0.95] tracking-[-0.025em]"
-          style={{ fontSize: personal.fullName.length > 17 ? 31 : 38 }}
+          style={{ fontSize: (personal.fullName.length > 17 ? 31 : 38) * fontScale }}
         >
           {personal.fullName || (locale === 'fr' ? 'VOTRE NOM' : 'YOUR NAME')}
         </h1>
-        <p className="mt-[13px] whitespace-nowrap pl-[34px] font-semibold uppercase tracking-[0.06em] text-white/95" style={{ fontSize: personal.title.length > 27 ? 11.5 : 14 }}>{personal.title}</p>
+        <p className="mt-[13px] whitespace-nowrap pl-[34px] font-semibold uppercase tracking-[0.06em] text-white/95" style={{ fontSize: (personal.title.length > 27 ? 11.5 : 14) * fontScale }}>{personal.title}</p>
       </header>
 
       <div data-design-motif="two-column-grid">
@@ -319,7 +322,7 @@ function HarryNelsonTemplate({ data, locale, variant }: TemplateProps & { varian
         <ExperienceSection data={data} palette={palette} locale={locale} />
       </div>
 
-      <div data-design-motif="footer-url" className="absolute bottom-[35px] left-[51px] z-30 max-w-[250px] truncate text-[10px] font-black uppercase tracking-[0.03em] text-white">
+      <div data-design-motif="footer-url" className="absolute bottom-[35px] left-[51px] z-30 max-w-[250px] truncate text-[0.625em] font-black uppercase tracking-[0.03em] text-white">
         {personal.website || personal.linkedin || personal.email}
       </div>
     </div>

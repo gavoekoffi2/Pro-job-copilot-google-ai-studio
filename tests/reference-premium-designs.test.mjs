@@ -51,6 +51,17 @@ test('le composant partagé garde le format A4 écran exact', () => {
   assert.match(source, /data-design-reference=\{`harry-nelson-\$\{variant\}`\}/);
 });
 
+test('les dates sont espacées des points et les titres ont des bordures arrondies', () => {
+  assert.match(source, /grid-cols-\[82px_1fr\] gap-\[21px\]/);
+  assert.match(source, /pr-\[28px\]/);
+  assert.match(source, /rounded-\[14px\] border-2/);
+});
+
+test('la taille des textes Harry Nelson suit le réglage utilisateur', () => {
+  assert.match(source, /fontScale = 1/);
+  assert.match(source, /fontSize: `\$\{16 \* Math\.max\(0\.9, Math\.min\(1\.15, fontScale\)\)\}px`/);
+});
+
 test('aucun contenu fictif du CV de référence ne fuit dans le produit', () => {
   for (const placeholder of ['HARRY NELSON', 'helpshared@gmail.com', 'FIRST UNIVERCITY', 'Lorem ipsum']) {
     assert.equal(source.includes(placeholder), false, `contenu fictif interdit: ${placeholder}`);

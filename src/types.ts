@@ -64,6 +64,10 @@ export interface CVData {
   languages: Language[];
   certifications: Certification[];
   interests: string[];
+  formatting?: {
+    /** Multiplicateur de taille de texte, conservé dans les sauvegardes et exports. */
+    fontScale?: number;
+  };
 }
 
 export interface AnalysisResult {

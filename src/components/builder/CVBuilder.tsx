@@ -3,6 +3,7 @@ import {
   Award,
   Briefcase,
   Download,
+  FileText,
   Save,
   GraduationCap,
   Heart,
@@ -29,6 +30,7 @@ import type {
 import { useT } from '../../i18n/LanguageContext';
 import { uid, fileToDataUrl, fileToUploadPayload } from '../../lib/utils';
 import { exportElementToPdf, cvFileName } from '../../lib/pdf';
+import { exportCvToWord } from '../../lib/word';
 import {
   applyModifications,
   optimizeCVContent,
@@ -100,8 +102,13 @@ export function CVBuilder({
   const fileRef = useRef<HTMLInputElement>(null);
   const photoRef = useRef<HTMLInputElement>(null);
   const [tab, setTab] = useState<'content' | 'design'>('content');
+  const fontScale = data.formatting?.fontScale ?? 1;
+  const setFontScale = (scale: number) => setData({
+    ...data,
+    formatting: { ...data.formatting, fontScale: scale },
+  });
   const [aiInput, setAiInput] = useState('');
-  const [busy, setBusy] = useState<null | 'apply' | 'optimize' | 'import' | 'pdf' | 'save'>(null);
+  const [busy, setBusy] = useState<null | 'apply' | 'optimize' | 'import' | 'pdf' | 'word' | 'save'>(null);
   const [error, setError] = useState<string | null>(null);
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [listening, setListening] = useState(false);
@@ -242,6 +249,18 @@ export function CVBuilder({
     setPaywallOpen(true);
   };
 
+  const onDownloadWord = async () => {
+    setError(null);
+    setBusy('word');
+    try {
+      await exportCvToWord(data, locale);
+    } catch (caught: unknown) {
+      setError(caught instanceof Error ? caught.message : 'Impossible d’exporter ce CV en Word.');
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const onPaidDownload = async () => {
     if (!previewRef.current) return;
     setBusy('pdf');
@@ -291,6 +310,15 @@ export function CVBuilder({
             onClick={() => saveCurrentCv(false)}
           >
             Sauvegarder dans mon compte
+          </Button>
+          <Button
+            size="lg"
+            variant="outline"
+            icon={<FileText className="h-5 w-5" />}
+            loading={busy === 'word'}
+            onClick={onDownloadWord}
+          >
+            {locale === 'fr' ? 'Exporter en Word' : 'Export to Word'}
           </Button>
           <Button
             size="lg"
@@ -405,6 +433,8 @@ export function CVBuilder({
               setAccent={setAccent}
               data={data}
               locale={locale}
+              fontScale={fontScale}
+              setFontScale={setFontScale}
             />
           ) : (
             <div className="space-y-3">
@@ -612,7 +642,7 @@ export function CVBuilder({
               </span>
             </div>
             <div className="max-h-[calc(100vh-9rem)] overflow-auto rounded-2xl bg-ink-100/50 p-4 sm:p-6">
-              <PreviewPane ref={previewRef} data={data} templateId={templateId} accent={accent} locale={locale} />
+              <PreviewPane ref={previewRef} data={data} templateId={templateId} accent={accent} locale={locale} fontScale={fontScale} />
             </div>
           </div>
         </div>

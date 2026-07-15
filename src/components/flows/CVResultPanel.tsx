@@ -13,12 +13,14 @@ export function CVResultPanel({
   templateId,
   accent,
   locale,
+  fontScale = 1,
   onOpenInBuilder,
 }: {
   cv: CVData;
   templateId: TemplateId;
   accent: string;
   locale: Locale;
+  fontScale?: number;
   onOpenInBuilder: () => void;
 }) {
   const t = useT();
@@ -67,7 +69,7 @@ export function CVResultPanel({
         </Button>
       </div>
       <div className="max-h-[calc(100vh-7rem)] min-h-[520px] overflow-y-auto overflow-x-hidden overscroll-contain rounded-2xl bg-ink-100/50 p-4 sm:p-6">
-        <PreviewPane ref={ref} data={cv} templateId={templateId} accent={accent} locale={locale} />
+        <PreviewPane ref={ref} data={cv} templateId={templateId} accent={accent} locale={locale} fontScale={fontScale} />
       </div>
     </div>
       <PaymentGateModal

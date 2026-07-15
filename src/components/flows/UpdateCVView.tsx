@@ -32,6 +32,11 @@ export function UpdateCVView({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const fontScale = cv?.formatting?.fontScale ?? 1;
+  const setFontScale = (scale: number) => setCv((current) => current ? {
+    ...current,
+    formatting: { ...current.formatting, fontScale: scale },
+  } : current);
 
   const onReady = (parsed: CVData) => {
     setCv(parsed);
@@ -112,6 +117,8 @@ export function UpdateCVView({
                 setAccent={setAccent}
                 data={cv}
                 locale={locale}
+                fontScale={fontScale}
+                setFontScale={setFontScale}
               />
             </div>
           </div>
@@ -121,6 +128,7 @@ export function UpdateCVView({
             templateId={templateId}
             accent={accent}
             locale={locale}
+            fontScale={fontScale}
             onOpenInBuilder={() => onOpenInBuilder(cv)}
           />
         </div>

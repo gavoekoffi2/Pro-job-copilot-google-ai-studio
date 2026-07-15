@@ -14,6 +14,8 @@ export interface TemplateProps {
   data: import('../../types').CVData;
   accent: string;
   locale: Locale;
+  /** Multiplicateur typographique choisi par l'utilisateur (0,9 à 1,15). */
+  fontScale?: number;
 }
 
 /** Niveau de compétence -> pourcentage pour les barres/points. */

@@ -14,6 +14,8 @@ export function DesignPanel({
   setAccent,
   data,
   locale,
+  fontScale,
+  setFontScale,
 }: {
   templateId: TemplateId;
   setTemplateId: (id: TemplateId) => void;
@@ -21,6 +23,8 @@ export function DesignPanel({
   setAccent: (c: string) => void;
   data: CVData;
   locale: Locale;
+  fontScale: number;
+  setFontScale: (scale: number) => void;
 }) {
   const t = useT();
   const orderedTemplates = [...TEMPLATES].sort((a, b) => {
@@ -31,6 +35,36 @@ export function DesignPanel({
 
   return (
     <div className="space-y-6">
+      <div className="rounded-2xl border border-ink-100 bg-ink-50 p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-ink-500">
+              {locale === 'fr' ? 'Taille des textes' : 'Text size'}
+            </h3>
+            <p className="mt-1 text-xs text-ink-500">
+              {locale === 'fr' ? 'Agrandissez ou réduisez les écritures du CV.' : 'Increase or reduce the CV text size.'}
+            </p>
+          </div>
+          <output className="min-w-12 rounded-lg bg-white px-2 py-1 text-center text-sm font-extrabold text-ink-800 shadow-sm">
+            {Math.round(fontScale * 100)}%
+          </output>
+        </div>
+        <div className="mt-3 flex items-center gap-3">
+          <span className="text-xs font-bold text-ink-500">A−</span>
+          <input
+            type="range"
+            min="0.9"
+            max="1.15"
+            step="0.05"
+            value={fontScale}
+            onChange={(event) => setFontScale(Number(event.target.value))}
+            className="h-2 flex-1 cursor-pointer accent-brand-600"
+            aria-label={locale === 'fr' ? 'Taille des textes du CV' : 'CV text size'}
+          />
+          <span className="text-sm font-black text-ink-700">A+</span>
+        </div>
+      </div>
+
       <div>
         <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-ink-500">
           {t.builder.design.accent}
