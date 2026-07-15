@@ -1,4 +1,5 @@
 import { FREE_WATERMARK } from './downloadPolicy';
+import { pdfPageCount } from './pdfPagination';
 
 /**
  * Exporte un nœud DOM (le CV rendu au format A4) en PDF multi-pages haute qualité.
@@ -330,18 +331,12 @@ export async function exportElementToPdf(
     // Hauteur de l'image rapportée à la largeur d'une page A4.
     const imgHeight = (canvas.height * pageWidth) / canvas.width;
 
-    let heightLeft = imgHeight;
-    let position = 0;
+    const pageCount = pdfPageCount(imgHeight, pageHeight);
 
-    pdf.addImage(imgData, 'JPEG', 0, position, pageWidth, imgHeight, undefined, 'FAST');
-    heightLeft -= pageHeight;
-
-    // Pages supplémentaires si le contenu dépasse une page.
-    while (heightLeft > 0) {
-      position -= pageHeight;
-      pdf.addPage();
+    for (let pageIndex = 0; pageIndex < pageCount; pageIndex += 1) {
+      if (pageIndex > 0) pdf.addPage();
+      const position = -(pageIndex * pageHeight);
       pdf.addImage(imgData, 'JPEG', 0, position, pageWidth, imgHeight, undefined, 'FAST');
-      heightLeft -= pageHeight;
     }
 
     pdf.save(fileName);

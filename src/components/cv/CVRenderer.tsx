@@ -2,20 +2,6 @@ import { forwardRef } from 'react';
 import type { CVData, Locale, TemplateId } from '../../types';
 import type { TemplateProps } from './cvParts';
 import {
-  SahelTemplate,
-  DakarTemplate,
-  ExecutiveTemplate,
-  LagosTemplate,
-} from './templates/set1';
-import {
-  MinimalTemplate,
-  KigaliTemplate,
-  AbidjanTemplate,
-  HorizonTemplate,
-} from './templates/set2';
-import {
-  EclatTemplate,
-  ClassicTemplate,
   TechTemplate,
   NairobiTemplate,
 } from './templates/set3';
@@ -23,18 +9,30 @@ import { ZurichTemplate, AccraTemplate, CasablancaTemplate } from './templates/s
 import { CapetownTemplate, MontrealTemplate, SavaneTemplate } from './templates/set5';
 import { LomeTemplate, KpalimeTemplate, MaritimeTemplate } from './templates/set6';
 import { AtlasTemplate, VoltaTemplate, AuroraTemplate, HeritageTemplate } from './templates/set7';
+import {
+  RefWaveTemplate,
+  RefTealGeometryTemplate,
+  RefNavyOrbitTemplate,
+  RefGoldWaveTemplate,
+  RefCitrusTemplate,
+  RefBlueRingsTemplate,
+  RefGoldenRibbonTemplate,
+  RefRecruiterTemplate,
+  RefAngularTemplate,
+  RefTealDotsTemplate,
+} from './templates/referencePremium';
 
 const REGISTRY: Record<TemplateId, (p: TemplateProps) => React.JSX.Element> = {
-  sahel: SahelTemplate,
-  dakar: DakarTemplate,
-  executive: ExecutiveTemplate,
-  lagos: LagosTemplate,
-  minimal: MinimalTemplate,
-  kigali: KigaliTemplate,
-  abidjan: AbidjanTemplate,
-  horizon: HorizonTemplate,
-  eclat: EclatTemplate,
-  classic: ClassicTemplate,
+  sahel: RefWaveTemplate,
+  dakar: RefTealGeometryTemplate,
+  executive: RefNavyOrbitTemplate,
+  lagos: RefGoldWaveTemplate,
+  minimal: RefCitrusTemplate,
+  kigali: RefBlueRingsTemplate,
+  abidjan: RefGoldenRibbonTemplate,
+  horizon: RefRecruiterTemplate,
+  eclat: RefAngularTemplate,
+  classic: RefTealDotsTemplate,
   tech: TechTemplate,
   nairobi: NairobiTemplate,
   zurich: ZurichTemplate,
@@ -65,7 +63,7 @@ interface CVRendererProps {
  */
 export const CVRenderer = forwardRef<HTMLDivElement, CVRendererProps>(
   ({ templateId, data, accent, locale }, ref) => {
-    const Template = REGISTRY[templateId] ?? SahelTemplate;
+    const Template = REGISTRY[templateId] ?? RefWaveTemplate;
     const renderData = data.personalInfo.showPhoto === false
       ? { ...data, personalInfo: { ...data.personalInfo, photo: '__HIDE_PHOTO__' } }
       : data;
