@@ -1,3 +1,4 @@
+import { jsonrepair } from 'jsonrepair';
 import { groundExtractedCV } from './_ground-cv.mjs';
 import { extractEmbeddedPdfText } from './_pdf-text.mjs';
 
@@ -70,6 +71,15 @@ function stripThinking(text) {
     .trim();
 }
 
+function tryRepairJson(candidate) {
+  if (!candidate) return undefined;
+  try {
+    return JSON.parse(jsonrepair(candidate));
+  } catch {
+    return undefined;
+  }
+}
+
 function parseJsonResponse(text) {
   const trimmed = stripThinking(text);
   if (!trimmed) {
@@ -80,13 +90,19 @@ function parseJsonResponse(text) {
   try {
     return JSON.parse(trimmed);
   } catch {
+    // Réparation déterministe locale avant un second appel IA : corrige notamment
+    // les virgules finales, retours à la ligne non échappés et guillemets imparfaits.
+    const locallyRepaired = tryRepairJson(trimmed);
+    if (locallyRepaired !== undefined) return locallyRepaired;
+
     // 1) Bloc de code ```json ... ```
     const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
     if (fenced) {
       try {
         return JSON.parse(fenced[1].trim());
       } catch {
-        /* on continue */
+        const repairedFence = tryRepairJson(fenced[1].trim());
+        if (repairedFence !== undefined) return repairedFence;
       }
     }
 
@@ -96,7 +112,8 @@ function parseJsonResponse(text) {
       try {
         return JSON.parse(candidate);
       } catch {
-        /* on continue */
+        const repairedCandidate = tryRepairJson(candidate);
+        if (repairedCandidate !== undefined) return repairedCandidate;
       }
     }
 
