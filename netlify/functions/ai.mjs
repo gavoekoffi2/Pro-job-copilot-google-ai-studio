@@ -326,12 +326,31 @@ async function callOpenRouter({
  * supportent pas `json_schema`. En cas d'échec sur ce format, on réessaie en
  * `json_object` (le schéma reste décrit dans le prompt système).
  */
+function isInterruptedResult(result) {
+  return result?.ok && Boolean(result.finishReason) && result.finishReason !== 'stop';
+}
+
 async function callWithFallback(options) {
-  const result = await callOpenRouter(options);
-  if (!result.ok && options.responseFormat?.type === 'json_schema') {
-    return callOpenRouter({ ...options, responseFormat: { type: 'json_object' } });
-  }
-  return result;
+  const first = await callOpenRouter(options);
+  const needsFormatFallback = !first.ok && options.responseFormat?.type === 'json_schema';
+  if (!needsFormatFallback && !isInterruptedResult(first)) return first;
+
+  // Gemini/OpenRouter peut renvoyer HTTP 200 avec finish_reason="error" et un
+  // fragment qui ne contient que le nom/titre. Ne jamais accepter ce fragment
+  // comme un CV valide : retenter avec json_object, plus largement supporté.
+  const retryOptions = {
+    ...options,
+    responseFormat:
+      options.responseFormat?.type === 'json_schema'
+        ? { type: 'json_object' }
+        : options.responseFormat,
+  };
+  const second = await callOpenRouter(retryOptions);
+  if (!isInterruptedResult(second)) return second;
+
+  // Une interruption fournisseur peut être transitoire. Une dernière tentative
+  // évite de livrer un CV presque vide tout en gardant un nombre d'appels borné.
+  return callOpenRouter(retryOptions);
 }
 
 async function repairJsonResponse({ badText, schema, task }) {
@@ -493,6 +512,19 @@ function isEmptyExtraction(value) {
  * Lève une erreur (avec statusCode) si la réponse est irrécupérable.
  */
 async function parseWithRepair(result, schema, task) {
+  // Un fragment interrompu peut être syntaxiquement « réparé », mais rester
+  // sémantiquement incomplet (souvent seulement personalInfo). Il ne doit jamais
+  // être accepté comme un CV valide après épuisement des nouvelles tentatives.
+  if (result.finishReason && result.finishReason !== 'stop') {
+    const error = new Error(
+      result.finishReason === 'length'
+        ? "La réponse de l'IA a été tronquée (limite de longueur). Réessayez ; pour un CV très long, simplifiez-le ou augmentez OPENROUTER_MAX_TOKENS."
+        : "La réponse de l'IA a été interrompue et reste incomplète après plusieurs tentatives. Réessayez l'import.",
+    );
+    error.statusCode = 502;
+    throw error;
+  }
+
   try {
     return {
       parsed: parseJsonResponse(result.text),
