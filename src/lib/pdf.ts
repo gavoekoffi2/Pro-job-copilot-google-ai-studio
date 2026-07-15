@@ -1,3 +1,5 @@
+import { FREE_WATERMARK } from './downloadPolicy';
+
 /**
  * Exporte un nœud DOM (le CV rendu au format A4) en PDF multi-pages haute qualité.
  * Le nœud doit avoir une largeur proche de 794px (A4 @ 96dpi) pour un rendu net.
@@ -182,7 +184,47 @@ function copyPdfSafeStyles(source: Element, target: Element) {
   targetStyle.setProperty('scrollbar-color', 'auto', 'important');
 }
 
-function buildPdfSafeClone(element: HTMLElement) {
+function addFreePreviewWatermark(clone: HTMLElement, width: number, height: number) {
+  if (window.getComputedStyle(clone).position === 'static') clone.style.position = 'relative';
+  clone.style.overflow = 'hidden';
+
+  const overlay = document.createElement('div');
+  overlay.setAttribute('data-free-preview-watermark', 'true');
+  overlay.style.position = 'absolute';
+  overlay.style.inset = '0';
+  overlay.style.zIndex = '2147483647';
+  overlay.style.width = `${width}px`;
+  overlay.style.height = `${height}px`;
+  overlay.style.display = 'flex';
+  overlay.style.flexDirection = 'column';
+  overlay.style.justifyContent = 'space-around';
+  overlay.style.overflow = 'hidden';
+  overlay.style.pointerEvents = 'none';
+  overlay.style.userSelect = 'none';
+
+  for (let row = 0; row < FREE_WATERMARK.rows; row += 1) {
+    const line = document.createElement('div');
+    line.textContent = `${FREE_WATERMARK.text}     ${FREE_WATERMARK.text}`;
+    line.style.width = '140%';
+    line.style.marginLeft = '-20%';
+    line.style.whiteSpace = 'nowrap';
+    line.style.textAlign = 'center';
+    line.style.fontFamily = 'Arial, sans-serif';
+    line.style.fontSize = `${FREE_WATERMARK.fontSize}px`;
+    line.style.fontWeight = '900';
+    line.style.letterSpacing = '4px';
+    line.style.lineHeight = '1';
+    line.style.color = `rgba(100, 100, 100, ${FREE_WATERMARK.opacity})`;
+    line.style.transform = `rotate(${FREE_WATERMARK.rotation}deg)`;
+    line.style.transformOrigin = 'center';
+    line.style.textShadow = '0 0 1px rgba(255,255,255,0.45)';
+    overlay.appendChild(line);
+  }
+
+  clone.appendChild(overlay);
+}
+
+function buildPdfSafeClone(element: HTMLElement, watermark = false) {
   const clone = element.cloneNode(true) as HTMLElement;
   const originalNodes = [element, ...Array.from(element.querySelectorAll('*'))];
   const clonedNodes = [clone, ...Array.from(clone.querySelectorAll('*'))];
@@ -195,6 +237,14 @@ function buildPdfSafeClone(element: HTMLElement) {
   clone.style.width = `${element.scrollWidth || element.offsetWidth}px`;
   clone.style.minHeight = `${element.scrollHeight || element.offsetHeight}px`;
   clone.style.backgroundColor = '#ffffff';
+
+  if (watermark) {
+    addFreePreviewWatermark(
+      clone,
+      element.scrollWidth || element.offsetWidth,
+      element.scrollHeight || element.offsetHeight,
+    );
+  }
 
   const wrapper = document.createElement('div');
   wrapper.setAttribute('data-pdf-safe-export', 'true');
@@ -213,13 +263,14 @@ function buildPdfSafeClone(element: HTMLElement) {
 export async function exportElementToPdf(
   element: HTMLElement,
   fileName = 'cv.pdf',
+  options: { watermark?: boolean } = {},
 ): Promise<void> {
   const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
     import('html2canvas'),
     import('jspdf'),
   ]);
 
-  const { wrapper, clone } = buildPdfSafeClone(element);
+  const { wrapper, clone } = buildPdfSafeClone(element, options.watermark === true);
 
   try {
     const canvas = await html2canvas(clone, {

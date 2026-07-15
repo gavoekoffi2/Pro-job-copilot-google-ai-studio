@@ -1,6 +1,7 @@
 import { saveCheckoutRecord } from './_checkout-store.mjs';
 import { loadSettings } from './_settings-store.mjs';
 import { json, requireEnv, siteUrl } from './_utils.mjs';
+import { authenticateAccount } from './_account-store.mjs';
 
 const GENIUSPAY_BASE_URL = 'https://geniuspay.ci/api/v1/merchant';
 
@@ -27,6 +28,17 @@ export async function handler(event) {
   }
 
   try {
+    const payload = JSON.parse(event.body || '{}');
+    const cv = payload.cv;
+    if (!cv?.personalInfo) {
+      return json(400, { error: 'CV invalide ou manquant.' });
+    }
+
+    // Le paiement ne peut être lancé qu'avec une vraie session de compte.
+    // Ne jamais se contenter de l'email envoyé par le navigateur.
+    const account = await authenticateAccount(payload.user);
+    const user = cleanUser(account.user, cv);
+
     const apiKey = requireEnv(
       'GENIUSPAY_API_KEY',
       'Configuration paiement manquante : ajoutez GENIUSPAY_API_KEY (clé publique pk_sandbox_... ou pk_live_...).',
@@ -35,13 +47,6 @@ export async function handler(event) {
       'GENIUSPAY_API_SECRET',
       'Configuration paiement manquante : ajoutez GENIUSPAY_API_SECRET côté serveur.',
     );
-
-    const payload = JSON.parse(event.body || '{}');
-    const cv = payload.cv;
-    const user = cleanUser(payload.user, cv);
-    if (!cv?.personalInfo) {
-      return json(400, { error: 'CV invalide ou manquant.' });
-    }
 
     const cvId = `cv_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
     const origin = siteUrl();

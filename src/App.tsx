@@ -8,7 +8,7 @@ import { Spinner } from './components/ui/ui';
 import { exampleCV } from './lib/sampleData';
 import { DEFAULT_TEMPLATE } from './data/templates';
 import { PaymentReturnHandler } from './components/payment/PaymentReturnHandler';
-import { loadAccountUser, type SavedCvRecord } from './lib/account';
+import { ACCOUNT_USER_CHANGED_EVENT, loadAccountUser, type SavedCvRecord } from './lib/account';
 import type { CheckoutUser } from './lib/payment';
 
 // Vues lourdes chargées à la demande (la landing reste instantanée).
@@ -59,6 +59,18 @@ function AppShell() {
   useEffect(() => {
     window.scrollTo({ top: 0 });
   }, [view]);
+
+  // Toute connexion créée depuis le modal de téléchargement met immédiatement
+  // à jour le menu (« Mes CV ») et les privilèges du créateur.
+  useEffect(() => {
+    const onAccountChanged = (event: Event) => {
+      const nextUser = (event as CustomEvent<CheckoutUser | null>).detail || loadAccountUser();
+      setAccountUser(nextUser);
+      setAdminUser(nextUser?.isSuperAdmin ? nextUser : null);
+    };
+    window.addEventListener(ACCOUNT_USER_CHANGED_EVENT, onAccountChanged);
+    return () => window.removeEventListener(ACCOUNT_USER_CHANGED_EVENT, onAccountChanged);
+  }, []);
 
   const openInBuilder = useCallback((cv: CVData) => {
     setCvData(cv);

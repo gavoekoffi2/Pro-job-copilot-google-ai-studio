@@ -7,6 +7,7 @@ import { Logo } from './ui/Logo';
 import { Button } from './ui/ui';
 import { LanguageToggle } from './ui/LanguageToggle';
 import type { CheckoutUser } from '../lib/payment';
+import { shouldShowMyCvs } from '../lib/downloadPolicy';
 
 interface NavbarProps {
   view: AppView;
@@ -33,7 +34,9 @@ export function Navbar({ view, setView, accountUser }: NavbarProps) {
     { view: AppView.ANALYZE, label: t.nav.analyze, icon: ScanSearch },
     { view: AppView.TRANSLATE, label: t.nav.translate, icon: Languages },
     { view: AppView.TAILOR, label: t.nav.tailor, icon: Target },
-    { view: AppView.ACCOUNT, label: isConnected ? 'Mes CV' : 'Connexion', icon: UserRound },
+    ...(shouldShowMyCvs(accountUser)
+      ? [{ view: AppView.ACCOUNT, label: 'Mes CV', icon: UserRound }]
+      : []),
   ];
 
   const go = (v: AppView) => {
@@ -79,6 +82,11 @@ export function Navbar({ view, setView, accountUser }: NavbarProps) {
 
         <div className="hidden items-center gap-3 lg:flex">
           <LanguageToggle dark={onLanding && !scrolled} />
+          {!isConnected && (
+            <Button size="sm" variant="outline" onClick={() => go(AppView.ACCOUNT)}>
+              Se connecter
+            </Button>
+          )}
           <Button size="sm" onClick={() => go(AppView.BUILDER)}>
             {t.common.startFree}
           </Button>
@@ -116,6 +124,11 @@ export function Navbar({ view, setView, accountUser }: NavbarProps) {
                 {it.label}
               </button>
             ))}
+            {!isConnected && (
+              <Button variant="outline" className="mt-2 w-full" onClick={() => go(AppView.ACCOUNT)}>
+                Se connecter
+              </Button>
+            )}
             <Button className="mt-2 w-full" onClick={() => go(AppView.BUILDER)}>
               {t.common.startFree}
             </Button>

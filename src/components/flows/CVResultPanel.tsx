@@ -41,6 +41,20 @@ export function CVResultPanel({
     }
   };
 
+  const watermarkedDownload = async () => {
+    if (!ref.current) return;
+    setBusy(true);
+    try {
+      await exportElementToPdf(
+        ref.current,
+        cvFileName(cv.personalInfo.fullName),
+        { watermark: true },
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <>
     <div>
@@ -64,6 +78,7 @@ export function CVResultPanel({
         locale={locale}
         onClose={() => setPaywallOpen(false)}
         onPaid={paidDownload}
+        onWatermarked={watermarkedDownload}
       />
     </>
   );

@@ -239,20 +239,6 @@ export function CVBuilder({
 
   const onDownload = async () => {
     if (!previewRef.current) return;
-    const user = accountUser || loadAccountUser();
-    if (user?.canDownloadPdf || user?.isUnlimited || user?.isSuperAdmin) {
-      setBusy('pdf');
-      setError(null);
-      try {
-        await exportElementToPdf(previewRef.current, cvFileName(data.personalInfo.fullName));
-        await saveCurrentCv(true);
-      } catch (e: any) {
-        setError(e?.message ?? t.common.errorGeneric);
-      } finally {
-        setBusy(null);
-      }
-      return;
-    }
     setPaywallOpen(true);
   };
 
@@ -261,9 +247,25 @@ export function CVBuilder({
     setBusy('pdf');
     try {
       await exportElementToPdf(previewRef.current, cvFileName(data.personalInfo.fullName));
-      await saveCurrentCv(true);
     } catch (e: any) {
       setError(e?.message ?? t.common.errorGeneric);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const onWatermarkedDownload = async () => {
+    if (!previewRef.current) return;
+    setBusy('pdf');
+    try {
+      await exportElementToPdf(
+        previewRef.current,
+        cvFileName(data.personalInfo.fullName),
+        { watermark: true },
+      );
+    } catch (e: any) {
+      setError(e?.message ?? t.common.errorGeneric);
+      throw e;
     } finally {
       setBusy(null);
     }
@@ -624,6 +626,7 @@ export function CVBuilder({
         locale={locale}
         onClose={() => setPaywallOpen(false)}
         onPaid={onPaidDownload}
+        onWatermarked={onWatermarkedDownload}
       />
     </>
   );

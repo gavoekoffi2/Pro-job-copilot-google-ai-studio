@@ -2,6 +2,7 @@ import type { CVData, Locale, TemplateId } from '../types';
 import type { CheckoutUser } from './payment';
 
 const ACCOUNT_USER_KEY = 'pro_job_copilot_account_user';
+export const ACCOUNT_USER_CHANGED_EVENT = 'jobtask-account-user-changed';
 const PRIVATE_ADMIN_ACCESS_KEY = 'pro_job_copilot_private_admin_access';
 const LOCAL_ACCOUNT_STORE_KEY = 'pro_job_copilot_local_accounts';
 
@@ -268,7 +269,7 @@ export function loadAccountUser(): CheckoutUser | null {
 }
 
 export function saveAccountUser(user: CheckoutUser) {
-  localStorage.setItem(ACCOUNT_USER_KEY, JSON.stringify({
+  const savedUser = {
     name: user.name.trim(),
     email: user.email.trim().toLowerCase(),
     phone: user.phone.trim(),
@@ -281,11 +282,14 @@ export function saveAccountUser(user: CheckoutUser) {
     isUnlimited: user.isUnlimited,
     canDownloadPdf: user.canDownloadPdf,
     sessionToken: user.sessionToken,
-  }));
+  };
+  localStorage.setItem(ACCOUNT_USER_KEY, JSON.stringify(savedUser));
+  window.dispatchEvent(new CustomEvent(ACCOUNT_USER_CHANGED_EVENT, { detail: savedUser }));
 }
 
 export function clearAccountUser() {
   localStorage.removeItem(ACCOUNT_USER_KEY);
+  window.dispatchEvent(new CustomEvent(ACCOUNT_USER_CHANGED_EVENT, { detail: null }));
 }
 
 export async function registerAccount(user: CheckoutUser): Promise<AccountPayload> {
@@ -316,6 +320,15 @@ export async function loginAccount(user: Pick<CheckoutUser, 'email' | 'password'
   } catch {
     return localLoginAccount(user);
   }
+}
+
+export async function validateAccountSession(user: CheckoutUser): Promise<AccountPayload> {
+  const response = await fetch('/.netlify/functions/account-cvs', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'list', user }),
+  });
+  return parseApiResponse(response) as Promise<AccountPayload>;
 }
 
 export async function listAccountCvs(user: CheckoutUser): Promise<AccountPayload> {
