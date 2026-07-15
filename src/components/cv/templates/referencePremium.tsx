@@ -44,6 +44,69 @@ const PALETTES: Record<Variant, Palette> = {
   graphite: { primary: '#23282f', secondary: '#99a3ad', sidebar: '#eceeef', paper: '#ffffff' },
 };
 
+function mixHex(from: string, to: string, amount: number): string {
+  const parse = (value: string) => {
+    const hex = value.replace('#', '');
+    const normalized = hex.length === 3 ? hex.split('').map((part) => `${part}${part}`).join('') : hex;
+    return [0, 2, 4].map((offset) => Number.parseInt(normalized.slice(offset, offset + 2), 16));
+  };
+  const start = parse(from);
+  const end = parse(to);
+  if ([...start, ...end].some(Number.isNaN)) return from;
+  return `#${start.map((channel, index) => Math.round(channel + (end[index] - channel) * amount).toString(16).padStart(2, '0')).join('')}`;
+}
+
+function paletteFromAccent(base: Palette, accent?: string): Palette {
+  if (!accent || !/^#[0-9a-f]{6}$/i.test(accent)) return base;
+  return {
+    primary: mixHex(accent, '#08111f', 0.58),
+    secondary: accent,
+    sidebar: mixHex(accent, '#ffffff', 0.91),
+    paper: base.paper,
+  };
+}
+
+type Experience = TemplateProps['data']['experiences'][number];
+
+function splitLongExperience(item: Experience, characterLimit = 900): Experience[] {
+  const description = item.description.trim();
+  if (description.length <= characterLimit) return [item];
+  const words = description.split(/\s+/);
+  const chunks: string[] = [];
+  let current = '';
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (candidate.length > characterLimit && current) {
+      chunks.push(current);
+      current = word;
+    } else {
+      current = candidate;
+    }
+  }
+  if (current) chunks.push(current);
+  return chunks.map((chunk, index) => ({ ...item, id: `${item.id}-part-${index + 1}`, description: chunk }));
+}
+
+function paginateExperiences(items: Experience[], firstPageBudget: number, nextPageBudget = 1900): Experience[][] {
+  const normalized = items.flatMap((item) => splitLongExperience(item));
+  if (normalized.length === 0) return [[]];
+  const pages: Experience[][] = [[]];
+  let pageIndex = 0;
+  let used = 0;
+  for (const item of normalized) {
+    const weight = 150 + item.title.length + item.company.length + item.description.length;
+    const budget = pageIndex === 0 ? firstPageBudget : nextPageBudget;
+    if (pages[pageIndex].length > 0 && used + weight > budget) {
+      pages.push([]);
+      pageIndex += 1;
+      used = 0;
+    }
+    pages[pageIndex].push(item);
+    used += weight;
+  }
+  return pages;
+}
+
 const contactRows = [
   ['email', Mail],
   ['phone', Phone],
@@ -71,8 +134,8 @@ function PortraitCutout({ src, name, palette }: { src?: string; name: string; pa
   return (
     <div
       data-design-motif="portrait-cutout"
-      className="absolute left-[54px] top-[45px] z-30 h-[282px] w-[246px] overflow-hidden"
-      style={{ clipPath: 'ellipse(46% 49% at 50% 48%)' }}
+      className="absolute left-[68px] top-[46px] z-30 h-[246px] w-[214px] overflow-hidden"
+      style={{ clipPath: 'ellipse(47% 49% at 50% 49%)' }}
     >
       {!hidden && src ? (
         <img
@@ -220,7 +283,7 @@ function AboutSection({ data, palette, locale }: { data: TemplateProps['data']; 
   const labels = sectionLabels(locale);
   if (!data.personalInfo.summary) return null;
   return (
-    <section className="absolute left-[379px] top-[220px] z-20 w-[355px]">
+    <section>
       <SectionBand palette={palette}>{labels.profile}</SectionBand>
       <p className="ml-[19px] mt-[18px] max-w-[337px] text-[0.65625em] leading-[1.9] text-[#555b64]">
         {data.personalInfo.summary}
@@ -233,7 +296,7 @@ function EducationSection({ data, palette, locale }: { data: TemplateProps['data
   const labels = sectionLabels(locale);
   if (data.education.length === 0 && data.certifications.length === 0) return null;
   return (
-    <section className="absolute left-[379px] top-[415px] z-20 w-[355px]">
+    <section>
       <SectionBand palette={palette}>{labels.education}</SectionBand>
       <div className="ml-[2px] mt-[18px]">
         <Timeline palette={palette}>
@@ -256,15 +319,15 @@ function EducationSection({ data, palette, locale }: { data: TemplateProps['data
   );
 }
 
-function ExperienceSection({ data, palette, locale }: { data: TemplateProps['data']; palette: Palette; locale: TemplateProps['locale'] }) {
+function ExperienceSection({ experiences, palette, locale, continuation = false }: { experiences: Experience[]; palette: Palette; locale: TemplateProps['locale']; continuation?: boolean }) {
   const labels = sectionLabels(locale);
-  if (data.experiences.length === 0) return null;
+  if (experiences.length === 0) return null;
   return (
-    <section className="absolute left-[379px] top-[736px] z-20 w-[355px]">
-      <SectionBand palette={palette}>{labels.experience}</SectionBand>
+    <section>
+      <SectionBand palette={palette}>{continuation ? `${labels.experience} · ${locale === 'fr' ? 'suite' : 'continued'}` : labels.experience}</SectionBand>
       <div className="ml-[2px] mt-[18px]">
         <Timeline palette={palette}>
-          {data.experiences.slice(0, 3).map((item) => (
+          {experiences.map((item) => (
             <DatedItem key={item.id} date={dateRange(item, locale)} palette={palette}>
               <h3 className="text-[0.625em] font-black uppercase tracking-[0.02em]" style={{ color: palette.primary }}>{item.title}</h3>
               <p className="mt-[2px] text-[0.5625em] font-semibold text-[#555b64]">{item.company}{item.location ? ` · ${item.location}` : ''}</p>
@@ -281,50 +344,82 @@ function ExperienceSection({ data, palette, locale }: { data: TemplateProps['dat
   );
 }
 
-function HarryNelsonTemplate({ data, locale, variant, fontScale = 1 }: TemplateProps & { variant: Variant }) {
-  const palette = PALETTES[variant];
-  const personal = data.personalInfo;
+function BottomCornerAccent({ palette }: { palette: Palette }) {
   return (
-    <div
-      data-design-reference={`harry-nelson-${variant}`}
-      className="relative h-[1123px] w-[794px] overflow-hidden font-sans text-[#555b64]"
-      style={{ background: palette.paper, fontSize: `${16 * Math.max(0.9, Math.min(1.15, fontScale))}px` }}
-    >
-      <div className="absolute bottom-0 left-0 top-0 w-[350px]" style={{ background: palette.sidebar }} />
+    <svg data-design-motif="bottom-corner-accent" className="absolute bottom-0 left-0 z-10 h-[34px] w-[286px]" viewBox="0 0 286 34" preserveAspectRatio="none" aria-hidden="true">
+      <path data-design-motif="bottom-wave-cyan" fill={palette.secondary} d="M0 8C82 17 171 3 286 11V34H0Z" />
+      <path data-design-motif="bottom-wave-navy" fill={palette.primary} d="M0 19C92 27 187 14 286 20V34H0Z" />
+    </svg>
+  );
+}
 
-      <svg className="absolute left-0 top-0 z-10 h-[216px] w-[794px]" viewBox="0 0 794 216" preserveAspectRatio="none" aria-hidden="true">
-        <path data-design-motif="top-wave-cyan" fill={palette.secondary} d="M0 0H794V215C720 201 659 181 600 187C505 196 433 173 352 153C279 135 225 131 160 150C97 169 50 204 0 194Z" />
-        <path data-design-motif="top-wave-navy" fill={palette.primary} d="M0 0H794V183C718 171 658 153 600 164C509 180 432 158 352 141C279 125 222 120 158 137C96 153 48 179 0 163Z" />
+function ContinuationPage({ experiences, data, palette, locale, fontScale }: { experiences: Experience[]; data: TemplateProps['data']; palette: Palette; locale: TemplateProps['locale']; fontScale: number }) {
+  return (
+    <div data-design-motif="continuation-page" className="relative h-[1123px] w-[794px] overflow-hidden bg-white font-sans text-[#555b64]" style={{ fontSize: `${16 * fontScale}px` }}>
+      <svg className="absolute left-0 top-0 h-[108px] w-[794px]" viewBox="0 0 794 108" preserveAspectRatio="none" aria-hidden="true">
+        <path fill={palette.secondary} d="M0 0H794V72C620 104 420 72 0 101Z" />
+        <path fill={palette.primary} d="M0 0H794V54C588 89 365 55 0 82Z" />
       </svg>
-
-      <svg className="absolute bottom-0 left-0 z-10 h-[146px] w-[794px]" viewBox="0 0 794 146" preserveAspectRatio="none" aria-hidden="true">
-        <path data-design-motif="bottom-wave-cyan" fill={palette.secondary} d="M0 0C87 10 170 31 257 38C356 46 443 21 531 30C624 39 699 60 794 47V146H0Z" />
-        <path data-design-motif="bottom-wave-navy" fill={palette.primary} d="M0 31C92 40 171 62 258 68C358 75 444 49 530 59C622 69 704 91 794 75V146H0Z" />
-      </svg>
-
-      <PortraitCutout src={personal.photo} name={personal.fullName} palette={palette} />
-
-      <header className="absolute left-[440px] top-[49px] z-30 w-[305px] text-white">
-        <h1
-          className="whitespace-nowrap font-black uppercase leading-[0.95] tracking-[-0.025em]"
-          style={{ fontSize: (personal.fullName.length > 17 ? 31 : 38) * fontScale }}
-        >
-          {personal.fullName || (locale === 'fr' ? 'VOTRE NOM' : 'YOUR NAME')}
-        </h1>
-        <p className="mt-[13px] whitespace-nowrap pl-[34px] font-semibold uppercase tracking-[0.06em] text-white/95" style={{ fontSize: (personal.title.length > 27 ? 11.5 : 14) * fontScale }}>{personal.title}</p>
+      <header className="absolute left-[54px] right-[54px] top-[30px] z-20 flex items-center justify-between text-white">
+        <h1 className="text-[1.25em] font-black uppercase tracking-[0.035em]">{data.personalInfo.fullName}</h1>
+        <span className="text-[0.6875em] font-bold uppercase tracking-[0.12em]">{data.personalInfo.title}</span>
       </header>
+      <main data-content-safe-bottom="true" className="absolute bottom-[62px] left-[82px] right-[82px] top-[146px] overflow-hidden">
+        <ExperienceSection experiences={experiences} palette={palette} locale={locale} continuation />
+      </main>
+      <BottomCornerAccent palette={palette} />
+    </div>
+  );
+}
 
-      <div data-design-motif="two-column-grid">
-        <ContactSection data={data} palette={palette} locale={locale} />
-        <SkillsAndExtras data={data} palette={palette} locale={locale} />
-        <AboutSection data={data} palette={palette} locale={locale} />
-        <EducationSection data={data} palette={palette} locale={locale} />
-        <ExperienceSection data={data} palette={palette} locale={locale} />
-      </div>
+function HarryNelsonTemplate({ data, accent, locale, variant, fontScale = 1 }: TemplateProps & { variant: Variant }) {
+  const palette = paletteFromAccent(PALETTES[variant], accent);
+  const personal = data.personalInfo;
+  const safeFontScale = Math.max(0.9, Math.min(1.15, fontScale));
+  const summaryCost = personal.summary.length * 0.75;
+  const educationCost = data.education.slice(0, 3).reduce((total, item) => total + 125 + item.description.length * 0.6, 0);
+  const firstPageBudget = Math.max(420, 1650 - summaryCost - educationCost);
+  const experiencePages = paginateExperiences(data.experiences, firstPageBudget);
+  return (
+    <div data-design-reference={`harry-nelson-${variant}`} data-user-accent={accent} className="w-[794px] bg-white">
+      <div className="relative h-[1123px] w-[794px] overflow-hidden font-sans text-[#555b64]" style={{ background: palette.paper, fontSize: `${16 * safeFontScale}px` }}>
+        <div className="absolute bottom-0 left-0 top-0 w-[350px]" style={{ background: palette.sidebar }} />
 
-      <div data-design-motif="footer-url" className="absolute bottom-[35px] left-[51px] z-30 max-w-[250px] truncate text-[0.625em] font-black uppercase tracking-[0.03em] text-white">
-        {personal.website || personal.linkedin || personal.email}
+        <svg className="absolute left-0 top-0 z-10 h-[216px] w-[794px]" viewBox="0 0 794 216" preserveAspectRatio="none" aria-hidden="true">
+          <path data-design-motif="top-wave-cyan" fill={palette.secondary} d="M0 0H794V190C628 185 512 143 386 137C248 131 134 168 0 202Z" />
+          <path data-design-motif="top-wave-navy" fill={palette.primary} d="M0 0H794V160C625 158 506 119 382 116C242 112 126 144 0 174Z" />
+        </svg>
+
+        <BottomCornerAccent palette={palette} />
+        <PortraitCutout src={personal.photo} name={personal.fullName} palette={palette} />
+
+        <header className="absolute left-[440px] top-[49px] z-30 w-[305px] text-white">
+          <h1
+            className="whitespace-nowrap font-black uppercase leading-[0.95] tracking-[-0.025em]"
+            style={{ fontSize: (personal.fullName.length > 17 ? 31 : 38) * safeFontScale }}
+          >
+            {personal.fullName || (locale === 'fr' ? 'VOTRE NOM' : 'YOUR NAME')}
+          </h1>
+          <p className="mt-[13px] whitespace-nowrap pl-[34px] font-semibold uppercase tracking-[0.06em] text-white/95" style={{ fontSize: (personal.title.length > 27 ? 11.5 : 14) * safeFontScale }}>{personal.title}</p>
+        </header>
+
+        <div data-design-motif="two-column-grid">
+          <ContactSection data={data} palette={palette} locale={locale} />
+          <SkillsAndExtras data={data} palette={palette} locale={locale} />
+          <main data-content-safe-bottom="true" className="absolute bottom-[60px] left-[379px] top-[220px] z-20 w-[355px] space-y-[22px] overflow-hidden">
+            <AboutSection data={data} palette={palette} locale={locale} />
+            <EducationSection data={data} palette={palette} locale={locale} />
+            <ExperienceSection experiences={experiencePages[0]} palette={palette} locale={locale} />
+          </main>
+        </div>
+
+        <div data-design-motif="footer-url" className="absolute bottom-[7px] left-[36px] z-30 max-w-[215px] truncate text-[0.5625em] font-black uppercase tracking-[0.03em] text-white">
+          {personal.website || personal.linkedin || personal.email}
+        </div>
       </div>
+      {experiencePages.slice(1).map((experiences, index) => (
+        <ContinuationPage key={`continuation-${index + 1}`} experiences={experiences} data={data} palette={palette} locale={locale} fontScale={safeFontScale} />
+      ))}
     </div>
   );
 }

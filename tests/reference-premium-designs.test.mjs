@@ -59,7 +59,28 @@ test('les dates sont espacées des points et les titres ont des bordures arrondi
 
 test('la taille des textes Harry Nelson suit le réglage utilisateur', () => {
   assert.match(source, /fontScale = 1/);
-  assert.match(source, /fontSize: `\$\{16 \* Math\.max\(0\.9, Math\.min\(1\.15, fontScale\)\)\}px`/);
+  assert.match(source, /const safeFontScale = Math\.max\(0\.9, Math\.min\(1\.15, fontScale\)\)/);
+  assert.match(source, /fontSize: `\$\{16 \* safeFontScale\}px`/);
+});
+
+test('les modèles Harry Nelson utilisent la couleur choisie dans le panneau Design', () => {
+  assert.match(source, /function HarryNelsonTemplate\(\{ data, accent, locale, variant/);
+  assert.match(source, /paletteFromAccent\(PALETTES\[variant\], accent\)/);
+  assert.match(source, /data-user-accent=\{accent\}/);
+});
+
+test('le bas de page reste un ornement fin à gauche et ne masque plus le texte', () => {
+  assert.match(source, /data-design-motif="bottom-corner-accent"/);
+  assert.match(source, /h-\[34px\] w-\[286px\]/);
+  assert.equal(source.includes('h-[146px] w-[794px]'), false);
+  assert.match(source, /data-content-safe-bottom="true"/);
+});
+
+test('la photo est plus discrète et les expériences restantes passent sur une page de suite', () => {
+  assert.match(source, /h-\[246px\] w-\[214px\]/);
+  assert.match(source, /data-design-motif="continuation-page"/);
+  assert.match(source, /paginateExperiences\(/);
+  assert.equal(source.includes('data.experiences.slice(0, 3)'), false);
 });
 
 test('aucun contenu fictif du CV de référence ne fuit dans le produit', () => {
