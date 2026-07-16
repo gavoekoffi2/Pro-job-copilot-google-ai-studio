@@ -43,6 +43,7 @@ export const fr = {
     analyze: 'Analyser',
     translate: 'Traduire',
     tailor: 'Adapter à une offre',
+    coverLetter: 'Lettre de motivation',
     features: 'Fonctionnalités',
     templates: 'Modèles',
     howItWorks: 'Comment ça marche',
@@ -82,6 +83,10 @@ export const fr = {
     tailor: {
       title: 'Adaptation aux offres',
       desc: 'Optimisez votre CV pour une offre précise et passez les filtres ATS sans effort.',
+    },
+    coverLetter: {
+      title: 'Lettre de motivation personnalisée',
+      desc: 'Générez une lettre convaincante à partir de votre CV et de l’offre visée, sans rien inventer.',
     },
     templates: {
       title: 'Modèles premium',
@@ -278,6 +283,27 @@ export const fr = {
     openInBuilder: 'Créer / modifier le CV',
   },
 
+  coverLetter: {
+    title: 'Lettre de motivation personnalisée',
+    subtitle: 'Transformez votre CV et une offre d’emploi en une lettre professionnelle, ciblée et prête à envoyer.',
+    importTitle: 'Commencez avec votre CV',
+    importHelp: 'Importez votre CV en PDF, image ou texte. Vous pouvez aussi utiliser le CV actuellement ouvert dans JobTask AI.',
+    selectedCv: 'CV sélectionné',
+    unnamedCandidate: 'Candidat',
+    changeCv: 'Changer',
+    jobLabel: 'Offre d’emploi visée',
+    jobHelp: 'Collez l’intitulé, les missions et les compétences demandées pour obtenir une lettre réellement personnalisée.',
+    jobPlaceholder: 'Collez ici l’offre d’emploi complète…',
+    generateButton: 'Générer ma lettre de motivation',
+    resultTitle: 'Votre lettre',
+    resultHelp: 'Relisez et modifiez librement le texte avant de le copier ou de le télécharger.',
+    emptyTitle: 'Votre lettre apparaîtra ici',
+    emptyHelp: 'Ajoutez une offre d’emploi puis lancez la génération. L’IA utilisera uniquement les informations présentes dans votre CV.',
+    copy: 'Copier',
+    copied: 'Copiée !',
+    download: 'Télécharger (.txt)',
+  },
+
   levels: {
     Débutant: 'Débutant',
     Intermédiaire: 'Intermédiaire',
@@ -325,6 +351,7 @@ export const en: typeof fr = {
     analyze: 'Analyze',
     translate: 'Translate',
     tailor: 'Tailor to a job',
+    coverLetter: 'Cover letter',
     features: 'Features',
     templates: 'Templates',
     howItWorks: 'How it works',
@@ -363,6 +390,10 @@ export const en: typeof fr = {
     tailor: {
       title: 'Job tailoring',
       desc: 'Optimize your CV for a specific job and pass ATS filters effortlessly.',
+    },
+    coverLetter: {
+      title: 'Personalized cover letter',
+      desc: 'Generate a compelling letter from your CV and target job without inventing any information.',
     },
     templates: {
       title: 'Premium templates',
@@ -555,6 +586,27 @@ export const en: typeof fr = {
     jobPlaceholder: 'Paste the job title and description here…',
     tailorBtn: 'Tailor my CV',
     openInBuilder: 'Create / edit CV',
+  },
+
+  coverLetter: {
+    title: 'Personalized cover letter',
+    subtitle: 'Turn your CV and a job offer into a targeted, professional letter that is ready to send.',
+    importTitle: 'Start with your CV',
+    importHelp: 'Import your CV as a PDF, image or text. You can also use the CV currently open in JobTask AI.',
+    selectedCv: 'Selected CV',
+    unnamedCandidate: 'Candidate',
+    changeCv: 'Change',
+    jobLabel: 'Target job offer',
+    jobHelp: 'Paste the title, duties and required skills to generate a genuinely personalized letter.',
+    jobPlaceholder: 'Paste the full job offer here…',
+    generateButton: 'Generate my cover letter',
+    resultTitle: 'Your cover letter',
+    resultHelp: 'Review and edit the text freely before copying or downloading it.',
+    emptyTitle: 'Your letter will appear here',
+    emptyHelp: 'Add a job offer and start generation. AI will only use information found in your CV.',
+    copy: 'Copy',
+    copied: 'Copied!',
+    download: 'Download (.txt)',
   },
 
   levels: {

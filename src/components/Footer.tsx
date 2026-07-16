@@ -49,6 +49,11 @@ export function Footer({ setView }: { setView: (v: AppView) => void }) {
                   {t.nav.tailor}
                 </button>
               </li>
+              <li>
+                <button className="hover:text-brand-300" onClick={() => go(AppView.COVER_LETTER)}>
+                  {t.nav.coverLetter}
+                </button>
+              </li>
             </ul>
           </div>
           <div>

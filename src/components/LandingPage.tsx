@@ -11,6 +11,7 @@ import {
   Target,
   Layout,
   FileDown,
+  Mail,
 } from 'lucide-react';
 import { AppView, type TemplateId } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -223,6 +224,7 @@ function Features({ t }: { t: any }) {
     { icon: ScanSearch, ...t.features.analyze, color: 'text-blue-600 bg-blue-50' },
     { icon: Languages, ...t.features.translate, color: 'text-violet-600 bg-violet-50' },
     { icon: Target, ...t.features.tailor, color: 'text-rose-600 bg-rose-50' },
+    { icon: Mail, ...t.features.coverLetter, color: 'text-emerald-600 bg-emerald-50' },
     { icon: Layout, ...t.features.templates, color: 'text-gold-600 bg-gold-50' },
     { icon: FileDown, ...t.features.pdf, color: 'text-teal-600 bg-teal-50' },
   ];

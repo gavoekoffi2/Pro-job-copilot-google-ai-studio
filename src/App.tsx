@@ -27,6 +27,9 @@ const TranslateView = lazy(() =>
 const TailorView = lazy(() =>
   import('./components/flows/TailorView').then((m) => ({ default: m.TailorView })),
 );
+const CoverLetterView = lazy(() =>
+  import('./components/flows/CoverLetterView').then((m) => ({ default: m.CoverLetterView })),
+);
 const AccountView = lazy(() =>
   import('./components/account/AccountView').then((m) => ({ default: m.AccountView })),
 );
@@ -173,6 +176,7 @@ function AppShell() {
                 onOpenInBuilder={openInBuilder}
               />
             )}
+            {view === AppView.COVER_LETTER && <CoverLetterView data={cvData} />}
             {view === AppView.ACCOUNT && (
               <AccountView onOpenCv={openSavedCv} onUserChange={setAccountUser} onPrivateAccess={openPrivateAccess} />
             )}

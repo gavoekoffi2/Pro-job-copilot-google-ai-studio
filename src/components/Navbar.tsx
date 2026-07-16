@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FileText, Languages, Menu, RefreshCw, ScanSearch, Target, UserRound, X } from 'lucide-react';
+import { FileText, Languages, Mail, Menu, RefreshCw, ScanSearch, Target, UserRound, X } from 'lucide-react';
 import { AppView } from '../types';
 import { useT } from '../i18n/LanguageContext';
 import { cn } from '../lib/utils';
@@ -34,6 +34,7 @@ export function Navbar({ view, setView, accountUser }: NavbarProps) {
     { view: AppView.ANALYZE, label: t.nav.analyze, icon: ScanSearch },
     { view: AppView.TRANSLATE, label: t.nav.translate, icon: Languages },
     { view: AppView.TAILOR, label: t.nav.tailor, icon: Target },
+    { view: AppView.COVER_LETTER, label: t.nav.coverLetter, icon: Mail },
     ...(shouldShowMyCvs(accountUser)
       ? [{ view: AppView.ACCOUNT, label: 'Mes CV', icon: UserRound }]
       : []),
@@ -58,7 +59,7 @@ export function Navbar({ view, setView, accountUser }: NavbarProps) {
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Logo onClick={() => go(AppView.HOME)} light={onLanding && !scrolled} />
 
-        <div className="hidden items-center gap-1 lg:flex">
+        <div className="hidden items-center gap-1 xl:flex">
           {items.map((it) => {
             const active = view === it.view;
             return (
@@ -80,7 +81,7 @@ export function Navbar({ view, setView, accountUser }: NavbarProps) {
           })}
         </div>
 
-        <div className="hidden items-center gap-3 lg:flex">
+        <div className="hidden items-center gap-3 xl:flex">
           <LanguageToggle dark={onLanding && !scrolled} />
           {!isConnected && (
             <Button size="sm" variant="outline" onClick={() => go(AppView.ACCOUNT)}>
@@ -93,7 +94,7 @@ export function Navbar({ view, setView, accountUser }: NavbarProps) {
         </div>
 
         {/* Mobile */}
-        <div className="flex items-center gap-2 lg:hidden">
+        <div className="flex items-center gap-2 xl:hidden">
           <LanguageToggle dark={onLanding && !scrolled} />
           <button
             onClick={() => setOpen((o) => !o)}
@@ -109,7 +110,7 @@ export function Navbar({ view, setView, accountUser }: NavbarProps) {
       </nav>
 
       {open && (
-        <div className="glass border-t border-ink-100/70 lg:hidden">
+        <div className="glass border-t border-ink-100/70 xl:hidden">
           <div className="space-y-1 px-4 py-4">
             {items.map((it) => (
               <button
