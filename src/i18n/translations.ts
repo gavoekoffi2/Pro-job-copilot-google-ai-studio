@@ -276,6 +276,12 @@ export const fr = {
     jobPlaceholder: 'Collez ici l’intitulé et la description du poste…',
     tailorBtn: 'Adapter mon CV',
     openInBuilder: 'Créer / modifier le CV',
+    coverLetterTitle: 'Lettre de motivation',
+    coverLetterDesc: 'Générez une lettre de motivation personnalisée à partir de votre CV et de cette offre, prête à envoyer.',
+    coverLetterBtn: 'Générer ma lettre de motivation',
+    coverLetterCopy: 'Copier la lettre',
+    coverLetterCopied: 'Lettre copiée !',
+    coverLetterDownload: 'Télécharger (.txt)',
   },
 
   levels: {
@@ -555,6 +561,12 @@ export const en: typeof fr = {
     jobPlaceholder: 'Paste the job title and description here…',
     tailorBtn: 'Tailor my CV',
     openInBuilder: 'Create / edit CV',
+    coverLetterTitle: 'Cover letter',
+    coverLetterDesc: 'Generate a personalized, ready-to-send cover letter from your CV and this job offer.',
+    coverLetterBtn: 'Generate my cover letter',
+    coverLetterCopy: 'Copy letter',
+    coverLetterCopied: 'Letter copied!',
+    coverLetterDownload: 'Download (.txt)',
   },
 
   levels: {

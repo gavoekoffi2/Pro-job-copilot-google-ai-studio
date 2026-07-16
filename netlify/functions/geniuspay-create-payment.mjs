@@ -1,9 +1,8 @@
 import { saveCheckoutRecord } from './_checkout-store.mjs';
 import { loadSettings } from './_settings-store.mjs';
-import { json, requireEnv, siteUrl } from './_utils.mjs';
+import { json, siteUrl } from './_utils.mjs';
 import { authenticateAccount } from './_account-store.mjs';
-
-const GENIUSPAY_BASE_URL = 'https://geniuspay.ci/api/v1/merchant';
+import { createGeniusPayPayment, geniusPayCredentials } from './_geniuspay.mjs';
 
 function cleanUser(user = {}, cv = {}) {
   const email = String(user.email || cv?.personalInfo?.email || '').trim().toLowerCase();
@@ -39,14 +38,7 @@ export async function handler(event) {
     const account = await authenticateAccount(payload.user);
     const user = cleanUser(account.user, cv);
 
-    const apiKey = requireEnv(
-      'GENIUSPAY_API_KEY',
-      'Configuration paiement manquante : ajoutez GENIUSPAY_API_KEY (clé publique pk_sandbox_... ou pk_live_...).',
-    );
-    const apiSecret = requireEnv(
-      'GENIUSPAY_API_SECRET',
-      'Configuration paiement manquante : ajoutez GENIUSPAY_API_SECRET côté serveur.',
-    );
+    geniusPayCredentials();
 
     const cvId = `cv_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
     const origin = siteUrl();
@@ -68,23 +60,12 @@ export async function handler(event) {
       },
     };
 
-    const response = await fetch(`${GENIUSPAY_BASE_URL}/payments`, {
-      method: 'POST',
-      headers: {
-        'X-API-Key': apiKey,
-        'X-API-Secret': apiSecret,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(createPaymentPayload),
-    });
-
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok || data?.success === false) {
-      const message = data?.error?.message || data?.message || `GeniusPay error ${response.status}`;
-      return json(response.status || 502, { error: message, details: data?.error });
+    const result = await createGeniusPayPayment(createPaymentPayload);
+    if (!result.ok) {
+      return json(result.status || 502, { error: result.message, details: result.details });
     }
 
-    const payment = data.data || {};
+    const payment = result.payment;
     const reference = payment.reference;
     const checkoutUrl = payment.checkout_url || payment.payment_url;
     if (!reference || !checkoutUrl) {

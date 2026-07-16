@@ -92,8 +92,14 @@ export async function verifyGeniusPayPayment(reference: string, providerStatus?:
   return parseApiResponse(response);
 }
 
-export async function recoverCheckoutCv(reference: string): Promise<PendingCheckout> {
-  const response = await fetch(`/.netlify/functions/checkout-cv?reference=${encodeURIComponent(reference)}`);
+export async function recoverCheckoutCv(reference: string, user: CheckoutUser): Promise<PendingCheckout> {
+  // La récupération du CV lié à un paiement exige la session du compte : le serveur
+  // vérifie que la référence a bien été créée pour ce compte avant de renvoyer le CV.
+  const response = await fetch('/.netlify/functions/checkout-cv', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reference, user: publicCheckoutUser(user) }),
+  });
   const data = await parseApiResponse(response);
   const cv = data.cv || {};
   const personalInfo = cv.personalInfo || {};

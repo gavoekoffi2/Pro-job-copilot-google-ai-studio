@@ -1,6 +1,5 @@
-import { json, requireEnv } from './_utils.mjs';
-
-const GENIUSPAY_BASE_URL = 'https://geniuspay.ci/api/v1/merchant';
+import { json } from './_utils.mjs';
+import { fetchGeniusPayPayment, geniusPayCredentials, isSandboxReference } from './_geniuspay.mjs';
 
 export async function handler(event) {
   if (event.httpMethod !== 'GET') {
@@ -8,14 +7,7 @@ export async function handler(event) {
   }
 
   try {
-    const apiKey = requireEnv(
-      'GENIUSPAY_API_KEY',
-      'Configuration paiement manquante : ajoutez GENIUSPAY_API_KEY.',
-    );
-    const apiSecret = requireEnv(
-      'GENIUSPAY_API_SECRET',
-      'Configuration paiement manquante : ajoutez GENIUSPAY_API_SECRET.',
-    );
+    geniusPayCredentials();
 
     const params = new URLSearchParams(event.rawQuery || '');
     const reference = params.get('reference');
@@ -26,11 +18,7 @@ export async function handler(event) {
     // l'endpoint de recherche /payments/{SANDBOX_...} répond encore
     // TRANSACTION_NOT_FOUND. On accepte ce signal uniquement avec la clé
     // sandbox côté serveur et une référence sandbox, jamais en production live.
-    if (
-      providerStatus === 'completed' &&
-      String(reference).startsWith('SANDBOX_') &&
-      String(apiKey).includes('sandbox')
-    ) {
+    if (providerStatus === 'completed' && isSandboxReference(reference)) {
       return json(200, {
         reference,
         status: 'completed',
@@ -41,27 +29,18 @@ export async function handler(event) {
       });
     }
 
-    const response = await fetch(`${GENIUSPAY_BASE_URL}/payments/${encodeURIComponent(reference)}`, {
-      headers: {
-        'X-API-Key': apiKey,
-        'X-API-Secret': apiSecret,
-      },
-    });
-
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok || data?.success === false) {
-      const message = data?.error?.message || data?.message || `GeniusPay error ${response.status}`;
-      return json(response.status || 502, { error: message, details: data?.error });
+    const result = await fetchGeniusPayPayment(reference);
+    if (!result.ok) {
+      return json(result.status || 502, { error: result.message, details: result.details });
     }
 
-    const payment = data.data || {};
+    const payment = result.payment;
     const status = payment.status;
-    const paid = status === 'completed';
 
     return json(200, {
       reference,
       status,
-      paid,
+      paid: status === 'completed',
       amount: payment.amount,
       currency: payment.currency,
       paymentMethod: payment.payment_method || payment.payment_provider || null,

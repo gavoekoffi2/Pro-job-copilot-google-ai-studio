@@ -26,6 +26,7 @@ Créez, analysez, traduisez et adaptez un CV professionnel qui décroche des ent
 | 🪄 | **Modifications par langage naturel** | Demandez « Ajoute une expérience de stagiaire marketing en 2023 » : l'IA intègre la modification au bon endroit, avec une mise en forme soignée. |
 | 🌍 | **Traduction professionnelle** | Traduisez votre CV en anglais (ou 7 langues), avec un vocabulaire métier adapté et la mise en page préservée. |
 | 🎯 | **Adaptation aux offres** | Optimisez votre CV pour une offre précise et passez les filtres ATS sans effort. |
+| ✉️ | **Lettre de motivation IA** | Générez une lettre de motivation personnalisée à partir de votre CV et de l'offre, prête à copier ou télécharger. |
 | 📄 | **Import & OCR** | Importez un CV existant (PDF / image / texte) : l'IA le structure automatiquement. |
 | ⬇️ | **Export PDF impeccable** | Téléchargez un PDF haute qualité, parfaitement mis en page, en un clic. |
 | 🇫🇷 | **Français par défaut** | Toute la plateforme est en français, avec bascule vers l'anglais en un clic. |
@@ -69,6 +70,7 @@ L'application est disponible sur http://localhost:3000.
 | `npm run build` | Build de production (`dist/`) |
 | `npm run preview` | Prévisualiser le build |
 | `npm run typecheck` | Vérification TypeScript |
+| `npm test` | Tests (sécurité comptes, exports, pagination PDF…) |
 
 ## 📁 Structure du projet
 
@@ -98,6 +100,19 @@ Vercel, Netlify, Cloudflare Pages, GitHub Pages, etc.
 
 > ✅ La clé IA n’est pas exposée au navigateur : les appels passent par la fonction Netlify
 > `/.netlify/functions/ai`, qui lit `OPENROUTER_API_KEY` côté serveur.
+
+## 🔐 Sécurité
+
+- **Aucun identifiant en dur** : le compte super admin n'existe que si
+  `JOBTASK_SUPER_ADMIN_EMAIL` et `JOBTASK_SUPER_ADMIN_PASSWORD` sont définis côté serveur.
+- **Rôles et plans côté serveur uniquement** : le navigateur ne peut jamais s'attribuer
+  un rôle admin ni un plan payant ; toute élévation passe par l'espace super admin authentifié.
+- **Paiement vérifié côté serveur** : un CV n'est marqué « payé » qu'après vérification de la
+  référence GeniusPay (compte correspondant + statut `completed` chez GeniusPay).
+- **Sessions expirantes (30 jours)** et **verrouillage anti-brute-force** (5 échecs → 15 min).
+- **Mots de passe** : hachage scrypt + sel, minimum 8 caractères pour les nouveaux comptes.
+- **Endpoint IA protégé** : limite de requêtes par IP et plafonds de taille de payload.
+- **En-têtes de sécurité** (nosniff, X-Frame-Options, Referrer-Policy…) sur Netlify et le serveur Node.
 
 ## 🖼️ Crédits
 

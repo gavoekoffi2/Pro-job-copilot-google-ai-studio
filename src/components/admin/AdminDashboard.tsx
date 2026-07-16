@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Crown, Download, Lock, Plus, RefreshCw, Save, ShieldCheck, Trash2, Users, WalletCards } from 'lucide-react';
 import { Button } from '../ui/ui';
-import { clearAccountUser, loadAccountUser, privateAdminUser, registerAccount, saveAccountUser, savePrivateAdminAccess } from '../../lib/account';
+import { clearAccountUser, loadAccountUser, loginAccount, saveAccountUser } from '../../lib/account';
 import type { CheckoutUser } from '../../lib/payment';
 import {
   deleteAdminUser,
@@ -27,17 +27,11 @@ const emptyUser: SaveUserInput = {
   initialPassword: '',
 };
 
-const emptyDashboard: AdminDashboardPayload = {
-  settings: { cvDownloadPriceXof: 500, currency: 'XOF' },
-  stats: { totalUsers: 0, activeUsers: 0, blockedUsers: 0, admins: 0, superAdmins: 1, unlimitedUsers: 1, proUsers: 0, freeUsers: 0, totalCvs: 0, paidCvs: 0 },
-  users: [],
-};
-
 export function AdminDashboard() {
-  const [admin, setAdmin] = useState<CheckoutUser>(() => loadAccountUser() || { name: 'Claude GAVOE Koffi', email: 'admin@jobtaskai.com', phone: '+228****0000' });
+  const [admin, setAdmin] = useState<CheckoutUser>(() => loadAccountUser() || { name: '', email: '', phone: '' });
   const [adminProfile, setAdminProfile] = useState<AdminProfileInput>(() => {
     const saved = loadAccountUser();
-    return { name: saved?.name || 'Claude GAVOE Koffi', email: saved?.email || '', phone: saved?.phone || '', newPassword: '' };
+    return { name: saved?.name || '', email: saved?.email || '', phone: saved?.phone || '', newPassword: '' };
   });
   const [connected, setConnected] = useState(() => Boolean(loadAccountUser()?.isSuperAdmin));
   const [dashboard, setDashboard] = useState<AdminDashboardPayload | null>(null);
@@ -66,9 +60,9 @@ export function AdminDashboard() {
     setError(null);
     setMessage('');
     try {
-      const account = await registerAccount(admin);
-      const user = account.user || admin;
-      if (!user.isSuperAdmin) throw new Error('Ce compte n’est pas super administrateur.');
+      const account = await loginAccount({ email: admin.email, password: admin.password });
+      const user = account.user;
+      if (!user?.isSuperAdmin) throw new Error('Ce compte n’est pas super administrateur.');
       saveAccountUser(user);
       setAdmin(user);
       syncAdminProfile(user);
@@ -88,8 +82,7 @@ export function AdminDashboard() {
     try {
       applyDashboard(await loadAdminDashboard(sourceAdmin));
     } catch (err) {
-      applyDashboard(emptyDashboard);
-      setMessage('Espace privé ouvert.');
+      setError(err instanceof Error ? err.message : 'Impossible de charger le tableau de bord. Reconnectez-vous.');
     } finally {
       setBusy(null);
     }
@@ -120,22 +113,7 @@ export function AdminDashboard() {
       applyDashboard(result.dashboard);
       setMessage('Vos accès administrateur ont été mis à jour.');
     } catch (err) {
-      const reason = err instanceof Error ? err.message : '';
-      if (reason === 'Erreur serveur.' || reason.includes('Failed to fetch') || admin.sessionToken === 'private-device-access') {
-        const access = savePrivateAdminAccess({
-          name: adminProfile.name,
-          email: adminProfile.email,
-          phone: adminProfile.phone,
-          password: adminProfile.newPassword || undefined,
-        });
-        const privateUser = privateAdminUser(access);
-        saveAccountUser(privateUser);
-        setAdmin(privateUser);
-        syncAdminProfile(privateUser);
-        setMessage('Vos accès administrateur ont été mis à jour sur cet appareil.');
-        return;
-      }
-      setError(reason || 'Impossible de modifier vos accès admin.');
+      setError(err instanceof Error ? err.message : 'Impossible de modifier vos accès admin.');
     } finally {
       setBusy(null);
     }
@@ -233,12 +211,10 @@ export function AdminDashboard() {
           <h2 className="font-display text-2xl font-extrabold text-ink-950">Connexion super administrateur</h2>
           <p className="mt-1 text-sm text-ink-500">Connectez votre compte illimité pour ouvrir le tableau de bord.</p>
           <div className="mt-5 grid gap-3 md:grid-cols-2">
-            <Field label="Nom" value={admin.name} onChange={(value) => setAdmin({ ...admin, name: value })} />
-            <Field label="Téléphone" value={admin.phone} onChange={(value) => setAdmin({ ...admin, phone: value })} placeholder="+228..." />
             <Field label="Email admin" type="email" value={admin.email} onChange={(value) => setAdmin({ ...admin, email: value })} />
             <Field label="Mot de passe" type="password" value={admin.password || ''} onChange={(value) => setAdmin({ ...admin, password: value })} placeholder="Mot de passe super admin" />
           </div>
-          <Button className="mt-5" icon={<ShieldCheck className="h-4 w-4" />} loading={busy === 'login'} disabled={!admin.email || !admin.password || !admin.name || !admin.phone} onClick={connect}>
+          <Button className="mt-5" icon={<ShieldCheck className="h-4 w-4" />} loading={busy === 'login'} disabled={!admin.email || !admin.password} onClick={connect}>
             Se connecter au tableau de bord
           </Button>
         </div>
@@ -262,9 +238,9 @@ export function AdminDashboard() {
                   <Field label="Nom admin" value={adminProfile.name} onChange={(value) => setAdminProfile({ ...adminProfile, name: value })} />
                   <Field label="Email admin" type="email" value={adminProfile.email} onChange={(value) => setAdminProfile({ ...adminProfile, email: value })} />
                   <Field label="Téléphone admin" value={adminProfile.phone} onChange={(value) => setAdminProfile({ ...adminProfile, phone: value })} />
-                  <Field label="Nouveau mot de passe" type="password" value={adminProfile.newPassword || ''} onChange={(value) => setAdminProfile({ ...adminProfile, newPassword: value })} placeholder="Laisser vide pour garder l’actuel" />
+                  <Field label="Nouveau mot de passe" type="password" value={adminProfile.newPassword || ''} onChange={(value) => setAdminProfile({ ...adminProfile, newPassword: value })} placeholder="Laisser vide pour garder l’actuel (min 8 caractères)" />
                 </div>
-                <Button className="mt-5 w-full" icon={<ShieldCheck className="h-4 w-4" />} loading={busy === 'adminProfile'} disabled={!adminProfile.name || !adminProfile.email || !adminProfile.phone || Boolean(adminProfile.newPassword && adminProfile.newPassword.length < 6)} onClick={saveAdminProfile}>
+                <Button className="mt-5 w-full" icon={<ShieldCheck className="h-4 w-4" />} loading={busy === 'adminProfile'} disabled={!adminProfile.name || !adminProfile.email || !adminProfile.phone || Boolean(adminProfile.newPassword && adminProfile.newPassword.length < 8)} onClick={saveAdminProfile}>
                   Sauvegarder mes accès admin
                 </Button>
               </div>

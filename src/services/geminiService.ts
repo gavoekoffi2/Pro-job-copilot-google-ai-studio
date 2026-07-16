@@ -440,6 +440,50 @@ ${cvText.substring(0, 50000)}
   return normalizeCV(result);
 }
 
+const coverLetterSchema: Schema = {
+  type: Type.OBJECT,
+  properties: {
+    coverLetter: {
+      type: Type.STRING,
+      description: 'La lettre de motivation complète, prête à envoyer, avec des paragraphes séparés par des sauts de ligne.',
+    },
+  },
+  required: ['coverLetter'],
+};
+
+/** Génère une lettre de motivation personnalisée à partir du CV et d'une offre d'emploi. */
+export async function generateCoverLetter(
+  currentData: CVData,
+  jobDescription: string,
+): Promise<string> {
+  ensureKey();
+  const prompt = `
+Tu es un expert en recrutement et en rédaction de lettres de motivation percutantes.
+Rédige une lettre de motivation professionnelle et convaincante pour le poste décrit
+ci-dessous, en t'appuyant UNIQUEMENT sur les faits présents dans le CV fourni.
+
+RÈGLES :
+1. Structure classique : accroche personnalisée, correspondance compétences/besoins du poste,
+   valeur ajoutée concrète du candidat, conclusion avec appel à l'entretien.
+2. N'invente aucune expérience, diplôme, chiffre ou compétence absent du CV.
+3. Ton professionnel, direct et confiant — sans flatterie excessive ni formules creuses.
+4. Longueur : 250 à 350 mots, en paragraphes aérés.
+5. Rédige dans la langue de l'offre d'emploi.
+6. Termine par une formule de politesse et le nom complet du candidat.
+Renvoie uniquement un JSON avec la clé "coverLetter".
+
+Offre d'emploi :
+${jobDescription.substring(0, 50000)}
+
+CV du candidat :
+${JSON.stringify(stripPhoto(currentData)).substring(0, 50000)}
+`;
+  const result = await generateJson(prompt, coverLetterSchema);
+  const letter = cleanText(result?.coverLetter);
+  if (!letter) throw new Error('La lettre de motivation n’a pas pu être générée. Réessayez.');
+  return letter;
+}
+
 /** Structure un texte brut de CV en CVData. */
 export async function parseCVFromText(rawText: string): Promise<CVData> {
   ensureKey();
