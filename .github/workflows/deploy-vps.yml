@@ -1,0 +1,99 @@
+name: Deploy JobTask AI to VPS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: jobtask-ai-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build, test and deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Run automated tests
+        run: node --test tests/*.test.mjs
+
+      - name: Build production assets
+        run: npm run build
+
+      - name: Prepare release artifact
+        run: |
+          mkdir -p release
+          cp -a dist netlify package.json package-lock.json server.js Dockerfile.prod docker-compose.vps.yml release/
+          EXPECTED_ASSET=$(grep -oE '/assets/index-[^" ]+\.js' release/dist/index.html | head -1)
+          test -n "$EXPECTED_ASSET"
+          echo "EXPECTED_ASSET=$EXPECTED_ASSET" >> "$GITHUB_ENV"
+
+      - name: Configure SSH
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          test -n "$VPS_HOST"
+          test -n "$VPS_SSH_KEY"
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/jobtask_ai_deploy_key
+          chmod 600 ~/.ssh/jobtask_ai_deploy_key
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
+
+      - name: Verify production configuration
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_APP_DIR: ${{ secrets.VPS_APP_DIR }}
+        run: |
+          test -n "$VPS_USER"
+          test -n "$VPS_APP_DIR"
+          ssh -i ~/.ssh/jobtask_ai_deploy_key -o StrictHostKeyChecking=yes "$VPS_USER@$VPS_HOST" \
+            "test -s '$VPS_APP_DIR/.env' && test -f '$VPS_APP_DIR/docker-compose.vps.yml'"
+
+      - name: Sync release to VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_APP_DIR: ${{ secrets.VPS_APP_DIR }}
+        run: |
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/jobtask_ai_deploy_key -o StrictHostKeyChecking=yes" \
+            --exclude '.env' \
+            --exclude 'dist.backup-*' \
+            release/ "$VPS_USER@$VPS_HOST:$VPS_APP_DIR/"
+
+      - name: Rebuild and restart production container
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_APP_DIR: ${{ secrets.VPS_APP_DIR }}
+        run: |
+          ssh -i ~/.ssh/jobtask_ai_deploy_key -o StrictHostKeyChecking=yes "$VPS_USER@$VPS_HOST" \
+            "cd '$VPS_APP_DIR' && docker compose -f docker-compose.vps.yml up -d --build --remove-orphans && docker ps --filter name=jobtask-ai --format '{{.Names}} {{.Status}}'"
+
+      - name: Smoke-test live production
+        run: |
+          curl -fsS --retry 12 --retry-all-errors --retry-delay 5 --retry-connrefused \
+            https://jobtaskai.com/health | grep -q '"ok":true'
+          curl -fsS --retry 12 --retry-all-errors --retry-delay 5 --retry-connrefused \
+            https://jobtaskai.com -o /tmp/jobtask-live.html
+          grep -qF "$EXPECTED_ASSET" /tmp/jobtask-live.html
