@@ -91,10 +91,10 @@ function Hero({ t, setView }: { t: any; setView: (v: AppView) => void }) {
             {t.hero.badge}
           </span>
 
-          <h1 className="mt-6 font-display text-5xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
+          <h1 className="mt-6 font-display text-[2.75rem] font-bold leading-[1.06] tracking-[-0.025em] text-balance sm:text-6xl lg:text-[4.25rem]">
             {t.hero.title1}
             <br />
-            <span className="text-gradient">{t.hero.title2}</span>
+            <span className="text-brand-300">{t.hero.title2}</span>
           </h1>
 
           <p className="mt-6 max-w-xl text-lg text-ink-300 sm:text-xl">{t.hero.subtitle}</p>
@@ -129,7 +129,7 @@ function Hero({ t, setView }: { t: any; setView: (v: AppView) => void }) {
 function Stat({ value, label }: { value: string; label: string }) {
   return (
     <div>
-      <div className="font-display text-3xl font-extrabold text-white">{value}</div>
+      <div className="font-display text-3xl font-bold text-white">{value}</div>
       <div className="mt-0.5 text-sm text-ink-400">{label}</div>
     </div>
   );
@@ -143,8 +143,8 @@ function HeroVisual({ t }: { t: any }) {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.8, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
     >
-      {/* Halo */}
-      <div className="absolute -inset-6 -z-10 rounded-[2.5rem] bg-gradient-to-tr from-brand-500/30 to-gold-500/30 blur-2xl" />
+      {/* Halo discret */}
+      <div className="absolute -inset-6 -z-10 rounded-[2.5rem] bg-gradient-to-tr from-brand-500/12 to-gold-500/12 blur-2xl" />
 
       {/* Image principale */}
       <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] border border-white/10 bg-ink-800 shadow-2xl">
@@ -168,7 +168,7 @@ function HeroVisual({ t }: { t: any }) {
           <ScoreRing value={92} />
           <div>
             <p className="text-xs text-ink-400">Score ATS</p>
-            <p className="font-display text-xl font-extrabold text-white">92<span className="text-sm text-ink-400">/100</span></p>
+            <p className="font-display text-xl font-bold text-white">92<span className="text-sm text-ink-400">/100</span></p>
           </div>
         </div>
       </motion.div>
@@ -332,7 +332,7 @@ function Steps({ t }: { t: any }) {
                 />
               </div>
               <div className="absolute -bottom-5 -right-3 rounded-2xl bg-ink-950 px-5 py-4 text-white shadow-xl">
-                <p className="font-display text-2xl font-extrabold text-gold-400">5 min</p>
+                <p className="font-display text-2xl font-bold text-gold-400">5 min</p>
                 <p className="text-xs text-ink-300">CV prêt à l'emploi</p>
               </div>
             </div>
@@ -348,7 +348,7 @@ function Steps({ t }: { t: any }) {
               {steps.map((s, i) => (
                 <Reveal key={s.n} delay={i * 0.08}>
                   <div className="flex gap-5">
-                    <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-brand-500 to-gold-500 font-display text-lg font-extrabold text-white shadow-lg shadow-brand-500/20">
+                    <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-ink-200 bg-white font-display text-lg font-bold text-brand-700">
                       {s.n}
                     </div>
                     <div>
@@ -440,13 +440,10 @@ function CtaBand({ t, setView }: { t: any; setView: (v: AppView) => void }) {
     <section className="bg-ink-50 py-24">
       <div className="mx-auto max-w-6xl px-6 lg:px-8">
         <Reveal>
-          <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-brand-600 via-brand-700 to-ink-950 px-8 py-16 text-center shadow-2xl">
-            <div
-              className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-gold-500/30 blur-3xl"
-            />
-            <div className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-brand-400/30 blur-3xl" />
+          <div className="relative overflow-hidden rounded-3xl border border-ink-800 bg-ink-950 px-8 py-16 text-center">
+            <div className="aurora-bg" />
             <div className="relative">
-              <h2 className="mx-auto max-w-2xl font-display text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+              <h2 className="mx-auto max-w-2xl font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
                 {t.ctaBand.title}
               </h2>
               <p className="mx-auto mt-4 max-w-xl text-lg text-brand-50">{t.ctaBand.subtitle}</p>

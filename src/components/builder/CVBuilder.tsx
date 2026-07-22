@@ -1,15 +1,19 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   Award,
   Briefcase,
+  Check,
+  ChevronDown,
   Download,
   FileText,
   Save,
   GraduationCap,
   Heart,
+  Info,
   Languages as LangIcon,
   Mic,
   MicOff,
+  RotateCcw,
   Sparkles,
   Upload,
   User,
@@ -28,7 +32,8 @@ import type {
   TemplateId,
 } from '../../types';
 import { useT } from '../../i18n/LanguageContext';
-import { uid, fileToDataUrl, fileToUploadPayload } from '../../lib/utils';
+import { cn, uid, fileToDataUrl, fileToUploadPayload } from '../../lib/utils';
+import { cvIsReady, emptyCV, isExampleCV } from '../../lib/sampleData';
 import { exportElementToPdf, cvFileName } from '../../lib/pdf';
 import { exportCvToWord } from '../../lib/word';
 import {
@@ -113,6 +118,36 @@ export function CVBuilder({
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [listening, setListening] = useState(false);
   const speechRef = useRef<BrowserSpeechRecognition | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
+  const exportRef = useRef<HTMLDivElement>(null);
+
+  /* L'aperçu démarre sur un exemple : tant qu'il n'est pas personnalisé, on le
+     signale comme démonstration et on garde l'export en retrait. */
+  const showingExample = isExampleCV(data);
+  const ready = cvIsReady(data);
+
+  // Fermer le menu d'export au clic extérieur ou avec Échap.
+  useEffect(() => {
+    if (!exportOpen) return;
+    const onPointer = (e: MouseEvent) => {
+      if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
+        setExportOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setExportOpen(false);
+    document.addEventListener('mousedown', onPointer);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onPointer);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [exportOpen]);
+
+  const resetToBlank = () => {
+    setError(null);
+    setExportOpen(false);
+    setData(emptyCV());
+  };
 
   /* ----------------------------- mutations ----------------------------- */
   const setPersonal = (patch: Partial<CVData['personalInfo']>) =>
@@ -294,49 +329,115 @@ export function CVBuilder({
     <>
       <div className="mx-auto max-w-[1500px] px-4 pb-16 pt-24 sm:px-6 lg:px-8">
       {/* En-tête */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-4 border-b border-ink-100 pb-5">
         <div>
-          <h1 className="font-display text-2xl font-extrabold text-ink-950 sm:text-3xl">
+          <h1 className="font-display text-2xl font-bold tracking-[-0.02em] text-ink-950 sm:text-[1.9rem]">
             {t.builder.title}
           </h1>
-          <p className="text-ink-500">{t.builder.subtitle}</p>
+          <p className="mt-1 text-[15px] text-ink-500">{t.builder.subtitle}</p>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="flex items-center gap-2">
           <Button
-            size="lg"
-            variant="outline"
-            icon={<Save className="h-5 w-5" />}
+            variant="ghost"
+            icon={<Save className="h-4 w-4" />}
             loading={busy === 'save'}
+            disabled={!ready}
+            title={ready ? undefined : 'Personnalisez votre CV pour l’enregistrer.'}
             onClick={() => saveCurrentCv(false)}
           >
-            Sauvegarder dans mon compte
+            {locale === 'fr' ? 'Enregistrer' : 'Save'}
           </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            icon={<FileText className="h-5 w-5" />}
-            loading={busy === 'word'}
-            onClick={onDownloadWord}
-          >
-            {locale === 'fr' ? 'Exporter en Word' : 'Export to Word'}
-          </Button>
-          <Button
-            size="lg"
-            variant="dark"
-            icon={<Download className="h-5 w-5" />}
-            loading={busy === 'pdf'}
-            onClick={onDownload}
-          >
-            {t.common.downloadPdf}
-          </Button>
+
+          {/* Action principale unique : Télécharger ▾ (PDF / Word) */}
+          <div ref={exportRef} className="relative">
+            <Button
+              variant="dark"
+              icon={<Download className="h-4 w-4" />}
+              iconRight={
+                <ChevronDown
+                  className={cn('h-4 w-4 transition-transform', exportOpen && 'rotate-180')}
+                />
+              }
+              loading={busy === 'pdf' || busy === 'word'}
+              disabled={!ready}
+              title={ready ? undefined : 'Terminez votre CV pour le télécharger.'}
+              onClick={() => setExportOpen((o) => !o)}
+              aria-haspopup="menu"
+              aria-expanded={exportOpen}
+            >
+              {locale === 'fr' ? 'Télécharger' : 'Download'}
+            </Button>
+            {exportOpen && ready && (
+              <div
+                role="menu"
+                className="absolute right-0 z-30 mt-2 w-60 overflow-hidden rounded-xl border border-ink-100 bg-white p-1 shadow-lg shadow-ink-900/10"
+              >
+                <ExportMenuItem
+                  icon={<Download className="h-4 w-4" />}
+                  title="PDF"
+                  hint={locale === 'fr' ? 'Idéal pour postuler' : 'Best for applying'}
+                  onClick={() => {
+                    setExportOpen(false);
+                    onDownload();
+                  }}
+                />
+                <ExportMenuItem
+                  icon={<FileText className="h-4 w-4" />}
+                  title="Word (.docx)"
+                  hint={locale === 'fr' ? 'Modifiable dans Word' : 'Editable in Word'}
+                  onClick={() => {
+                    setExportOpen(false);
+                    onDownloadWord();
+                  }}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Bandeau d'état : guide l'utilisateur au lieu d'afficher des actions prématurées. */}
+      {showingExample ? (
+        <div className="mb-5 flex flex-col gap-3 rounded-xl border border-gold-200 bg-gold-50/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-2.5">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-gold-600" />
+            <p className="text-sm text-ink-700">
+              <span className="font-semibold text-ink-900">
+                {locale === 'fr' ? 'Ceci est un exemple.' : 'This is a sample.'}
+              </span>{' '}
+              {locale === 'fr'
+                ? 'Il montre le rendu final. Importez votre CV ou repartez de zéro, puis le téléchargement s’activera.'
+                : 'It shows the final result. Import your CV or start fresh, and download will unlock.'}
+            </p>
+          </div>
+          <div className="flex shrink-0 gap-2">
+            <Button size="sm" variant="outline" icon={<Upload className="h-4 w-4" />} onClick={() => fileRef.current?.click()}>
+              {locale === 'fr' ? 'Importer mon CV' : 'Import my CV'}
+            </Button>
+            <Button size="sm" variant="primary" icon={<RotateCcw className="h-4 w-4" />} onClick={resetToBlank}>
+              {locale === 'fr' ? 'Repartir de zéro' : 'Start fresh'}
+            </Button>
+          </div>
+        </div>
+      ) : ready ? (
+        <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700">
+          <Check className="h-3.5 w-3.5" />
+          {locale === 'fr' ? 'CV prêt — téléchargement activé' : 'CV ready — download enabled'}
+        </div>
+      ) : (
+        <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-ink-200 bg-ink-50 px-3 py-1.5 text-xs font-medium text-ink-600">
+          <Info className="h-3.5 w-3.5" />
+          {locale === 'fr'
+            ? 'Ajoutez votre nom et au moins une section pour activer le téléchargement.'
+            : 'Add your name and at least one section to enable download.'}
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,460px)_1fr]">
         {/* ----------------------------- ÉDITEUR ----------------------------- */}
         <div className="space-y-4">
           {/* Import + assistant IA */}
-          <div className="rounded-2xl border border-brand-100 bg-gradient-to-br from-brand-50 to-white p-4">
+          <div className="rounded-xl border border-ink-200 bg-white p-4">
             <input
               ref={fileRef}
               type="file"
@@ -347,9 +448,9 @@ export function CVBuilder({
             <button
               onClick={() => fileRef.current?.click()}
               disabled={busy === 'import'}
-              className="flex w-full items-center gap-3 rounded-xl border border-dashed border-brand-300 bg-white/70 px-4 py-3 text-left transition-colors hover:bg-white disabled:opacity-60"
+              className="flex w-full items-center gap-3 rounded-lg border border-dashed border-ink-300 bg-ink-50/60 px-4 py-3 text-left transition-colors hover:border-brand-400 hover:bg-brand-50/50 disabled:opacity-60"
             >
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-brand-100 text-brand-700">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-700">
                 {busy === 'import' ? (
                   <Sparkles className="h-5 w-5 animate-pulse" />
                 ) : (
@@ -636,12 +737,21 @@ export function CVBuilder({
         <div>
           <div className="sticky top-20">
             <div className="mb-3 flex items-center justify-between">
-              <span className="text-sm font-bold text-ink-500">{t.builder.preview}</span>
-              <span className="rounded-full bg-ink-100 px-3 py-1 text-xs font-semibold text-ink-600">
-                {TEMPLATE_MAP[templateId].name}
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-400">
+                {t.builder.preview}
               </span>
+              <div className="flex items-center gap-2">
+                {showingExample && (
+                  <span className="rounded-full border border-gold-300 bg-gold-50 px-2.5 py-1 text-xs font-semibold text-gold-700">
+                    {locale === 'fr' ? 'Exemple' : 'Sample'}
+                  </span>
+                )}
+                <span className="rounded-full border border-ink-200 bg-white px-3 py-1 text-xs font-semibold text-ink-600">
+                  {TEMPLATE_MAP[templateId].name}
+                </span>
+              </div>
             </div>
-            <div className="max-h-[calc(100vh-9rem)] overflow-auto rounded-2xl bg-ink-100/50 p-4 sm:p-6">
+            <div className="max-h-[calc(100vh-9rem)] overflow-auto rounded-2xl border border-ink-100 bg-ink-50 p-4 sm:p-6">
               <PreviewPane ref={previewRef} data={data} templateId={templateId} accent={accent} locale={locale} fontScale={fontScale} />
             </div>
           </div>
@@ -663,6 +773,34 @@ export function CVBuilder({
 }
 
 /* ----------------------------- sous-composants ----------------------------- */
+
+function ExportMenuItem({
+  icon,
+  title,
+  hint,
+  onClick,
+}: {
+  icon: ReactNode;
+  title: string;
+  hint: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      role="menuitem"
+      onClick={onClick}
+      className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-ink-50"
+    >
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-ink-100 text-ink-700">
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block text-sm font-semibold text-ink-900">{title}</span>
+        <span className="block text-xs text-ink-500">{hint}</span>
+      </span>
+    </button>
+  );
+}
 
 function PhotoButton({
   photo,

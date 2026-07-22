@@ -25,6 +25,30 @@ export function emptyCV(): CVData {
   };
 }
 
+/** Signature de l'exemple : sert à savoir si l'utilisateur travaille encore
+ *  sur l'aperçu de démonstration (non personnalisé) ou sur son propre CV. */
+export const EXAMPLE_EMAIL = 'afi.mensah@email.com';
+export const EXAMPLE_NAME = 'Afi Mensah';
+
+/** Vrai tant que l'utilisateur n'a pas remplacé l'identité de l'exemple. */
+export function isExampleCV(data: CVData): boolean {
+  return (
+    data.personalInfo.fullName.trim() === EXAMPLE_NAME &&
+    data.personalInfo.email.trim() === EXAMPLE_EMAIL
+  );
+}
+
+/** Vrai quand le CV contient assez de contenu réel pour être exporté. */
+export function cvIsReady(data: CVData): boolean {
+  if (isExampleCV(data)) return false;
+  const hasIdentity = data.personalInfo.fullName.trim().length > 0;
+  const hasBody =
+    data.experiences.length > 0 ||
+    data.education.length > 0 ||
+    data.skills.length > 0;
+  return hasIdentity && hasBody;
+}
+
 /** Exemple riche (français) servant d'aperçu et de démonstration. */
 export function exampleCV(): CVData {
   return {
