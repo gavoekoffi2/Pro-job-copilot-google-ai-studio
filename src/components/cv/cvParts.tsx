@@ -177,33 +177,24 @@ export function SkillBar({
   const safePercent = Math.max(0, Math.min(100, percent));
   return (
     <div
-      className="relative h-[7px] w-full overflow-hidden rounded-full ring-1 ring-black/[0.04]"
+      className="relative h-[6px] w-full overflow-hidden rounded-full"
       style={{ background: track }}
     >
       {safePercent > 0 ? (
+        // Remplissage plein et net : lisible à l'écran comme à l'export PDF.
         <div
-          className="relative h-full rounded-full"
-          style={{
-            width: `${safePercent}%`,
-            background: `linear-gradient(90deg, ${accent}cc, ${accent})`,
-            boxShadow: `0 0 10px ${accent}42`,
-          }}
-        >
-          <span className="absolute inset-x-1 top-[1px] h-px rounded-full bg-white/35" />
-        </div>
+          className="h-full rounded-full"
+          style={{ width: `${safePercent}%`, background: accent }}
+        />
       ) : (
+        // Aucun niveau renseigné : piste discrète, sans niveau inventé.
         <div
-          className="h-full w-full opacity-45"
+          className="h-full w-full opacity-40"
           style={{
             background: `repeating-linear-gradient(90deg, ${accent}55 0 16px, transparent 16px 21px)`,
           }}
         />
       )}
-      <div className="pointer-events-none absolute inset-0 flex justify-evenly opacity-25">
-        {[1, 2, 3].map((tick) => (
-          <span key={tick} className="h-full w-px bg-white" />
-        ))}
-      </div>
     </div>
   );
 }
@@ -225,11 +216,8 @@ export function LevelDots({
       {Array.from({ length: total }).map((_, i) => (
         <span
           key={i}
-          className="h-[5px] w-[13px] rounded-full ring-1 ring-black/[0.03]"
-          style={{
-            background: i < count ? `linear-gradient(90deg, ${accent}bb, ${accent})` : empty,
-            boxShadow: i < count ? `0 1px 4px ${accent}30` : undefined,
-          }}
+          className="h-[5px] w-[13px] rounded-full"
+          style={{ background: i < count ? accent : empty }}
         />
       ))}
     </span>
