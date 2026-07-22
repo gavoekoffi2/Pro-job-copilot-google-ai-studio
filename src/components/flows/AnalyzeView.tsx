@@ -97,14 +97,14 @@ export function AnalyzeView({
         <CVImporter onReady={onReady} currentData={data} />
       ) : (
         <div className="space-y-6">
-          <div className="rounded-3xl border border-brand-200 bg-gradient-to-br from-brand-50 via-white to-white p-5 shadow-sm">
+          <div className="rounded-3xl border border-brand-200 bg-brand-50/40 p-5 shadow-sm">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex gap-3">
                 <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-brand-100 text-brand-700">
                   <FileCheck2 className="h-6 w-6" />
                 </span>
                 <div>
-                  <h3 className="font-display text-lg font-extrabold text-ink-950">CV extrait avec succès</h3>
+                  <h3 className="font-display text-lg font-bold text-ink-950">CV extrait avec succès</h3>
                   <p className="mt-1 text-sm leading-relaxed text-ink-600">
                     Les informations du fichier ont été récupérées. Vous pouvez maintenant créer, corriger et télécharger le CV final.
                   </p>
@@ -133,7 +133,7 @@ export function AnalyzeView({
               />
             ) : null}
 
-            <div className="rounded-2xl border border-brand-100 bg-gradient-to-br from-brand-50 to-white p-5">
+            <div className="rounded-2xl border border-brand-100 bg-brand-50/40 p-5">
               <h3 className="flex items-center gap-2 font-display text-base font-bold text-ink-900">
                 <Wand2 className="h-5 w-5 text-brand-600" />
                 {t.analyze.refineTitle}
@@ -201,8 +201,8 @@ function AnalysisCard({
       <ListBlock icon={<AlertTriangle className="h-4 w-4" />} color="text-amber-600" title={t.analyze.weaknesses} items={analysis.weaknesses} />
       <ListBlock icon={<Lightbulb className="h-4 w-4" />} color="text-blue-600" title={t.analyze.suggestions} items={analysis.suggestions} />
 
-      <div className="rounded-2xl border border-brand-100 bg-gradient-to-br from-brand-50 to-white p-4">
-        <h4 className="font-display text-base font-extrabold text-ink-950">Optimiser automatiquement ce CV</h4>
+      <div className="rounded-2xl border border-brand-100 bg-brand-50/40 p-4">
+        <h4 className="font-display text-base font-bold text-ink-950">Optimiser automatiquement ce CV</h4>
         <p className="mt-1 text-sm leading-relaxed text-ink-600">
           Appliquer les conseils ci-dessus directement sur le CV, sans inventer d’informations absentes.
         </p>
@@ -285,7 +285,7 @@ function ScoreGauge({ value }: { value: number }) {
           style={{ transition: 'stroke-dashoffset 0.6s ease' }}
         />
       </svg>
-      <span className="absolute font-display text-2xl font-extrabold" style={{ color }}>
+      <span className="absolute font-display text-2xl font-bold" style={{ color }}>
         {value}
       </span>
     </div>

@@ -70,7 +70,7 @@ export function CoverLetterView({ data }: { data: CVData }) {
       {!cv ? (
         <div>
           <div className="mb-5 rounded-2xl border border-brand-100 bg-brand-50/70 p-5">
-            <p className="font-display text-lg font-extrabold text-ink-950">{t.coverLetter.importTitle}</p>
+            <p className="font-display text-lg font-bold text-ink-950">{t.coverLetter.importTitle}</p>
             <p className="mt-1 text-sm leading-relaxed text-ink-600">{t.coverLetter.importHelp}</p>
           </div>
           <CVImporter onReady={setCv} currentData={data} />
@@ -125,7 +125,7 @@ export function CoverLetterView({ data }: { data: CVData }) {
           <section className="rounded-2xl border border-ink-100 bg-white p-5 shadow-sm sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h2 className="font-display text-xl font-extrabold text-ink-950">{t.coverLetter.resultTitle}</h2>
+                <h2 className="font-display text-xl font-bold text-ink-950">{t.coverLetter.resultTitle}</h2>
                 <p className="mt-1 text-sm text-ink-500">{t.coverLetter.resultHelp}</p>
               </div>
               {coverLetter && (

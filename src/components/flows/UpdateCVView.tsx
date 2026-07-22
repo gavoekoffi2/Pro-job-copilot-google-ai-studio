@@ -74,8 +74,8 @@ export function UpdateCVView({
       ) : (
         <div className="grid gap-6 xl:grid-cols-[minmax(320px,440px)_1fr]">
           <div className="space-y-5">
-            <div className="rounded-2xl border border-brand-100 bg-gradient-to-br from-brand-50 to-white p-5 shadow-sm">
-              <h3 className="flex items-center gap-2 font-display text-lg font-extrabold text-ink-950">
+            <div className="rounded-2xl border border-brand-100 bg-brand-50/40 p-5 shadow-sm">
+              <h3 className="flex items-center gap-2 font-display text-lg font-bold text-ink-950">
                 <Wand2 className="h-5 w-5 text-brand-600" />
                 {t.update.instructionTitle}
               </h3>
@@ -106,7 +106,7 @@ export function UpdateCVView({
             </div>
 
             <div className="rounded-2xl border border-ink-100 bg-white p-5 shadow-sm">
-              <h3 className="mb-4 flex items-center gap-2 font-display text-lg font-extrabold text-ink-950">
+              <h3 className="mb-4 flex items-center gap-2 font-display text-lg font-bold text-ink-950">
                 <LayoutTemplate className="h-5 w-5 text-brand-600" />
                 {t.update.templateChoiceTitle}
               </h3>
@@ -153,11 +153,11 @@ function StepCard({
   return (
     <div className={`rounded-2xl border p-4 ${active ? 'border-brand-200 bg-white shadow-sm' : 'border-ink-100 bg-white/70'}`}>
       <div className="flex items-start gap-3">
-        <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl text-sm font-extrabold ${active ? 'bg-brand-600 text-white' : 'bg-ink-100 text-ink-500'}`}>
+        <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl text-sm font-bold ${active ? 'bg-brand-600 text-white' : 'bg-ink-100 text-ink-500'}`}>
           {index}
         </span>
         <div>
-          <p className="flex items-center gap-2 text-sm font-extrabold text-ink-900">
+          <p className="flex items-center gap-2 text-sm font-bold text-ink-900">
             <span className={active ? 'text-brand-600' : 'text-ink-400'}>{icon}</span>
             {title}
           </p>

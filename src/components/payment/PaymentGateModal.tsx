@@ -207,12 +207,12 @@ export function PaymentGateModal({
   return (
     <div className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-ink-950/70 px-4 py-6 backdrop-blur-sm no-print">
       <div className="my-auto w-full max-w-3xl overflow-hidden rounded-3xl bg-white shadow-2xl shadow-ink-950/30">
-        <div className="flex items-start justify-between gap-4 bg-gradient-to-br from-ink-950 to-ink-800 px-6 py-5 text-white">
+        <div className="flex items-start justify-between gap-4 bg-ink-950 px-6 py-5 text-white">
           <div>
             <p className="inline-flex items-center gap-2 rounded-full bg-gold-400/15 px-3 py-1 text-xs font-bold uppercase tracking-wider text-gold-200">
               <LockKeyhole className="h-3.5 w-3.5" /> Téléchargement sécurisé
             </p>
-            <h2 className="mt-3 font-display text-2xl font-extrabold">
+            <h2 className="mt-3 font-display text-2xl font-bold">
               {connected ? 'Choisissez votre téléchargement' : 'Connectez-vous avant de télécharger'}
             </h2>
             <p className="mt-1 max-w-2xl text-sm text-ink-200">
@@ -245,14 +245,14 @@ export function PaymentGateModal({
                   <button
                     type="button"
                     onClick={() => { setMode('login'); setError(null); }}
-                    className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-extrabold transition ${mode === 'login' ? 'bg-ink-950 text-white shadow-lg' : 'text-ink-600 hover:bg-ink-100'}`}
+                    className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition ${mode === 'login' ? 'bg-ink-950 text-white shadow-lg' : 'text-ink-600 hover:bg-ink-100'}`}
                   >
                     <LogIn className="h-4 w-4" /> Se connecter
                   </button>
                   <button
                     type="button"
                     onClick={() => { setMode('register'); setError(null); }}
-                    className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-extrabold transition ${mode === 'register' ? 'bg-brand-600 text-white shadow-lg' : 'text-ink-600 hover:bg-ink-100'}`}
+                    className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition ${mode === 'register' ? 'bg-brand-600 text-white shadow-lg' : 'text-ink-600 hover:bg-ink-100'}`}
                   >
                     <UserPlus className="h-4 w-4" /> Créer un compte
                   </button>
@@ -299,7 +299,7 @@ export function PaymentGateModal({
               <div className="flex items-start gap-3">
                 <ShieldCheck className="h-7 w-7 shrink-0 text-emerald-700" />
                 <div>
-                  <h3 className="font-display text-xl font-extrabold text-ink-950">Accès administrateur reconnu</h3>
+                  <h3 className="font-display text-xl font-bold text-ink-950">Accès administrateur reconnu</h3>
                   <p className="mt-1 text-sm text-ink-600">Téléchargez immédiatement le PDF professionnel sans filigrane.</p>
                 </div>
               </div>
@@ -316,14 +316,14 @@ export function PaymentGateModal({
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
               <section className="flex flex-col rounded-2xl border-2 border-ink-200 bg-ink-50 p-5">
-                <span className="inline-flex w-fit items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-extrabold uppercase tracking-wider text-ink-700 shadow-sm">
+                <span className="inline-flex w-fit items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-wider text-ink-700 shadow-sm">
                   <Eye className="h-4 w-4" /> Aperçu gratuit
                 </span>
-                <h3 className="mt-4 font-display text-xl font-extrabold text-ink-950">PDF avec gros filigrane</h3>
+                <h3 className="mt-4 font-display text-xl font-bold text-ink-950">PDF avec gros filigrane</h3>
                 <p className="mt-2 flex-1 text-sm leading-relaxed text-ink-600">
                   Gratuit pour vérifier la présentation. Un grand filigrane « APERÇU — JOBTASK AI » couvre toutes les pages et rend ce fichier impropre à une candidature.
                 </p>
-                <p className="mt-4 font-display text-3xl font-extrabold text-ink-950">0 FCFA</p>
+                <p className="mt-4 font-display text-3xl font-bold text-ink-950">0 FCFA</p>
                 <Button
                   className="mt-4 w-full"
                   variant="outline"
@@ -335,15 +335,15 @@ export function PaymentGateModal({
                 </Button>
               </section>
 
-              <section className="flex flex-col rounded-2xl border-2 border-gold-300 bg-gradient-to-br from-gold-50 to-white p-5 shadow-lg shadow-gold-200/30">
-                <span className="inline-flex w-fit items-center gap-2 rounded-full bg-gold-400 px-3 py-1 text-xs font-extrabold uppercase tracking-wider text-ink-950">
+              <section className="flex flex-col rounded-2xl border-2 border-gold-300 bg-gold-50/50 p-5 shadow-lg shadow-gold-200/30">
+                <span className="inline-flex w-fit items-center gap-2 rounded-full bg-gold-400 px-3 py-1 text-xs font-bold uppercase tracking-wider text-ink-950">
                   <CreditCard className="h-4 w-4" /> Version professionnelle
                 </span>
-                <h3 className="mt-4 font-display text-xl font-extrabold text-ink-950">PDF sans filigrane</h3>
+                <h3 className="mt-4 font-display text-xl font-bold text-ink-950">PDF sans filigrane</h3>
                 <p className="mt-2 flex-1 text-sm leading-relaxed text-ink-600">
                   Version propre, prête à envoyer aux recruteurs. Vous serez redirigé vers le paiement sécurisé GeniusPay avant le téléchargement.
                 </p>
-                <p className="mt-4 font-display text-3xl font-extrabold text-ink-950">{price.toLocaleString('fr-FR')} FCFA</p>
+                <p className="mt-4 font-display text-3xl font-bold text-ink-950">{price.toLocaleString('fr-FR')} FCFA</p>
                 <Button
                   className="mt-4 w-full"
                   variant="dark"

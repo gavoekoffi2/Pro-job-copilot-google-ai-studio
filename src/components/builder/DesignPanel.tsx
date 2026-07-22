@@ -45,7 +45,7 @@ export function DesignPanel({
               {locale === 'fr' ? 'Agrandissez ou réduisez les écritures du CV.' : 'Increase or reduce the CV text size.'}
             </p>
           </div>
-          <output className="min-w-12 rounded-lg bg-white px-2 py-1 text-center text-sm font-extrabold text-ink-800 shadow-sm">
+          <output className="min-w-12 rounded-lg bg-white px-2 py-1 text-center text-sm font-bold text-ink-800 shadow-sm">
             {Math.round(fontScale * 100)}%
           </output>
         </div>

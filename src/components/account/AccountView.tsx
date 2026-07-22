@@ -134,13 +134,14 @@ export function AccountView({ onOpenCv, onUserChange, onPrivateAccess }: Account
 
   return (
     <section className="mx-auto max-w-6xl px-4 pb-16 pt-24 sm:px-6 lg:px-8">
-      <div className="overflow-hidden rounded-[2rem] bg-gradient-to-br from-ink-950 via-ink-900 to-brand-950 p-6 text-white shadow-2xl shadow-ink-950/25 sm:p-8">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+      <div className="relative overflow-hidden rounded-3xl border border-ink-800 bg-ink-950 p-6 text-white sm:p-8">
+        <div className="aurora-bg" />
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-100">
               <UserRound className="h-3.5 w-3.5" /> Espace personnel
             </p>
-            <h1 className="mt-4 font-display text-3xl font-extrabold sm:text-4xl">{connected ? 'Mes CV sauvegardés' : 'Connexion à votre espace'}</h1>
+            <h1 className="mt-4 font-display text-3xl font-bold sm:text-4xl">{connected ? 'Mes CV sauvegardés' : 'Connexion à votre espace'}</h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-200 sm:text-base">
               {connected
                 ? 'Vos CV restent sauvegardés ici. Vous pouvez les ouvrir, les corriger et les réexporter à tout moment.'
@@ -157,7 +158,7 @@ export function AccountView({ onOpenCv, onUserChange, onPrivateAccess }: Account
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[390px_1fr]">
         <div className="rounded-3xl border border-ink-100 bg-white p-5 shadow-soft">
-          <h2 className="font-display text-xl font-extrabold text-ink-950">{connected ? 'Compte connecté' : 'Connexion / inscription'}</h2>
+          <h2 className="font-display text-xl font-bold text-ink-950">{connected ? 'Compte connecté' : 'Connexion / inscription'}</h2>
           <p className="mt-1 text-sm text-ink-500">{connected ? 'Actualisez la liste pour récupérer vos dernières modifications.' : 'Email + mot de passe pour retrouver votre espace depuis n’importe quel appareil.'}</p>
 
           <form
@@ -204,7 +205,7 @@ export function AccountView({ onOpenCv, onUserChange, onPrivateAccess }: Account
         <div className="rounded-3xl border border-ink-100 bg-white p-5 shadow-soft">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="font-display text-xl font-extrabold text-ink-950">Bibliothèque CV</h2>
+              <h2 className="font-display text-xl font-bold text-ink-950">Bibliothèque CV</h2>
               <p className="text-sm text-ink-500">Ouvrez un CV, modifiez-le puis sauvegardez les changements.</p>
             </div>
             <span className="rounded-full bg-ink-100 px-3 py-1 text-xs font-bold text-ink-600">{cvs.length} CV</span>
@@ -227,7 +228,7 @@ export function AccountView({ onOpenCv, onUserChange, onPrivateAccess }: Account
                 <article key={cv.id} className="rounded-2xl border border-ink-100 bg-ink-50 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <h3 className="font-display text-lg font-extrabold text-ink-950">{cv.title}</h3>
+                      <h3 className="font-display text-lg font-bold text-ink-950">{cv.title}</h3>
                       <p className="text-sm text-ink-500">{cv.subtitle || 'CV professionnel'}</p>
                     </div>
                     <span className="rounded-full bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-700">

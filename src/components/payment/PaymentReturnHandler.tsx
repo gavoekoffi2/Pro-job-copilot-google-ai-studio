@@ -199,7 +199,7 @@ export function PaymentReturnHandler() {
             <Loader2 className="mt-0.5 h-5 w-5 shrink-0 animate-spin text-brand-600" />
           )}
           <div className="flex-1">
-            <p className="font-display text-base font-extrabold text-ink-950">
+            <p className="font-display text-base font-bold text-ink-950">
               {status === 'done'
                 ? 'CV téléchargé'
                 : status === 'error'

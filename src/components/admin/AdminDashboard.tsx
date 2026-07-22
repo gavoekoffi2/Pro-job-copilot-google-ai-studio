@@ -205,13 +205,14 @@ export function AdminDashboard() {
 
   return (
     <section className="mx-auto max-w-7xl px-4 pb-16 pt-24 sm:px-6 lg:px-8">
-      <div className="overflow-hidden rounded-[2rem] bg-gradient-to-br from-ink-950 via-ink-900 to-brand-950 p-6 text-white shadow-2xl shadow-ink-950/25 sm:p-8">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+      <div className="relative overflow-hidden rounded-3xl border border-ink-800 bg-ink-950 p-6 text-white sm:p-8">
+        <div className="aurora-bg" />
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="inline-flex items-center gap-2 rounded-full bg-gold-400/15 px-3 py-1 text-xs font-bold uppercase tracking-wider text-gold-100">
               <Crown className="h-3.5 w-3.5" /> Super administration JobTask AI
             </p>
-            <h1 className="mt-4 font-display text-3xl font-extrabold sm:text-4xl">Tableau de bord global</h1>
+            <h1 className="mt-4 font-display text-3xl font-bold sm:text-4xl">Tableau de bord global</h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-200 sm:text-base">
               Gérez les utilisateurs, les abonnements, les accès illimités et le prix du téléchargement PDF.
             </p>
@@ -230,7 +231,7 @@ export function AdminDashboard() {
 
       {!connected ? (
         <div className="mt-6 rounded-3xl border border-ink-100 bg-white p-6 shadow-soft sm:p-8">
-          <h2 className="font-display text-2xl font-extrabold text-ink-950">Connexion super administrateur</h2>
+          <h2 className="font-display text-2xl font-bold text-ink-950">Connexion super administrateur</h2>
           <p className="mt-1 text-sm text-ink-500">Connectez votre compte illimité pour ouvrir le tableau de bord.</p>
           <div className="mt-5 grid gap-3 md:grid-cols-2">
             <Field label="Nom" value={admin.name} onChange={(value) => setAdmin({ ...admin, name: value })} />
@@ -256,7 +257,7 @@ export function AdminDashboard() {
           <div className="mt-6 grid gap-6 lg:grid-cols-[390px_1fr]">
             <div className="space-y-6">
               <div className="rounded-3xl border border-gold-200 bg-gold-50 p-5 shadow-soft">
-                <h2 className="font-display text-xl font-extrabold text-ink-950">Mes accès admin</h2>
+                <h2 className="font-display text-xl font-bold text-ink-950">Mes accès admin</h2>
                 <p className="mt-1 text-sm text-ink-600">Modifiez votre nom, email, téléphone ou mot de passe administrateur à tout moment.</p>
                 <div className="mt-4 space-y-3">
                   <Field label="Nom admin" value={adminProfile.name} onChange={(value) => setAdminProfile({ ...adminProfile, name: value })} />
@@ -270,7 +271,7 @@ export function AdminDashboard() {
               </div>
 
               <div className="rounded-3xl border border-ink-100 bg-white p-5 shadow-soft">
-                <h2 className="font-display text-xl font-extrabold text-ink-950">Prix du téléchargement CV</h2>
+                <h2 className="font-display text-xl font-bold text-ink-950">Prix du téléchargement CV</h2>
                 <p className="mt-1 text-sm text-ink-500">Ce montant est utilisé sur GeniusPay et dans le paywall client.</p>
                 <div className="mt-4 flex gap-2">
                   <input type="number" min={100} value={price} onChange={(event) => setPrice(Number(event.target.value))} className="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm font-bold text-ink-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
@@ -279,7 +280,7 @@ export function AdminDashboard() {
               </div>
 
               <div className="rounded-3xl border border-ink-100 bg-white p-5 shadow-soft">
-                <h2 className="font-display text-xl font-extrabold text-ink-950">Utilisateur / abonnement</h2>
+                <h2 className="font-display text-xl font-bold text-ink-950">Utilisateur / abonnement</h2>
                 <p className="mt-1 text-sm text-ink-500">Ajoutez un utilisateur, attribuez un abonnement ou un accès illimité.</p>
                 <div className="mt-4 space-y-3">
                   <Field label="Nom" value={form.name} onChange={(value) => setForm({ ...form, name: value })} />
@@ -308,7 +309,7 @@ export function AdminDashboard() {
             <div className="rounded-3xl border border-ink-100 bg-white p-5 shadow-soft">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h2 className="font-display text-xl font-extrabold text-ink-950">Tous les utilisateurs connectés</h2>
+                  <h2 className="font-display text-xl font-bold text-ink-950">Tous les utilisateurs connectés</h2>
                   <p className="text-sm text-ink-500">Rôle, abonnement, statut, CV et activité.</p>
                 </div>
                 <span className="rounded-full bg-ink-100 px-3 py-1 text-xs font-bold text-ink-600">{sortedUsers.length} comptes</span>
@@ -318,7 +319,7 @@ export function AdminDashboard() {
                   <article key={entry.user.email} className="rounded-2xl border border-ink-100 bg-ink-50 p-4">
                     <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                       <div>
-                        <h3 className="font-display text-lg font-extrabold text-ink-950">{entry.user.name || entry.user.email}</h3>
+                        <h3 className="font-display text-lg font-bold text-ink-950">{entry.user.name || entry.user.email}</h3>
                         <p className="text-sm text-ink-500">{entry.user.email} · {entry.user.phone || 'Téléphone non renseigné'}</p>
                         <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-bold uppercase tracking-wider">
                           <Badge tone={entry.user.active === false ? 'danger' : 'success'}>{entry.user.active === false ? 'Bloqué' : 'Actif'}</Badge>
@@ -371,7 +372,7 @@ function Stat({ icon, label, value }: { icon: ReactNode; label: string; value: n
         <span className="grid h-11 w-11 place-items-center rounded-2xl bg-brand-50 text-brand-700">{icon}</span>
         <div>
           <p className="text-sm font-semibold text-ink-500">{label}</p>
-          <p className="font-display text-3xl font-extrabold text-ink-950">{value.toLocaleString('fr-FR')}</p>
+          <p className="font-display text-3xl font-bold text-ink-950">{value.toLocaleString('fr-FR')}</p>
         </div>
       </div>
     </div>

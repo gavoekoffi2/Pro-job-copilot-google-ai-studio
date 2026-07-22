@@ -144,10 +144,10 @@ function HeroVisual({ t }: { t: any }) {
       transition={{ duration: 0.8, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
     >
       {/* Halo discret */}
-      <div className="absolute -inset-6 -z-10 rounded-[2.5rem] bg-gradient-to-tr from-brand-500/12 to-gold-500/12 blur-2xl" />
+      <div className="absolute -inset-6 -z-10 rounded-3xl bg-gradient-to-tr from-brand-500/12 to-gold-500/12 blur-2xl" />
 
       {/* Image principale */}
-      <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] border border-white/10 bg-ink-800 shadow-2xl">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-3xl border border-white/10 bg-ink-800 shadow-2xl">
         <img
           src={pexels(HERO_IMAGES.womanOrange, 720, 900)}
           onError={onImageError}
@@ -321,8 +321,8 @@ function Steps({ t }: { t: any }) {
         <div className="grid items-center gap-14 lg:grid-cols-2">
           <Reveal>
             <div className="relative">
-              <div className="absolute -inset-4 -z-10 rounded-[2.5rem] bg-gradient-to-tr from-brand-500/15 to-gold-500/15 blur-2xl" />
-              <div className="relative aspect-[4/3] overflow-hidden rounded-[2rem] border border-ink-100 bg-ink-100 shadow-xl">
+              <div className="absolute -inset-4 -z-10 rounded-3xl bg-gradient-to-tr from-brand-500/15 to-gold-500/15 blur-2xl" />
+              <div className="relative aspect-[4/3] overflow-hidden rounded-3xl border border-ink-100 bg-ink-100 shadow-xl">
                 <img
                   src={pexels(SCENE_IMAGES.team, 900, 680)}
                   onError={onImageError}
