@@ -79,6 +79,7 @@ jobs:
             -e "ssh -i ~/.ssh/jobtask_ai_deploy_key -o StrictHostKeyChecking=yes" \
             --exclude '.env' \
             --exclude 'dist.backup-*' \
+            --exclude 'backups' \
             release/ "$VPS_USER@$VPS_HOST:$VPS_APP_DIR/"
 
       - name: Rebuild and restart production container
