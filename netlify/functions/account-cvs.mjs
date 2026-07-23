@@ -1,16 +1,34 @@
 import { json } from './_utils.mjs';
 import {
   authenticateAccount,
-  cleanAccountUser,
+  effectiveAccess,
   loadAccount,
   loginAccount,
   publicAccount,
   registerOrLoginAccount,
   saveUserCv,
 } from './_account-store.mjs';
+import { loadCheckoutRecord } from './_checkout-store.mjs';
+import { fetchGeniusPayPayment, isSandboxReference } from './_geniuspay.mjs';
 
 function parseBody(event) {
   return JSON.parse(event.body || '{}');
+}
+
+/**
+ * Un CV ne peut être marqué « payé » que si la référence GeniusPay correspond à un
+ * checkout créé pour CE compte et confirmé côté GeniusPay. Le flag `paid` envoyé
+ * par le navigateur n'est jamais suffisant à lui seul.
+ */
+async function isPaidReferenceForEmail(reference, email) {
+  if (!reference) return false;
+  const record = await loadCheckoutRecord(reference).catch(() => null);
+  if (!record) return false;
+  const recordEmail = String(record.user?.email || '').trim().toLowerCase();
+  if (!recordEmail || recordEmail !== String(email || '').trim().toLowerCase()) return false;
+  if (isSandboxReference(reference)) return true;
+  const result = await fetchGeniusPayPayment(reference).catch(() => null);
+  return Boolean(result?.ok && result.payment?.status === 'completed');
 }
 
 export async function handler(event) {
@@ -53,17 +71,39 @@ export async function handler(event) {
     }
 
     if (action === 'save') {
-      // Vérifie que les infos publiques restent propres, mais l’accès vient de authenticateAccount.
-      cleanAccountUser({ ...user, ...payload.user, password: undefined });
+      // L'identité vient du compte authentifié. Seuls le nom et le téléphone peuvent
+      // être complétés depuis le navigateur — jamais le rôle, le plan ou l'email.
+      const profileUser = {
+        email: user.email,
+        name: String(payload.user?.name || user.name || '').trim(),
+        phone: String(payload.user?.phone || user.phone || '').trim(),
+      };
+
+      const access = effectiveAccess(user);
+      const reference = String(payload.reference || '').trim();
+      let paid = false;
+      if (payload.paid) {
+        if (access.canDownloadPdf || access.isAdmin) {
+          paid = true;
+        } else {
+          paid = await isPaidReferenceForEmail(reference, user.email);
+          if (!paid) {
+            return json(402, {
+              error: 'Paiement non confirmé pour ce CV. Terminez le paiement GeniusPay puis réessayez.',
+            });
+          }
+        }
+      }
+
       const record = await saveUserCv({
-        user: { ...user, ...payload.user, sessionToken: undefined, password: undefined },
+        user: profileUser,
         cv: payload.cv,
         templateId: payload.templateId,
         accent: payload.accent,
         locale: payload.locale || 'fr',
         cvId: payload.cvId,
-        paid: payload.paid,
-        reference: payload.reference,
+        paid,
+        reference,
       });
       const updated = await loadAccount(user.email);
       return json(200, { cv: record, account: publicAccount(updated, payload.user?.sessionToken || '') });

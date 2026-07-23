@@ -82,8 +82,8 @@ export function PaymentGateModal({
   }, [open, cv.personalInfo]);
 
   const authReady = useMemo(
-    () => Boolean(user.email.trim() && (user.password?.length || 0) >= 6),
-    [user.email, user.password],
+    () => Boolean(user.email.trim() && (user.password?.length || 0) >= (mode === 'register' ? 8 : 1)),
+    [user.email, user.password, mode],
   );
   const connected = isAuthenticatedAccount(user);
   const administrator = isDownloadAdministrator(user);
@@ -275,7 +275,7 @@ export function PaymentGateModal({
                     <Field label="Email" type="email" value={user.email} onChange={(value) => updateUser({ email: value })} placeholder="client@email.com" />
                   </div>
                   <div className={mode === 'login' ? 'sm:col-span-2' : ''}>
-                    <Field label="Mot de passe" type="password" value={user.password || ''} onChange={(value) => updateUser({ password: value })} placeholder="Minimum 6 caractères" />
+                    <Field label="Mot de passe" type="password" value={user.password || ''} onChange={(value) => updateUser({ password: value })} placeholder={mode === 'register' ? 'Minimum 8 caractères' : 'Votre mot de passe'} />
                   </div>
                   <div className="sm:col-span-2">
                     <Button

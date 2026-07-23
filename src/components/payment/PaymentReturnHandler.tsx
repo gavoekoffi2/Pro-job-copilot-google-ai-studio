@@ -11,7 +11,7 @@ import {
   verifyGeniusPayPayment,
   type PendingCheckout,
 } from '../../lib/payment';
-import { saveAccountCv } from '../../lib/account';
+import { loadAccountUser, saveAccountCv } from '../../lib/account';
 
 /**
  * Gère le retour GeniusPay (?payment=success/error) et télécharge le CV sauvegardé
@@ -84,13 +84,16 @@ export function PaymentReturnHandler() {
       let checkout = pending;
 
       if (!checkout?.cv?.personalInfo && referenceToVerify) {
-        try {
-          setMessage('Paiement détecté. Récupération sécurisée du CV…');
-          checkout = await recoverCheckoutCv(referenceToVerify);
-          savePendingCheckout(checkout);
-          setPending(checkout);
-        } catch {
-          checkout = null;
+        const accountUser = loadAccountUser();
+        if (accountUser?.sessionToken) {
+          try {
+            setMessage('Paiement détecté. Récupération sécurisée du CV…');
+            checkout = await recoverCheckoutCv(referenceToVerify, accountUser);
+            savePendingCheckout(checkout);
+            setPending(checkout);
+          } catch {
+            checkout = null;
+          }
         }
       }
 

@@ -14,6 +14,37 @@ const OPENROUTER_TIMEOUT_MS = Number(process.env.OPENROUTER_TIMEOUT_MS || 24000)
 const DEFAULT_MAX_TOKENS_GENERATE = 4096;
 const DEFAULT_MAX_TOKENS_ANALYZE = 2048;
 
+// Garde-fous anti-abus : cet endpoint consomme des crédits OpenRouter payants.
+// Limite par IP (fenêtre glissante, mémoire d'instance : best effort en serverless,
+// suffisant pour stopper les boucles de scripts et le gros du scraping).
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX_REQUESTS = Math.max(1, Number(process.env.AI_RATE_LIMIT_PER_MINUTE || 12));
+const MAX_BODY_BYTES = 8_000_000; // ~6 Mo de fichier en base64 + prompt
+const MAX_PROMPT_CHARS = 150_000;
+const rateBuckets = new Map();
+
+function clientIp(event) {
+  const headers = event.headers || {};
+  return (
+    headers['x-nf-client-connection-ip'] ||
+    String(headers['x-forwarded-for'] || '').split(',')[0].trim() ||
+    'unknown'
+  );
+}
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const recent = (rateBuckets.get(ip) || []).filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
+  if (recent.length >= RATE_LIMIT_MAX_REQUESTS) {
+    rateBuckets.set(ip, recent);
+    return true;
+  }
+  recent.push(now);
+  if (rateBuckets.size > 5000) rateBuckets.clear();
+  rateBuckets.set(ip, recent);
+  return false;
+}
+
 function json(statusCode, body) {
   return {
     statusCode,
@@ -563,11 +594,22 @@ export async function handler(event) {
     return json(405, { error: 'Method not allowed' });
   }
 
+  if ((event.body || '').length > MAX_BODY_BYTES) {
+    return json(413, { error: 'Requête trop volumineuse. Importez un fichier plus léger (max ~6 Mo).' });
+  }
+
+  if (isRateLimited(clientIp(event))) {
+    return json(429, { error: 'Trop de requêtes IA en peu de temps. Patientez une minute puis réessayez.' });
+  }
+
   try {
     const payload = JSON.parse(event.body || '{}');
     const { prompt, schema, file, task } = payload;
     if (!prompt || typeof prompt !== 'string') {
       return json(400, { error: 'Missing prompt' });
+    }
+    if (prompt.length > MAX_PROMPT_CHARS) {
+      return json(413, { error: 'Contenu trop long pour une seule requête IA. Réduisez la taille du CV ou du texte.' });
     }
 
     // Extraction depuis un fichier/image : on durcit la sortie pour que le modèle

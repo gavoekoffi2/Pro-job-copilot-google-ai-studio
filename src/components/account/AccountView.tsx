@@ -9,12 +9,10 @@ import {
   getAccountCv,
   listAccountCvs,
   loadAccountUser,
-  loadPrivateAdminAccess,
-  privateAdminUser,
+  MIN_PASSWORD_LENGTH,
   registerAccount,
   saveAccountUser,
   loginAccount,
-  isPrivateAdminCredentials,
   type SavedCvSummary,
 } from '../../lib/account';
 
@@ -41,7 +39,8 @@ export function AccountView({ onOpenCv, onUserChange, onPrivateAccess }: Account
 
   const updateUser = (patch: Partial<CheckoutUser>) => setUser((current) => ({ ...current, ...patch }));
   const accountMode = user.name.trim() || user.phone.trim() ? 'register' : 'login';
-  const canSubmitAccount = Boolean(user.email.trim()) && (user.password?.length || 0) >= 6 && (accountMode === 'login' || Boolean(user.name.trim()));
+  const minPasswordLength = accountMode === 'register' ? MIN_PASSWORD_LENGTH : 1;
+  const canSubmitAccount = Boolean(user.email.trim()) && (user.password?.length || 0) >= minPasswordLength && (accountMode === 'login' || Boolean(user.name.trim()));
 
   const loadCvs = async (accountUser = user) => {
     setError(null);
@@ -62,16 +61,6 @@ export function AccountView({ onOpenCv, onUserChange, onPrivateAccess }: Account
     setMessage('');
     setBusy('account');
     try {
-      if (isPrivateAdminCredentials({ email: user.email, password: user.password }) && onPrivateAccess) {
-        const privateUser = privateAdminUser(loadPrivateAdminAccess());
-        saveAccountUser(privateUser);
-        setUser(privateUser);
-        setConnected(true);
-        onUserChange(privateUser);
-        onPrivateAccess(privateUser);
-        return;
-      }
-
       const canUseDirectLogin = !user.name.trim() && !user.phone.trim();
       const account = canUseDirectLogin ? await loginAccount({ email: user.email, password: user.password }) : await registerAccount(user);
       const connectedUser = account.user || user;
@@ -170,7 +159,7 @@ export function AccountView({ onOpenCv, onUserChange, onPrivateAccess }: Account
           >
             <Field label="Nom complet" value={user.name} onChange={(value) => updateUser({ name: value })} />
             <Field label="Email" type="email" value={user.email} onChange={(value) => updateUser({ email: value })} placeholder="client@email.com" />
-            <Field label="Mot de passe" type="password" value={user.password || ''} onChange={(value) => updateUser({ password: value })} placeholder="Minimum 6 caractères" />
+            <Field label="Mot de passe" type="password" value={user.password || ''} onChange={(value) => updateUser({ password: value })} placeholder={`Minimum ${MIN_PASSWORD_LENGTH} caractères à l’inscription`} />
             <Field label="Téléphone" value={user.phone} onChange={(value) => updateUser({ phone: value })} placeholder="+228..." />
 
             {error && <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">{error}</p>}

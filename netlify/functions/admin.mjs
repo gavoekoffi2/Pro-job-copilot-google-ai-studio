@@ -3,6 +3,7 @@ import {
   adminAccountSummary,
   deleteAccount,
   effectiveAccess,
+  generateRandomPassword,
   listAccounts,
   loadAccount,
   publicAccount,
@@ -62,7 +63,7 @@ export async function handler(event) {
       if (!nextEmail || !/^\S+@\S+\.\S+$/.test(nextEmail)) return json(400, { error: 'Email admin invalide.' });
       if (!nextName) return json(400, { error: 'Nom admin obligatoire.' });
       if (!nextPhone) return json(400, { error: 'Téléphone admin obligatoire.' });
-      if (nextPassword && nextPassword.length < 6) return json(400, { error: 'Le nouveau mot de passe doit contenir au moins 6 caractères.' });
+      if (nextPassword && nextPassword.length < 8) return json(400, { error: 'Le nouveau mot de passe doit contenir au moins 8 caractères.' });
       if (nextEmail !== currentEmail && await loadAccount(nextEmail)) return json(409, { error: 'Cet email est déjà utilisé par un autre compte.' });
 
       const account = adminAccount;
@@ -98,7 +99,7 @@ export async function handler(event) {
         name: target.name || email,
         email,
         phone: target.phone || '',
-        password: target.initialPassword || Math.random().toString(36).slice(2, 10) + 'Aa1!',
+        password: target.initialPassword || generateRandomPassword(),
       });
       account.user = {
         ...account.user,
